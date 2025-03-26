@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海林市高级中学校友会 - 四秩风华</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1a4a7a;
+            --secondary-blue: #2a6dad;
+            --highlight-red: #B71C1C;
+        }
+        .header-bar {
+            background: var(--primary-blue);
+            padding: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .school-logo {
+            height: 60px;
+            margin-right: 1rem;
+        }
+        .anniversary-banner {
+            background: linear-gradient(rgba(26,74,122,0.9), rgba(26,74,122,0.9)),
+                       url('anniversary-bg.jpg') center/cover;
+            padding: 4rem 0;
+        }
+        .nav-tab {
+            color: #fff !important;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .nav-tab:hover {
+            border-color: var(--highlight-red);
+        }
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="header-bar">
+        <div class="container d-flex align-items-center">
+            <img src="school-badge.png" class="school-logo" alt="校徽">
+            <div class="text-white">
+                <h2>“新海高人”海林市高级中学校友会</h2>
+                <small>始建于1984年   四十载春华秋实 
+                              四十载春风化雨乐未央</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- 校庆横幅 -->
+    <div class="anniversary-banner text-white">
+        <div class="container text-center">
+            <h1 class="display-4 mb-3">四秩风华·再启新程</h1>
+            <div class="d-flex justify-content-center gap-4">
+                <a href="#events" class="nav-tab">校庆动态</a>
+                <a href="#service" class="nav-tab">校友服务</a>
+                <a href="#contact" class="nav-tab">联系我们</a>
+                <a href="#contact" class="nav-tab">新海高人</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主要内容 -->
+    <main class="container my-5">
+        <!-- 校庆活动 -->
+        <section id="events" class="info-card">
+            <h3 class="mb-4">“新海高人”2025年“情系母校”院校返校支队宣讲</h3>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>“朋辈从游”从游节</h5>
+                            <p>「致知穷理，学古探微」主题论坛</p>
+                            <small class="text-muted">1月15日 文华楼学术报告厅</small>
+                        </div>
+                    </div>
+                </div>
+ <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>饮水思源 爱国荣校</h5>
+                            <p>「不忘初心，牢记使命」主题论坛</p>
+                            <small class="text-muted">1月15日 金曦楼学术报告厅</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 其他活动卡片 -->
+            </div>
+        </section>
+
+        <!-- 校训展示 -->
+        <section class="info-card bg-primary text-white">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h2 class="display-5">崇尚文明 志存高远 
+                                                             自强不息 开拓创新</h2>
+                    <p class="lead">2024年海林市高级中学毕业典礼暨毕业生欢送仪式</p>
+                </div>
+                <div class="col-md-6">
+                    <img src="motto-stone.jpg" class="img-fluid rounded" alt="2024年海林市高级中学毕业典礼暨毕业生欢送仪式">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
