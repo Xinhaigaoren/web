@@ -22,6 +22,6 @@ async function sendMessage() {
   const input = document.getElementById('input');
   const { error } = await supabase
     .from('messages')
-    .insert({ content: input.value });
+    .insert([{ content: input.value }]);
   if (!error) input.value = '';
 }
