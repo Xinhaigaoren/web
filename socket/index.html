@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>实时位置共享</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            width: 200px;
+        }
+        button {
+            padding: 8px 15px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #map {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #ccc;
+            position: relative;
+        }
+        .player-marker {
+            width: 30px;
+            height: 30px;
+            background: #3b82f6;
+            border-radius: 50%;
+            position: absolute;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>多人位置共享系统</h1>
+        
+        <!-- 数据输入区 -->
+        <div class="input-group">
+            <input type="text" id="username" placeholder="用户名">
+            <input type="number" id="x" placeholder="X坐标">
+            <input type="number" id="y" placeholder="Y坐标">
+            <input type="number" id="angle" placeholder="角度(0-360)">
+            <button onclick="updatePosition()">更新位置</button>
+        </div>
+
+        <!-- 实时地图展示 -->
+        <div id="map"></div>
+    </div>
+
+    <!-- 引入Supabase客户端 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // 初始化Supabase客户端
+        const supabaseUrl = 'https://ouzvzbwmygtktqzjltmp.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91enZ6YndteWd0a3RxempsdG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMDA3NzIsImV4cCI6MjA1ODU3Njc3Mn0.QEk7NZG9qBLovTHzT9mNhl__PqfqxCoQs26AlLhaGnY';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 生成唯一用户ID（简易版）
+        let userId = localStorage.getItem('userId') || crypto.randomUUID();
+        localStorage.setItem('userId', userId);
+
+        // 实时监听位置变化
+        const channel = supabase
+            .channel('positions')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'positions'
+            }, handlePositionUpdate)
+            .subscribe();
+
+        // 处理位置更新
+        function handlePositionUpdate(payload) {
+            const player = payload.new;
+            const marker = document.getElementById(`player-${player.id}`);
+            
+            if (marker) {
+                // 更新已有玩家位置
+                marker.style.left = `${player.x}px`;
+                marker.style.top = `${player.y}px`;
+                marker.style.transform = `rotate(${player.angle}deg)`;
+                marker.textContent = player.username;
+            } else {
+                // 创建新玩家标记
+                createPlayerMarker(player);
+            }
+        }
+
+        // 创建玩家标记
+        function createPlayerMarker(player) {
+            const map = document.getElementById('map');
+            const marker = document.createElement('div');
+            marker.className = 'player-marker';
+            marker.id = `player-${player.id}`;
+            marker.style.left = `${player.x}px`;
+            marker.style.top = `${player.y}px`;
+            marker.style.transform = `rotate(${player.angle}deg)`;
+            marker.textContent = player.username;
+            map.appendChild(marker);
+        }
+
+        // 更新位置到数据库
+        async function updatePosition() {
+            const username = document.getElementById('username').value;
+            const x = parseInt(document.getElementById('x').value);
+            const y = parseInt(document.getElementById('y').value);
+            const angle = parseInt(document.getElementById('angle').value);
+
+            const { error } = await supabase
+                .from('positions')
+                .upsert({
+                    id: userId,
+                    username,
+                    x,
+                    y,
+                    angle,
+                    updated_at: new Date()
+                });
+
+            if (error) console.error('更新失败:', error);
+        }
+    </script>
+</body>
+</html>
