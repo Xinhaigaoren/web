@@ -1,304 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>多人实时位置共享</title>
-    <style>
-        :root {
-            --primary-color: #3b82f6;
-            --error-color: #ef4444;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f3f4f6;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .input-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        input {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        button {
-            background: var(--primary-color);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        #map {
-            width: 100%;
-            height: 600px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            position: relative;
-            overflow: hidden;
-            background: #f8fafc;
-        }
-
-        .player-marker {
-            width: 40px;
-            height: 40px;
-            position: absolute;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .marker-content {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            position: relative;
-        }
-
-        .current-user .marker-content {
-            background: #10b981;
-        }
-
-        .direction {
-            width: 0;
-            height: 0;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
-            border-bottom: 10px solid white;
-            position: absolute;
-            top: -5px;
-        }
-
-        .username {
-            position: absolute;
-            bottom: -20px;
-            font-size: 12px;
-            white-space: nowrap;
-        }
-
-        .error {
-            color: var(--error-color);
-            margin-top: 5px;
-            font-size: 14px;
-        }
-    </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>多人实时位置共享系统</h1>
-        
-        <div class="input-section">
-            <input type="text" id="username" placeholder="用户名" required>
-            <input type="number" id="x" placeholder="X坐标" min="0" required>
-            <input type="number" id="y" placeholder="Y坐标" min="0" required>
-            <input type="number" id="angle" placeholder="角度 (0-360)" min="0" max="360" required>
-            <button onclick="handlePositionUpdate()">更新位置</button>
-        </div>
-        <div id="error" class="error"></div>
+  <input id="username" placeholder="用户名">
+  <input type="number" id="x" placeholder="X">
+  <input type="number" id="y" placeholder="Y">
+  <input type="number" id="angle" placeholder="角度">
+  <button onclick="updatePosition()">更新位置</button>
 
-        <div id="map"></div>
-    </div>
+  <script>
+    const supabase = createClient('https://ouzvzbwmygtktqzjltmp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91enZ6YndteWd0a3RxempsdG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMDA3NzIsImV4cCI6MjA1ODU3Njc3Mn0.QEk7NZG9qBLovTHzT9mNhl__PqfqxCoQs26AlLhaGnY');
+    let userId = localStorage.getItem('userId') || crypto.randomUUID();
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        // 初始化配置
-        const SUPABASE_URL = 'https://ouzvzbwmygtktqzjltmp.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91enZ6YndteWd0a3RxempsdG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMDA3NzIsImV4cCI6MjA1ODU3Njc3Mn0.QEk7NZG9qBLovTHzT9mNhl__PqfqxCoQs26AlLhaGnY';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const userId = localStorage.getItem('userId') || crypto.randomUUID();
-        let currentChannel = null;
-
-        // 初始化用户
-        localStorage.setItem('userId', userId);
-        document.getElementById('username').value = `玩家_${userId.slice(0,4)}`;
-
-        // 实时订阅
-        function initRealtime() {
-            if (currentChannel) currentChannel.unsubscribe();
-            
-            currentChannel = supabase
-                .channel('public:positions')
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'positions'
-                }, handleRealtimeUpdate)
-                .subscribe();
+    // 实时监听位置变化
+    supabase
+      .channel('positions')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'positions' },
+        (payload) => {
+          console.log('实时更新:', payload.new);
+          updateMarker(payload.new);
         }
+      )
+      .subscribe();
 
-        // 处理实时更新
-        function handleRealtimeUpdate(payload) {
-            const { eventType, new: newData } = payload;
-            const markerId = `player-${newData.user_id}`;
-            
-            switch(eventType) {
-                case 'INSERT':
-                    createPlayerMarker(newData);
-                    break;
-                case 'UPDATE':
-                    updatePlayerMarker(newData);
-                    break;
-                case 'DELETE':
-                    removePlayerMarker(markerId);
-                    break;
-            }
-        }
-
-        // 创建玩家标记
-        function createPlayerMarker(data) {
-            const marker = document.createElement('div');
-            marker.className = `player-marker ${data.user_id === userId ? 'current-user' : ''}`;
-            marker.id = `player-${data.user_id}`;
-            
-            marker.innerHTML = `
-                <div class="marker-content">
-                    <div class="direction"></div>
-                </div>
-                <div class="username">${data.username}</div>
-            `;
-
-            updateMarkerPosition(marker, data);
-            document.getElementById('map').appendChild(marker);
-        }
-
-        // 更新标记位置
-        function updateMarkerPosition(marker, data) {
-            marker.style.left = `${data.x}px`;
-            marker.style.top = `${data.y}px`;
-            marker.querySelector('.direction').style.transform = `rotate(${data.angle}deg)`;
-        }
-
-        // 更新玩家标记
-        function updatePlayerMarker(data) {
-            const marker = document.getElementById(`player-${data.user_id}`);
-            if (marker) updateMarkerPosition(marker, data);
-        }
-
-        // 删除玩家标记
-        function removePlayerMarker(markerId) {
-            const marker = document.getElementById(markerId);
-            if (marker) marker.remove();
-        }
-
-        // 处理位置更新
-        async function handlePositionUpdate() {
-            const username = document.getElementById('username').value.trim();
-            const x = parseInt(document.getElementById('x').value);
-            const y = parseInt(document.getElementById('y').value);
-            const angle = parseInt(document.getElementById('angle').value);
-            const errorElement = document.getElementById('error');
-
-            // 输入验证
-            if (!username || isNaN(x) || isNaN(y) || isNaN(angle)) {
-                errorElement.textContent = '请填写所有有效字段';
-                return;
-            }
-            errorElement.textContent = '';
-
-            try {
-                // 尝试插入新记录
-                const { error: insertError } = await supabase
-                    .from('positions')
-                    .insert({
-                        user_id: userId,
-                        username,
-                        x,
-                        y,
-                        angle
-                    });
-
-                // 插入失败则更新现有记录
-                if (insertError) {
-                    const { error: updateError } = await supabase
-                        .from('positions')
-                        .update({ x, y, angle })
-                        .eq('user_id', userId);
-                    
-                    if (updateError) throw updateError;
-                }
-            } catch (error) {
-                console.error('更新失败:', error);
-                errorElement.textContent = '更新失败，请检查网络连接';
-            }
-        }
-
-        // 初始化
-        window.addEventListener('DOMContentLoaded', () => {
-            initRealtime();
-            // 加载现有玩家位置
-            supabase
-                .from('positions')
-                .select('*')
-                .then(({ data }) => {
-                    data.forEach(createPlayerMarker);
-                });
+    async function updatePosition() {
+      const { error } = await supabase
+        .from('positions')
+        .upsert({
+          id: userId,
+          username: document.getElementById('username').value,
+          x: parseInt(document.getElementById('x').value),
+          y: parseInt(document.getElementById('y').value),
+          angle: parseInt(document.getElementById('angle').value)
         });
-    </script>
-        <!-- 在原有HTML结构中添加以下元素 -->
-    <div id="feedback-container">
-        <div id="success-toast" class="toast">✓ 位置更新成功</div>
-        <div id="loading-indicator" class="toast">🔄 更新中...</div>
-    </div>
-
-    <style>
-        /* 新增样式 */
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: -300px;
-            background: #fff;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: right 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        #success-toast {
-            border-left: 4px solid #10b981;
-        }
-
-        #loading-indicator {
-            border-left: 4px solid #3b82f6;
-            display: none;
-        }
-
-        .success-animation {
-            animation: bounce 0.5s ease;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-    </style>
+      
+      if (!error) showToast('更新成功');
+    }
+  </script>
 </body>
 </html>
+ 
