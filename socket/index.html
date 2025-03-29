@@ -260,5 +260,45 @@
                 });
         });
     </script>
+        <!-- 在原有HTML结构中添加以下元素 -->
+    <div id="feedback-container">
+        <div id="success-toast" class="toast">✓ 位置更新成功</div>
+        <div id="loading-indicator" class="toast">🔄 更新中...</div>
+    </div>
+
+    <style>
+        /* 新增样式 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: -300px;
+            background: #fff;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #success-toast {
+            border-left: 4px solid #10b981;
+        }
+
+        #loading-indicator {
+            border-left: 4px solid #3b82f6;
+            display: none;
+        }
+
+        .success-animation {
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
 </body>
 </html>
