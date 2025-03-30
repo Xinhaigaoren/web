@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <style>
         .container {
             display: flex;
@@ -41,6 +41,26 @@
             width: 100%;
             box-sizing: border-box;
         }
+        input {
+            -webkit-user-select: auto !important;  /* 允许文本选择 */
+            user-select: auto !important;
+            -webkit-tap-highlight-color: transparent; /* 移除点击高光 */
+            font-size: 16px; /* 防止iOS自动缩放 */
+        }
+
+        /* 提升用户设置区域层级 */
+        #controls {
+            z-index: 10000;  /* 高于摇杆容器 */
+            position: relative;
+        }
+
+        /* 适配iOS输入法弹窗 */
+        @supports (-webkit-overflow-scrolling: touch) {
+            .user-setup {
+                padding-bottom: constant(safe-area-inset-bottom); /* iOS 11 */
+                padding-bottom: env(safe-area-inset-bottom); /* iOS 11.2+ */
+            }
+        }
 
         .player-card {
             display: flex;
@@ -69,8 +89,8 @@
         bottom: 40px;  /* 增大底部间距避免被手势操作遮挡 */
         left: 50%;
         transform: translateX(-50%);
-        width: 100px;
-        height: 100px;
+        width: 120px;
+        height: 120px;
         z-index: 9999;  /* 确保置于最顶层 */
         touch-action: manipulation; /* 优化移动端触摸反馈 */
         }
@@ -173,7 +193,9 @@
 
             // 移动端事件（新增部分）
             joystick.bg.addEventListener('touchstart', e => {
-                e.preventDefault();
+                if (e.target === joystick.bg) { // 仅当点击摇杆背景时才阻止默认
+                    e.preventDefault();
+                }
                 if (!joystick.touchId) { // 防止多点触控干扰
                     joystick.touchId = e.touches[0].identifier;
                     startDrag(getEventPosition(e));
@@ -195,8 +217,32 @@
                     endDrag();
                 }
             }, { passive: false });
-        }
 
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+                initJoystickEvents();
+                // 新增输入框触摸支持
+                document.getElementById('username').addEventListener('touchstart', function(e) {
+                    e.stopPropagation(); // 阻止事件冒泡到摇杆
+                    this.focus();
+                }, { passive: true });
+            });
+
+        document.querySelector('button').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            activateUser();
+        });
+
+        let initialViewportHeight = window.innerHeight;
+        window.addEventListener('resize', () => {
+            const newHeight = window.innerHeight;
+            if (newHeight < initialViewportHeight * 0.8) { // 键盘弹出
+                document.querySelector('.user-setup').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        });
         // 修改后的核心函数
         function startDrag(e) {
             if (!isUserActive) return;
@@ -246,9 +292,6 @@
             
             joystick.handle.style.transform = `translate(${deltaX * ratio}px, ${deltaY * ratio}px)`;
         }
-
-        // 初始化（在DOM加载完成后调用）
-        document.addEventListener('DOMContentLoaded', initJoystickEvents);
 
         // 画布尺寸调整
         function resizeCanvas() {
