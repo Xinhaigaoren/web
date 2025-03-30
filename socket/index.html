@@ -13,6 +13,7 @@
             padding: 20px;
             background: #f5f5f5;
             border-right: 2px solid #ddd;
+            position: relative;
         }
         
         .user-setup {
@@ -21,7 +22,7 @@
         
         #gameCanvas {
             flex: 1;
-            cursor: pointer;
+            touch-action: none;
         }
         
         button {
@@ -40,7 +41,6 @@
             box-sizing: border-box;
         }
 
-        /* 新增玩家列表样式 */
         .player-card {
             display: flex;
             align-items: center;
@@ -62,6 +62,37 @@
             max-height: 400px;
             overflow-y: auto;
         }
+
+        .joystick-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 120px;
+        }
+
+        .joystick-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #f0f0f0;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .joystick-handle {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #3b82f6;
+            border-radius: 50%;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.05s;
+            touch-action: none;
+        }
     </style>
 </head>
 <body>
@@ -69,32 +100,54 @@
         <div id="controls">
             <div class="user-setup">
                 <h2>用户设置</h2>
-                <input type="text" id="username" placeholder="输入用户名" required>
+                <input type="text" id="username" placeholder="输入用户名" required maxlength="20">
                 <button onclick="activateUser()">确认用户</button>
             </div>
+            
             <h3>在线玩家</h3>
             <div id="playerList"></div>
+
+            <div class="joystick-container">
+                <div class="joystick-bg"></div>
+                <div class="joystick-handle"></div>
+            </div>
         </div>
         <canvas id="gameCanvas"></canvas>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // 配置信息
+        // Supabase 配置
         const SUPABASE_URL = 'https://ouzvzbwmygtktqzjltmp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91enZ6YndteWd0a3RxempsdG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMDA3NzIsImV4cCI6MjA1ODU3Njc3Mn0.QEk7NZG9qBLovTHzT9mNhl__PqfqxCoQs26AlLhaGnY';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            db: { schema: 'public' }
+        });
+        let realtimeChannel = null; // 实时订阅通道
+
         // 系统状态
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let isUserActive = false;
         let userId = localStorage.getItem('userId') || crypto.randomUUID();
         let currentPos = { x: 300, y: 200, angle: 0 };
-        let targetPos = { ...currentPos };
         const players = new Map();
 
-        // 初始化画布
+        // 摇杆控制
+        const joystick = {
+            bg: document.querySelector('.joystick-bg'),
+            handle: document.querySelector('.joystick-handle'),
+            maxRadius: 50,
+            active: false,
+            vector: { x: 0, y: 0 }
+        };
+
+        // 初始化事件
+        joystick.bg.addEventListener('pointerdown', startDrag);
+        document.addEventListener('pointermove', handleDrag);
+        document.addEventListener('pointerup', endDrag);
+
+        // 画布尺寸调整
         function resizeCanvas() {
             canvas.width = window.innerWidth - 300;
             canvas.height = window.innerHeight;
@@ -105,71 +158,96 @@
         // 用户激活
         function activateUser() {
             const username = document.getElementById('username').value.trim();
-            if (!username) {
-                alert('请输入有效的用户名');
-                return;
-            }
+            if (!username) return alert('用户名不能为空');
+            if (username.length > 20) return alert('用户名不能超过20个字符');
+            
             isUserActive = true;
             localStorage.setItem('userId', userId);
-            initCanvasInteraction();
-            updatePosition(); // 初始位置同步
-            updatePlayerList(); // 新增：激活时更新列表
+            initPositionSync();
+            updatePlayerList();
         }
 
-        // 画布交互初始化
-        function initCanvasInteraction() {
-            canvas.addEventListener('click', handleCanvasClick);
+        // 摇杆事件处理
+        function startDrag(e) {
+            if (!isUserActive) return;
+            joystick.active = true;
+            updateJoystick(e);
         }
 
-        // 画布点击处理
-        function handleCanvasClick(e) {
-            if (!isUserActive) {
-                alert('请先确认用户身份');
-                return;
+        function handleDrag(e) {
+            if (!joystick.active) return;
+            updateJoystick(e);
+            updateMovement();
+        }
+
+        function endDrag() {
+            joystick.active = false;
+            joystick.vector = { x: 0, y: 0 };
+            joystick.handle.style.transform = `translate(-50%, -50%)`;
+            updateMovement();
+        }
+
+        function updateJoystick(e) {
+            const rect = joystick.bg.getBoundingClientRect();
+            const centerX = rect.left + rect.width/2;
+            const centerY = rect.top + rect.height/2;
+            const deltaX = e.clientX - centerX;
+            const deltaY = e.clientY - centerY;
+            
+            const distance = Math.sqrt(deltaX**2 + deltaY**2);
+            const ratio = Math.min(1, joystick.maxRadius / distance);
+            
+            joystick.vector = {
+                x: (deltaX * ratio) / joystick.maxRadius,
+                y: (deltaY * ratio) / joystick.maxRadius
+            };
+            
+            joystick.handle.style.transform = `translate(${deltaX * ratio}px, ${deltaY * ratio}px)`;
+        }
+
+        // 运动更新
+        function updateMovement() {
+            if (!isUserActive) return;
+            
+            const speed = 8;
+            currentPos.x = clamp(currentPos.x + joystick.vector.x * speed, 0, canvas.width);
+            currentPos.y = clamp(currentPos.y + joystick.vector.y * speed, 0, canvas.height);
+            
+            if(joystick.vector.x !== 0 || joystick.vector.y !== 0) {
+                currentPos.angle = Math.round((Math.atan2(joystick.vector.y, joystick.vector.x) * 180 / Math.PI + 360) % 360);
             }
             
-            const rect = canvas.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
-            
-            // 计算目标角度（面向点击位置）
-            const dx = clickX - currentPos.x;
-            const dy = clickY - currentPos.y;
-            targetPos = {
-                x: clickX,
-                y: clickY,
-                angle: (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360
-            };
-            
-            startSmoothMovement();
+            safePositionUpdate();
+            drawAllPlayers();
         }
 
-        // 平滑移动动画
-        function startSmoothMovement() {
-            const startTime = Date.now();
-            const duration = 1000; // 1秒动画时间
+        // 数据同步
+        let lastUpdate = 0;
+        async function safePositionUpdate() {
+            const now = Date.now();
+            if (now - lastUpdate < 100) return; // 节流控制
             
-            const animate = () => {
-                const progress = Math.min((Date.now() - startTime) / duration, 1);
+            try {
+                const success = await supabase.from('positions').upsert({
+                    user_id: userId,
+                    username: document.getElementById('username').value.trim(),
+                    x: Math.round(currentPos.x),
+                    y: Math.round(currentPos.y),
+                    angle: Math.round(currentPos.angle)
+                }, { 
+                    onConflict: 'user_id',
+                    returning: 'minimal'
+                });
                 
-                // 使用缓动函数实现平滑过渡
-                currentPos.x = currentPos.x + (targetPos.x - currentPos.x) * 0.1;
-                currentPos.y = currentPos.y + (targetPos.y - currentPos.y) * 0.1;
-                currentPos.angle += (targetPos.angle - currentPos.angle) * 0.1;
-                
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                } else {
-                    currentPos = { ...targetPos };
-                }
-                
-                updatePosition();
-                drawAllPlayers();
-            };
-            requestAnimationFrame(animate);
+                lastUpdate = now;
+                if (success.error) throw success.error;
+            } catch (e) {
+                console.error('同步失败:', e);
+                setTimeout(safePositionUpdate, 100);
+            }
         }
 
-        // 玩家绘制类（修复颜色生成逻辑）
+        // 玩家对象
         class Player {
             constructor(data) {
                 this.id = data.user_id;
@@ -203,7 +281,7 @@
             }
         }
 
-        // 新增：更新玩家列表
+        // 玩家列表
         function updatePlayerList() {
             const container = document.getElementById('playerList');
             container.innerHTML = '';
@@ -219,24 +297,7 @@
             });
         }
 
-        // 数据同步
-        async function updatePosition() {
-            try {
-                await supabase
-                    .from('positions')
-                    .upsert({
-                        user_id: userId,
-                        username: document.getElementById('username').value,
-                        x: Math.round(currentPos.x),
-                        y: Math.round(currentPos.y),
-                        angle: Math.round(currentPos.angle)
-                    }, { onConflict: 'user_id' });
-            } catch (e) {
-                console.error('同步失败:', e);
-            }
-        }
-
-        // 实时数据同步（添加列表更新）
+        // 实时数据同步
         supabase
             .channel('public:positions')
             .on('postgres_changes', 
@@ -254,13 +315,19 @@
             )
             .subscribe();
 
-        // 全局绘制
+
+        // 绘图函数
         function drawAllPlayers() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             players.forEach(player => player.draw());
         }
 
-        // 初始化加载（添加列表更新）
+        // 工具函数
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
+        // 初始加载
         (async () => {
             const { data } = await supabase.from('positions').select('*');
             data.forEach(d => players.set(d.user_id, new Player(d)));
