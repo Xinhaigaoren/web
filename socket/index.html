@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         .container {
             display: flex;
@@ -64,21 +65,24 @@
         }
 
         .joystick-container {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120px;
-            height: 120px;
+        position: absolute;
+        bottom: 40px;  /* 增大底部间距避免被手势操作遮挡 */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 120px;
+        z-index: 9999;  /* 确保置于最顶层 */
+        touch-action: manipulation; /* 优化移动端触摸反馈 */
         }
 
         .joystick-bg {
             position: absolute;
             width: 100%;
             height: 100%;
-            background: #f0f0f0;
+            background: rgba(240,240,240,0.8); /* 半透明效果 */
             border-radius: 50%;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            backdrop-filter: blur(4px); /* 毛玻璃效果 */
         }
 
         .joystick-handle {
@@ -92,6 +96,17 @@
             transform: translate(-50%, -50%);
             transition: transform 0.05s;
             touch-action: none;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); /* 增加层次感 */
+        }
+
+        /* 移动端特殊适配 */
+        @media (hover: none) and (pointer: coarse) {
+            .joystick-container {
+                bottom: 60px;  /* 适配手机底部手势条 */
+            }
+            .joystick-bg {
+                transform: scale(1.2);  /* 放大触控区域 */
+            }
         }
     </style>
 </head>
@@ -133,19 +148,107 @@
         let currentPos = { x: 300, y: 200, angle: 0 };
         const players = new Map();
 
-        // 摇杆控制
+        // 摇杆控制（增强移动端支持）
         const joystick = {
             bg: document.querySelector('.joystick-bg'),
             handle: document.querySelector('.joystick-handle'),
             maxRadius: 50,
             active: false,
-            vector: { x: 0, y: 0 }
+            vector: { x: 0, y: 0 },
+            touchId: null // 新增触摸标识
         };
 
-        // 初始化事件
-        joystick.bg.addEventListener('pointerdown', startDrag);
-        document.addEventListener('pointermove', handleDrag);
-        document.addEventListener('pointerup', endDrag);
+        // 通用事件处理器
+        function getEventPosition(e) {
+            // 同时支持鼠标和触摸事件
+            return e.touches ? e.touches[0] : e;
+        }
+
+        // 初始化事件（增加触摸支持）
+        function initJoystickEvents() {
+            // 桌面端事件
+            joystick.bg.addEventListener('pointerdown', startDrag);
+            document.addEventListener('pointermove', handleDrag);
+            document.addEventListener('pointerup', endDrag);
+
+            // 移动端事件（新增部分）
+            joystick.bg.addEventListener('touchstart', e => {
+                e.preventDefault();
+                if (!joystick.touchId) { // 防止多点触控干扰
+                    joystick.touchId = e.touches[0].identifier;
+                    startDrag(getEventPosition(e));
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchmove', e => {
+                e.preventDefault();
+                if (joystick.touchId !== null) {
+                    const touch = [...e.touches].find(t => t.identifier === joystick.touchId);
+                    if (touch) handleDrag(getEventPosition(touch));
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchend', e => {
+                e.preventDefault();
+                if ([...e.touches].every(t => t.identifier !== joystick.touchId)) {
+                    joystick.touchId = null;
+                    endDrag();
+                }
+            }, { passive: false });
+        }
+
+        // 修改后的核心函数
+        function startDrag(e) {
+            if (!isUserActive) return;
+            
+            // 新增设备类型判断
+            const isTouch = e instanceof TouchEvent;
+            joystick.active = true;
+            
+            // 更新坐标时加入viewport偏移补偿
+            updateJoystick(e, isTouch);
+        }
+
+        function handleDrag(e) {
+            if (!joystick.active) return;
+            const isTouch = e instanceof TouchEvent;
+            updateJoystick(e, isTouch);
+            updateMovement();
+        }
+
+        function endDrag() {
+            joystick.active = false;
+            joystick.vector = { x: 0, y: 0 };
+            joystick.handle.style.transform = `translate(-50%, -50%)`;
+            updateMovement();
+        }
+
+        // 修改后的坐标更新（增加视口补偿）
+        function updateJoystick(e, isTouch = false) {
+            const rect = joystick.bg.getBoundingClientRect();
+            const centerX = rect.left + rect.width/2;
+            const centerY = rect.top + rect.height/2;
+            
+            // 移动端需要补偿viewport偏移
+            const clientX = isTouch ? e.clientX - window.visualViewport.offsetLeft : e.clientX;
+            const clientY = isTouch ? e.clientY - window.visualViewport.offsetTop : e.clientY;
+
+            const deltaX = clientX - centerX;
+            const deltaY = clientY - centerY;
+
+            const distance = Math.sqrt(deltaX**2 + deltaY**2);
+            const ratio = Math.min(1, joystick.maxRadius / distance);
+            
+            joystick.vector = {
+                x: (deltaX * ratio) / joystick.maxRadius,
+                y: (deltaY * ratio) / joystick.maxRadius
+            };
+            
+            joystick.handle.style.transform = `translate(${deltaX * ratio}px, ${deltaY * ratio}px)`;
+        }
+
+        // 初始化（在DOM加载完成后调用）
+        document.addEventListener('DOMContentLoaded', initJoystickEvents);
 
         // 画布尺寸调整
         function resizeCanvas() {
@@ -154,6 +257,13 @@
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                canvas.width = window.innerWidth - 300;
+                canvas.height = window.innerHeight;
+                drawAllPlayers();
+            }, 300);
+        });
 
         // 用户激活
         function activateUser() {
