@@ -1,137 +1,272 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>实时位置共享系统</title>
     <style>
-        /* 样式部分保持不变 */
-        :root { --primary-color: #3b82f6; --error-color: #ef4444; }
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        #map { height: 500px; border: 2px solid #e5e7eb; position: relative; }
-        .player-marker { /* 标记样式 */ }
+        .container {
+            display: flex;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        
+        #controls {
+            width: 300px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-right: 2px solid #ddd;
+        }
+        
+        .user-setup {
+            margin-bottom: 20px;
+        }
+        
+        #gameCanvas {
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        input {
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* 新增玩家列表样式 */
+        .player-card {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        #playerList {
+            max-height: 400px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>实时位置共享系统</h1>
-        <div class="input-section">
-            <input type="text" id="username" placeholder="用户名" required>
-            <input type="number" id="x" placeholder="X坐标" min="0">
-            <input type="number" id="y" placeholder="Y坐标" min="0">
-            <input type="number" id="angle" placeholder="角度 (0-360)" min="0" max="360">
-            <button onclick="handlePositionUpdate()">更新位置</button>
+        <div id="controls">
+            <div class="user-setup">
+                <h2>用户设置</h2>
+                <input type="text" id="username" placeholder="输入用户名" required>
+                <button onclick="activateUser()">确认用户</button>
+            </div>
+            <h3>在线玩家</h3>
+            <div id="playerList"></div>
         </div>
-        <div id="error" class="error"></div>
-        <div id="map"></div>
+        <canvas id="gameCanvas"></canvas>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // 初始化Supabase客户端 
+        // 配置信息
         const SUPABASE_URL = 'https://ouzvzbwmygtktqzjltmp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91enZ6YndteWd0a3RxempsdG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMDA3NzIsImV4cCI6MjA1ODU3Njc3Mn0.QEk7NZG9qBLovTHzT9mNhl__PqfqxCoQs26AlLhaGnY';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // 用户身份管理 
+        // 系统状态
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let isUserActive = false;
         let userId = localStorage.getItem('userId') || crypto.randomUUID();
-        localStorage.setItem('userId', userId);
+        let currentPos = { x: 300, y: 200, angle: 0 };
+        let targetPos = { ...currentPos };
+        const players = new Map();
 
-        // 实时订阅频道 
-        const channel = supabase
-            .channel('room1')
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'positions',
-            }, handleRealtimeUpdate)
-            .subscribe();
-
-        // 处理实时更新 
-        function handleRealtimeUpdate(payload) {
-            const { eventType, new: newData } = payload;
-            const markerId = `player-${newData.user_id}`;
-
-            switch(eventType) {
-                case 'INSERT':
-                    createPlayerMarker(newData);
-                    break;
-                case 'UPDATE':
-                    updatePlayerPosition(newData);
-                    break;
-                case 'DELETE':
-                    removePlayerMarker(markerId);
-                    break;
-            }
+        // 初始化画布
+        function resizeCanvas() {
+            canvas.width = window.innerWidth - 300;
+            canvas.height = window.innerHeight;
         }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
 
-        // 创建玩家标记
-        function createPlayerMarker(data) {
-            const marker = document.createElement('div');
-            marker.className = `player-marker ${data.user_id === userId ? 'current-user' : ''}`;
-            marker.id = `player-${data.user_id}`;
-            marker.innerHTML = `
-                <div class="marker-content">
-                    <div class="direction"></div>
-                </div>
-                <div class="username">${data.username}</div>
-            `;
-            updateMarkerPosition(marker, data);
-            document.getElementById('map').appendChild(marker);
-        }
-
-        // 更新标记位置 
-        function updateMarkerPosition(marker, data) {
-            marker.style.left = `${data.x}px`;
-            marker.style.top = `${data.y}px`;
-            marker.querySelector('.direction').style.transform = `rotate(${data.angle}deg)`;
-        }
-
-        // 处理位置更新 
-        async function handlePositionUpdate() {
+        // 用户激活
+        function activateUser() {
             const username = document.getElementById('username').value.trim();
-            const x = parseInt(document.getElementById('x').value);
-            const y = parseInt(document.getElementById('y').value);
-            const angle = parseInt(document.getElementById('angle').value);
-            const errorElement = document.getElementById('error');
-
-            // 输入验证 
-            if (!username || isNaN(x) || isNaN(y) || isNaN(angle)) {
-                errorElement.textContent = '所有字段必须填写有效值';
+            if (!username) {
+                alert('请输入有效的用户名');
                 return;
             }
+            isUserActive = true;
+            localStorage.setItem('userId', userId);
+            initCanvasInteraction();
+            updatePosition(); // 初始位置同步
+            updatePlayerList(); // 新增：激活时更新列表
+        }
 
+        // 画布交互初始化
+        function initCanvasInteraction() {
+            canvas.addEventListener('click', handleCanvasClick);
+        }
+
+        // 画布点击处理
+        function handleCanvasClick(e) {
+            if (!isUserActive) {
+                alert('请先确认用户身份');
+                return;
+            }
+            
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            
+            // 计算目标角度（面向点击位置）
+            const dx = clickX - currentPos.x;
+            const dy = clickY - currentPos.y;
+            targetPos = {
+                x: clickX,
+                y: clickY,
+                angle: (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360
+            };
+            
+            startSmoothMovement();
+        }
+
+        // 平滑移动动画
+        function startSmoothMovement() {
+            const startTime = Date.now();
+            const duration = 1000; // 1秒动画时间
+            
+            const animate = () => {
+                const progress = Math.min((Date.now() - startTime) / duration, 1);
+                
+                // 使用缓动函数实现平滑过渡
+                currentPos.x = currentPos.x + (targetPos.x - currentPos.x) * 0.1;
+                currentPos.y = currentPos.y + (targetPos.y - currentPos.y) * 0.1;
+                currentPos.angle += (targetPos.angle - currentPos.angle) * 0.1;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    currentPos = { ...targetPos };
+                }
+                
+                updatePosition();
+                drawAllPlayers();
+            };
+            requestAnimationFrame(animate);
+        }
+
+        // 玩家绘制类（修复颜色生成逻辑）
+        class Player {
+            constructor(data) {
+                this.id = data.user_id;
+                this.username = data.username;
+                this.x = data.x;
+                this.y = data.y;
+                this.angle = data.angle;
+                this.color = this.generateColor(data.username);
+            }
+
+            generateColor(username) {
+                const hash = [...username].reduce((acc, char) => 
+                    char.charCodeAt(0) + (acc << 6) + (acc << 16) - acc, 0);
+                return `hsl(${hash % 360}, 70%, 50%)`;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle * Math.PI / 180);
+                
+                // 绘制旋转方块
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-15, -15, 30, 30);
+                
+                // 方向指示器
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.fillRect(5, -5, 8, 8);
+                
+                ctx.restore();
+            }
+        }
+
+        // 新增：更新玩家列表
+        function updatePlayerList() {
+            const container = document.getElementById('playerList');
+            container.innerHTML = '';
+            
+            players.forEach(player => {
+                const card = document.createElement('div');
+                card.className = 'player-card';
+                card.innerHTML = `
+                    <div class="color-box" style="background:${player.color}"></div>
+                    <div>${player.username}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 数据同步
+        async function updatePosition() {
             try {
-                const { error } = await supabase
+                await supabase
                     .from('positions')
                     .upsert({
                         user_id: userId,
-                        username,
-                        x,
-                        y,
-                        angle
+                        username: document.getElementById('username').value,
+                        x: Math.round(currentPos.x),
+                        y: Math.round(currentPos.y),
+                        angle: Math.round(currentPos.angle)
                     }, { onConflict: 'user_id' });
-
-                if (error) throw error;
-                showToast('位置更新成功');
-            } catch (error) {
-                console.error('更新失败:', error);
-                errorElement.textContent = error.message;
+            } catch (e) {
+                console.error('同步失败:', e);
             }
         }
 
-        // 初始化加载现有位置 
-        window.addEventListener('DOMContentLoaded', async () => {
-            const { data } = await supabase
-                .from('positions')
-                .select('*');
-            
-            data.forEach(createPlayerMarker);
-        });
+        // 实时数据同步（添加列表更新）
+        supabase
+            .channel('public:positions')
+            .on('postgres_changes', 
+                { event: '*', schema: 'public', table: 'positions' },
+                payload => {
+                    const data = payload.new;
+                    if (payload.eventType === 'DELETE') {
+                        players.delete(data.user_id);
+                    } else {
+                        players.set(data.user_id, new Player(data));
+                    }
+                    drawAllPlayers();
+                    updatePlayerList(); // 新增：同步更新列表
+                }
+            )
+            .subscribe();
 
-        // 辅助函数
-        function showToast(message) {
-            /* 提示信息实现 */
+        // 全局绘制
+        function drawAllPlayers() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            players.forEach(player => player.draw());
         }
+
+        // 初始化加载（添加列表更新）
+        (async () => {
+            const { data } = await supabase.from('positions').select('*');
+            data.forEach(d => players.set(d.user_id, new Player(d)));
+            drawAllPlayers();
+            updatePlayerList(); // 新增：初始加载更新列表
+        })();
     </script>
 </body>
 </html>
