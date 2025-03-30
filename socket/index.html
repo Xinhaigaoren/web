@@ -66,11 +66,11 @@
 
         .joystick-container {
         position: absolute;
-        bottom: 160px;  /* 增大底部间距避免被手势操作遮挡 */
+        bottom: 40px;  /* 增大底部间距避免被手势操作遮挡 */
         left: 50%;
         transform: translateX(-50%);
-        width: 180px;
-        height: 180px;
+        width: 160px;
+        height: 160px;
         z-index: 9999;  /* 确保置于最顶层 */
         touch-action: manipulation; /* 优化移动端触摸反馈 */
         }
@@ -102,7 +102,7 @@
         /* 移动端特殊适配 */
         @media (hover: none) and (pointer: coarse) {
             .joystick-container {
-                bottom: 200px;  /* 适配手机底部手势条 */
+                bottom: 40px;  /* 适配手机底部手势条 */
             }
             .joystick-bg {
                 transform: scale(1.2);  /* 放大触控区域 */
