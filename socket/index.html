@@ -3,129 +3,195 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <style>
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #60a5fa;
+            --background: #f8fafc;
+            --text-primary: #1e293b;
+            --border-radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, sans-serif;
+            color: var(--text-primary);
+        }
+
         .container {
             display: flex;
             height: 100vh;
-            font-family: Arial, sans-serif;
+            flex-direction: row-reverse;
         }
-        
+
         #controls {
-            width: 300px;
-            padding: 20px;
-            background: #f5f5f5;
-            border-right: 2px solid #ddd;
-            position: relative;
+            width: 100%;
+            max-width: 320px;
+            padding: 1rem;
+            background: var(--background);
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            box-shadow: 4px 0 12px rgba(0,0,0,0.05);
+            overflow-y: auto;
         }
-        
+
         .user-setup {
-            margin-bottom: 20px;
+            padding: 1rem;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        
-        #gameCanvas {
-            flex: 1;
-            touch-action: none;
+
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
         }
-        
+
+        h3 {
+            font-size: 1rem;
+            color: #64748b;
+            margin-bottom: 0.75rem;
+        }
+
+        #username {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        #username:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
         button {
-            background: #3b82f6;
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary-color);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-weight: 500;
             cursor: pointer;
-            margin-top: 10px;
-        }
-        
-        input {
-            padding: 8px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        input {
-            -webkit-user-select: auto !important;  /* 允许文本选择 */
-            user-select: auto !important;
-            -webkit-tap-highlight-color: transparent; /* 移除点击高光 */
-            font-size: 16px; /* 防止iOS自动缩放 */
+            transition: all 0.2s;
+            margin-top: 1rem;
         }
 
-        /* 提升用户设置区域层级 */
-        #controls {
-            z-index: 10000;  /* 高于摇杆容器 */
-            position: relative;
+        button:active {
+            transform: scale(0.98);
         }
 
-        /* 适配iOS输入法弹窗 */
-        @supports (-webkit-overflow-scrolling: touch) {
-            .user-setup {
-                padding-bottom: constant(safe-area-inset-bottom); /* iOS 11 */
-                padding-bottom: env(safe-area-inset-bottom); /* iOS 11.2+ */
-            }
+        button:hover {
+            background: var(--secondary-color);
+        }
+
+        #playerList {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 0.5rem;
         }
 
         .player-card {
             display: flex;
             align-items: center;
-            margin: 8px 0;
-            padding: 8px;
+            padding: 0.75rem;
             background: white;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: 1px solid #f1f5f9;
+        }
+
+        .player-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
         }
 
         .color-box {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-            margin-right: 10px;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            margin-right: 1rem;
+            flex-shrink: 0;
         }
 
-        #playerList {
-            max-height: 400px;
-            overflow-y: auto;
+        /* 游戏画布适配 */
+        #gameCanvas {
+            flex: 1;
+            background: #f1f5f9;
+            touch-action: none;
         }
 
+        /* 摇杆样式优化 */
         .joystick-container {
-        position: absolute;
-        bottom: 40px;  /* 增大底部间距避免被手势操作遮挡 */
-        left: 50%;
-        transform: translateX(-50%);
-        width: 120px;
-        height: 120px;
-        z-index: 9999;  /* 确保置于最顶层 */
-        touch-action: manipulation; /* 优化移动端触摸反馈 */
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 120px;
+            z-index: 1000;
+            touch-action: none;
         }
 
         .joystick-bg {
-            position: absolute;
             width: 100%;
             height: 100%;
-            background: rgba(240,240,240,0.8); /* 半透明效果 */
+            background: rgba(255,255,255,0.9);
             border-radius: 50%;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            backdrop-filter: blur(4px); /* 毛玻璃效果 */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
         .joystick-handle {
-            position: absolute;
             width: 40px;
             height: 40px;
-            background: #3b82f6;
+            background: var(--primary-color);
             border-radius: 50%;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            transition: transform 0.05s;
-            touch-action: none;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); /* 增加层次感 */
+            transition: transform 0.1s ease-out;
+            will-change: transform;
         }
 
-        /* 移动端特殊适配 */
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            #controls {
+                max-width: 100%;
+                height: 45vh;
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            #gameCanvas {
+                height: 55vh;
+            }
+
+            .joystick-container {
+                bottom: 25vh;
+                width: 100px;
+                height: 100px;
+            }
+        }
+
         @media (hover: none) and (pointer: coarse) {
             .joystick-container {
-                bottom: 60px;  /* 适配手机底部手势条 */
-            }
-            .joystick-bg {
-                transform: scale(1.2);  /* 放大触控区域 */
+                bottom: calc(25vh + env(safe-area-inset-bottom));
             }
         }
     </style>
@@ -292,6 +358,23 @@
             
             joystick.handle.style.transform = `translate(${deltaX * ratio}px, ${deltaY * ratio}px)`;
         }
+        function updateJoystick(e) {
+            const rect = joystick.bg.getBoundingClientRect();
+            const centerX = rect.left + rect.width/2;
+            const centerY = rect.top + rect.height/2;
+            const deltaX = e.clientX - centerX;
+            const deltaY = e.clientY - centerY;
+            
+            const distance = Math.sqrt(deltaX**2 + deltaY**2);
+            const ratio = Math.min(1, joystick.maxRadius / distance);
+            
+            joystick.vector = {
+                x: (deltaX * ratio) / joystick.maxRadius,
+                y: (deltaY * ratio) / joystick.maxRadius
+            };
+            
+            joystick.handle.style.transform = `translate(${deltaX * ratio}px, ${deltaY * ratio}px)`;
+        }
 
         // 画布尺寸调整
         function resizeCanvas() {
@@ -338,24 +421,6 @@
             joystick.vector = { x: 0, y: 0 };
             joystick.handle.style.transform = `translate(-50%, -50%)`;
             updateMovement();
-        }
-
-        function updateJoystick(e) {
-            const rect = joystick.bg.getBoundingClientRect();
-            const centerX = rect.left + rect.width/2;
-            const centerY = rect.top + rect.height/2;
-            const deltaX = e.clientX - centerX;
-            const deltaY = e.clientY - centerY;
-            
-            const distance = Math.sqrt(deltaX**2 + deltaY**2);
-            const ratio = Math.min(1, joystick.maxRadius / distance);
-            
-            joystick.vector = {
-                x: (deltaX * ratio) / joystick.maxRadius,
-                y: (deltaY * ratio) / joystick.maxRadius
-            };
-            
-            joystick.handle.style.transform = `translate(${deltaX * ratio}px, ${deltaY * ratio}px)`;
         }
 
         // 运动更新
@@ -444,10 +509,16 @@
                 card.className = 'player-card';
                 card.innerHTML = `
                     <div class="color-box" style="background:${player.color}"></div>
-                    <div>${player.username}</div>
+                    <div>
+                        <div>${player.username}</div>
+                        <small style="color:#64748b">位置: (${player.x}, ${player.y})</small>
+                    </div>
                 `;
                 container.appendChild(card);
             });
+            
+            // 更新在线人数显示
+            document.querySelector('h3').innerHTML = `在线玩家 (${players.size})`;
         }
 
         // 实时数据同步
