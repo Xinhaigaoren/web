@@ -223,6 +223,16 @@
                 initJoystickEvents();
                 // 新增输入框触摸支持
                 document.getElementById('username').addEventListener('touchstart', function(e) {
+                    let initialViewportHeight = window.innerHeight;
+                    window.addEventListener('resize', () => {
+                        const newHeight = window.innerHeight;
+                        if (newHeight < initialViewportHeight * 0.8) { // 键盘弹出
+                            document.querySelector('.user-setup').scrollIntoView({ 
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                        }
+                    });
                     e.stopPropagation(); // 阻止事件冒泡到摇杆
                     this.focus();
                 }, { passive: true });
@@ -233,16 +243,6 @@
             activateUser();
         });
 
-        let initialViewportHeight = window.innerHeight;
-        window.addEventListener('resize', () => {
-            const newHeight = window.innerHeight;
-            if (newHeight < initialViewportHeight * 0.8) { // 键盘弹出
-                document.querySelector('.user-setup').scrollIntoView({ 
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-            }
-        });
         // 修改后的核心函数
         function startDrag(e) {
             if (!isUserActive) return;
