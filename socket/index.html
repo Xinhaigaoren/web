@@ -25,11 +25,13 @@
         .container {
             display: flex;
             height: 100vh;
-            flex-direction: row-reverse;
+            flex-direction: row;
+            z-index: 1000;
+            position: relative;
         }
 
         #controls {
-            width: 100%;
+            width: 30%;
             max-width: 320px;
             padding: 1rem;
             background: var(--background);
@@ -39,6 +41,7 @@
             gap: 1.5rem;
             box-shadow: 4px 0 12px rgba(0,0,0,0.05);
             overflow-y: auto;
+            overscroll-behavior: contain;
         }
 
         .user-setup {
@@ -129,11 +132,14 @@
 
         /* 游戏画布适配 */
         #gameCanvas {
-            flex: 1;
-            background: #f1f5f9;
+            right: 0;
+            width: 70%;
+            position: absolute;
+            transform-origin: center;
             touch-action: none;
+            image-rendering: crisp-edges; /* 像素风格优化 */
+            z-index: 100;
         }
-
         /* 摇杆样式优化 */
         .joystick-container {
             position: fixed;
@@ -198,10 +204,12 @@
 </head>
 <body>
     <div class="container">
+        <canvas id="gameCanvas"></canvas>
         <div id="controls">
             <div class="user-setup">
                 <h2>用户设置</h2>
-                <input type="text" id="username" placeholder="输入用户名" required maxlength="20">
+                <input type="text"  id="username" enterkeyhint="done" autocapitalize="none" 
+                autocomplete="off" autocorrect="off" placeholder="输入用户名" required maxlength="20">
                 <button onclick="activateUser()">确认用户</button>
             </div>
             
@@ -213,7 +221,6 @@
                 <div class="joystick-handle"></div>
             </div>
         </div>
-        <canvas id="gameCanvas"></canvas>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -259,6 +266,8 @@
 
             // 移动端事件（新增部分）
             joystick.bg.addEventListener('touchstart', e => {
+                // 增加输入框检测
+                if (document.activeElement === document.getElementById('username')) return;
                 if (e.target === joystick.bg) { // 仅当点击摇杆背景时才阻止默认
                     e.preventDefault();
                 }
@@ -358,38 +367,50 @@
             
             joystick.handle.style.transform = `translate(${deltaX * ratio}px, ${deltaY * ratio}px)`;
         }
-        function updateJoystick(e) {
-            const rect = joystick.bg.getBoundingClientRect();
-            const centerX = rect.left + rect.width/2;
-            const centerY = rect.top + rect.height/2;
-            const deltaX = e.clientX - centerX;
-            const deltaY = e.clientY - centerY;
-            
-            const distance = Math.sqrt(deltaX**2 + deltaY**2);
-            const ratio = Math.min(1, joystick.maxRadius / distance);
-            
-            joystick.vector = {
-                x: (deltaX * ratio) / joystick.maxRadius,
-                y: (deltaY * ratio) / joystick.maxRadius
-            };
-            
-            joystick.handle.style.transform = `translate(${deltaX * ratio}px, ${deltaY * ratio}px)`;
-        }
 
         // 画布尺寸调整
+        // 新增全局变量
+        let viewportScale = 0.1; // 当前缩放比例
+        const BASE_SIZE = 20;  // 基准方块大小
+        const DESIGN_WIDTH = 800; // 设计分辨率
+        const DESIGN_HEIGHT = 800;
+
+        // 替换原有resizeCanvas函数
         function resizeCanvas() {
-            canvas.width = window.innerWidth - 300;
-            canvas.height = window.innerHeight;
+            const container = canvas.parentElement;
+            const screenWidth = container.clientWidth;
+            const screenHeight = container.clientHeight;
+            
+            // 计算缩放比例
+            const widthRatio = screenWidth / DESIGN_WIDTH;
+            const heightRatio = screenHeight / DESIGN_HEIGHT;
+            viewportScale = Math.min(widthRatio, heightRatio);
+            
+            // 设置canvas实际分辨率
+            canvas.width = DESIGN_WIDTH * devicePixelRatio;
+            canvas.height = DESIGN_HEIGHT * devicePixelRatio;
+            canvas.style.width = `${DESIGN_WIDTH}px`;
+            canvas.style.height = `${DESIGN_HEIGHT}px`;
+             // 修正devicePixelRatio处理
+            const dpr = window.devicePixelRatio || 1;
+            ctx.scale(dpr, dpr); // 必须在设置canvas尺寸之后调用
+            // 应用缩放变换
+            canvas.style.transform = `
+                translate(-50%, -50%)
+                scale(${viewportScale})
+            `;
+            canvas.style.left = '50%';
+            canvas.style.top = '50%';
+            
+            // 适配高分辨率屏幕
+            ctx.scale(devicePixelRatio, devicePixelRatio);
         }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                canvas.width = window.innerWidth - 300;
-                canvas.height = window.innerHeight;
-                drawAllPlayers();
-            }, 300);
-        });
+        function worldToScreen(x, y) {
+            return {
+                x: (x - currentPos.x) * viewportScale + DESIGN_WIDTH/2,
+                y: (y - currentPos.y) * viewportScale + DESIGN_HEIGHT/2
+            };
+        }
 
         // 用户激活
         function activateUser() {
@@ -426,14 +447,15 @@
         // 运动更新
         function updateMovement() {
             if (!isUserActive) return;
-            
-            const speed = 8;
-            currentPos.x = clamp(currentPos.x + joystick.vector.x * speed, 0, canvas.width);
-            currentPos.y = clamp(currentPos.y + joystick.vector.y * speed, 0, canvas.height);
-            
+            const speed = 8 / viewportScale; // 基于缩放调整速度
+
             if(joystick.vector.x !== 0 || joystick.vector.y !== 0) {
                 currentPos.angle = Math.round((Math.atan2(joystick.vector.y, joystick.vector.x) * 180 / Math.PI + 360) % 360);
             }
+            
+             // 强制用户位置居中
+            currentPos.x -= joystick.vector.x * speed;
+            currentPos.y -= joystick.vector.y * speed;
             
             safePositionUpdate();
             drawAllPlayers();
@@ -483,8 +505,9 @@
             }
 
             draw() {
+                const screenPos = worldToScreen(-this.x, -this.y);
                 ctx.save();
-                ctx.translate(this.x, this.y);
+                ctx.translate(screenPos.x, screenPos.y);
                 ctx.rotate(this.angle * Math.PI / 180);
                 
                 // 绘制旋转方块

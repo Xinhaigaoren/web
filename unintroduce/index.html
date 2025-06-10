@@ -1,0 +1,721 @@
+<html lang="zh-CN"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大学介绍 | My GitHub Page</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- Tailwind CSS 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            accent: '#FF7D00',
+            dark: '#1D2129',
+            light: '#F2F3F5'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-balance {
+        text-wrap: balance;
+      }
+      .card-hover {
+        @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+      }
+      .btn-primary {
+        @apply bg-primary text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-primary/90 hover:shadow-md active:scale-95;
+      }
+      .btn-secondary {
+        @apply bg-white text-primary border border-primary px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-primary/5 hover:shadow-md active:scale-95;
+      }
+    }
+  </style>
+  
+  <!-- 字体加载 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+</head>
+<body class="font-inter bg-light text-dark">
+  <!-- 导航栏 -->
+  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-300">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <a href="#" class="flex items-center space-x-2">
+            <span class="text-primary text-2xl"><i class="fa fa-graduation-cap"></i></span>
+            <span class="font-bold text-xl">大学介绍</span>
+          </a>
+        </div>
+        
+        <!-- 桌面导航 -->
+        <nav class="hidden md:flex space-x-8">
+          <a href="#" class="text-dark hover:text-primary font-medium transition-colors duration-200">首页</a>
+          <a href="#" class="text-primary border-b-2 border-primary font-medium pb-1">大学介绍</a>
+          <a href="#" class="text-dark hover:text-primary font-medium transition-colors duration-200">热门帖子</a>
+          <a href="#" class="text-dark hover:text-primary font-medium transition-colors duration-200">关于我们</a>
+        </nav>
+        
+        <!-- 移动端菜单按钮 -->
+        <div class="md:hidden">
+          <button id="mobile-menu-button" class="text-dark hover:text-primary focus:outline-none">
+            <i class="fa fa-bars text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 移动端导航菜单 -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t shadow-md">
+      <div class="container mx-auto px-4 py-3 space-y-3">
+        <a href="#" class="block text-dark hover:text-primary font-medium py-2 transition-colors duration-200">首页</a>
+        <a href="#" class="block text-primary font-medium py-2">大学介绍</a>
+        <a href="#" class="block text-dark hover:text-primary font-medium py-2 transition-colors duration-200">热门帖子</a>
+        <a href="#" class="block text-dark hover:text-primary font-medium py-2 transition-colors duration-200">关于我们</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- 英雄区 -->
+    <section class="bg-gradient-to-r from-primary/10 to-secondary/10 py-16 md:py-24">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto text-center">
+          <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-dark leading-tight mb-6">分享你的大学故事</h1>
+          <p class="text-[clamp(1rem,2vw,1.25rem)] text-dark/80 mb-8 text-balance">
+            在这里，你可以介绍自己的母校，分享校园生活、学术特色和难忘经历，让更多人了解这所独特的学府。
+          </p>
+          <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="#posts" class="btn-primary">
+              <i class="fa fa-eye mr-2"></i>浏览帖子
+            </a>
+            <a href="#post-form" class="btn-secondary">
+              <i class="fa fa-pencil mr-2"></i>发表介绍
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 统计数据 -->
+    <section class="py-12 bg-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div class="bg-light rounded-xl p-6 text-center card-hover">
+            <div class="text-primary text-3xl mb-2">
+              <i class="fa fa-university"></i>
+            </div>
+            <h3 class="text-3xl font-bold mb-1">128</h3>
+            <p class="text-dark/70">大学介绍</p>
+          </div>
+          <div class="bg-light rounded-xl p-6 text-center card-hover">
+            <div class="text-primary text-3xl mb-2">
+              <i class="fa fa-users"></i>
+            </div>
+            <h3 class="text-3xl font-bold mb-1">3.5k</h3>
+            <p class="text-dark/70">用户参与</p>
+          </div>
+          <div class="bg-light rounded-xl p-6 text-center card-hover">
+            <div class="text-primary text-3xl mb-2">
+              <i class="fa fa-comment"></i>
+            </div>
+            <h3 class="text-3xl font-bold mb-1">2.8k</h3>
+            <p class="text-dark/70">评论互动</p>
+          </div>
+          <div class="bg-light rounded-xl p-6 text-center card-hover">
+            <div class="text-primary text-3xl mb-2">
+              <i class="fa fa-heart"></i>
+            </div>
+            <h3 class="text-3xl font-bold mb-1">15.2k</h3>
+            <p class="text-dark/70">点赞数</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 帖子列表 -->
+    <section id="posts" class="py-16 bg-light">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark mb-4">大学介绍</h2>
+          <p class="text-dark/70 max-w-2xl mx-auto">
+            浏览同学们分享的大学介绍，了解不同学校的特色和魅力
+          </p>
+        </div>
+        
+        <!-- 筛选器 -->
+        <div class="mb-8 flex flex-wrap justify-between items-center gap-4">
+          <div class="flex flex-wrap gap-2">
+            <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium">全部</button>
+            <button class="px-4 py-2 bg-white text-dark/70 hover:bg-primary/10 rounded-lg text-sm font-medium transition-colors">综合大学</button>
+            <button class="px-4 py-2 bg-white text-dark/70 hover:bg-primary/10 rounded-lg text-sm font-medium transition-colors">理工院校</button>
+            <button class="px-4 py-2 bg-white text-dark/70 hover:bg-primary/10 rounded-lg text-sm font-medium transition-colors">师范院校</button>
+            <button class="px-4 py-2 bg-white text-dark/70 hover:bg-primary/10 rounded-lg text-sm font-medium transition-colors">财经院校</button>
+          </div>
+          <div class="relative">
+            <input type="text" placeholder="搜索大学..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-dark/50"></i>
+          </div>
+        </div>
+        
+        <!-- 帖子网格 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <!-- 帖子卡片 1 -->
+          <article class="bg-white rounded-xl overflow-hidden shadow-sm card-hover">
+            <div class="relative h-48">
+              <img src="https://picsum.photos/seed/university1/600/400" alt="北京大学风景" class="w-full h-full object-cover">
+              <div class="absolute top-3 right-3 bg-primary/90 text-white text-xs font-medium px-2 py-1 rounded">
+                综合大学
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="text-xl font-bold">北京大学</h3>
+                <div class="flex items-center text-yellow-500">
+                  <i class="fa fa-star"></i>
+                  <span class="ml-1 text-sm font-medium">4.9</span>
+                </div>
+              </div>
+              <p class="text-dark/70 text-sm mb-4 line-clamp-3">
+                北京大学创办于1898年，初名京师大学堂，是中国近代第一所国立综合性大学，也是当时中国的最高教育行政机关。
+              </p>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <img src="https://picsum.photos/seed/user1/40/40" alt="用户头像" class="w-8 h-8 rounded-full object-cover">
+                  <span class="ml-2 text-sm font-medium">李明</span>
+                </div>
+                <div class="flex items-center text-dark/50 text-sm">
+                  <span class="mr-4"><i class="fa fa-eye mr-1"></i> 1.2k</span>
+                  <span><i class="fa fa-heart mr-1"></i> 345</span>
+                </div>
+              </div>
+            </div>
+          </article>
+          
+          <!-- 帖子卡片 2 -->
+          <article class="bg-white rounded-xl overflow-hidden shadow-sm card-hover">
+            <div class="relative h-48">
+              <img src="https://picsum.photos/seed/university2/600/400" alt="清华大学风景" class="w-full h-full object-cover">
+              <div class="absolute top-3 right-3 bg-primary/90 text-white text-xs font-medium px-2 py-1 rounded">
+                理工院校
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="text-xl font-bold">清华大学</h3>
+                <div class="flex items-center text-yellow-500">
+                  <i class="fa fa-star"></i>
+                  <span class="ml-1 text-sm font-medium">4.8</span>
+                </div>
+              </div>
+              <p class="text-dark/70 text-sm mb-4 line-clamp-3">
+                清华大学始建于1911年，初名清华学堂，是清政府设立的留美预备学校，其建校的资金源于1908年美国退还的部分庚子赔款。
+              </p>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <img src="https://picsum.photos/seed/user2/40/40" alt="用户头像" class="w-8 h-8 rounded-full object-cover">
+                  <span class="ml-2 text-sm font-medium">张伟</span>
+                </div>
+                <div class="flex items-center text-dark/50 text-sm">
+                  <span class="mr-4"><i class="fa fa-eye mr-1"></i> 986</span>
+                  <span><i class="fa fa-heart mr-1"></i> 278</span>
+                </div>
+              </div>
+            </div>
+          </article>
+          
+          <!-- 帖子卡片 3 -->
+          <article class="bg-white rounded-xl overflow-hidden shadow-sm card-hover">
+            <div class="relative h-48">
+              <img src="https://picsum.photos/seed/university3/600/400" alt="复旦大学风景" class="w-full h-full object-cover">
+              <div class="absolute top-3 right-3 bg-primary/90 text-white text-xs font-medium px-2 py-1 rounded">
+                综合大学
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="text-xl font-bold">复旦大学</h3>
+                <div class="flex items-center text-yellow-500">
+                  <i class="fa fa-star"></i>
+                  <span class="ml-1 text-sm font-medium">4.7</span>
+                </div>
+              </div>
+              <p class="text-dark/70 text-sm mb-4 line-clamp-3">
+                复旦大学创建于1905年，原名复旦公学，是中国人自主创办的第一所高等院校，创始人为中国近代知名教育家马相伯。
+              </p>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <img src="https://picsum.photos/seed/user3/40/40" alt="用户头像" class="w-8 h-8 rounded-full object-cover">
+                  <span class="ml-2 text-sm font-medium">王芳</span>
+                </div>
+                <div class="flex items-center text-dark/50 text-sm">
+                  <span class="mr-4"><i class="fa fa-eye mr-1"></i> 854</span>
+                  <span><i class="fa fa-heart mr-1"></i> 231</span>
+                </div>
+              </div>
+            </div>
+          </article>
+          
+          <!-- 帖子卡片 4 -->
+          <article class="bg-white rounded-xl overflow-hidden shadow-sm card-hover">
+            <div class="relative h-48">
+              <img src="https://picsum.photos/seed/university4/600/400" alt="北京师范大学风景" class="w-full h-full object-cover">
+              <div class="absolute top-3 right-3 bg-primary/90 text-white text-xs font-medium px-2 py-1 rounded">
+                师范院校
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="text-xl font-bold">北京师范大学</h3>
+                <div class="flex items-center text-yellow-500">
+                  <i class="fa fa-star"></i>
+                  <span class="ml-1 text-sm font-medium">4.6</span>
+                </div>
+              </div>
+              <p class="text-dark/70 text-sm mb-4 line-clamp-3">
+                北京师范大学的前身是1902年创立的京师大学堂师范馆，1908年改称京师优级师范学堂，独立设校，1912年改名为北京高等师范学校。
+              </p>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <img src="https://picsum.photos/seed/user4/40/40" alt="用户头像" class="w-8 h-8 rounded-full object-cover">
+                  <span class="ml-2 text-sm font-medium">刘洋</span>
+                </div>
+                <div class="flex items-center text-dark/50 text-sm">
+                  <span class="mr-4"><i class="fa fa-eye mr-1"></i> 762</span>
+                  <span><i class="fa fa-heart mr-1"></i> 198</span>
+                </div>
+              </div>
+            </div>
+          </article>
+          
+          <!-- 帖子卡片 5 -->
+          <article class="bg-white rounded-xl overflow-hidden shadow-sm card-hover">
+            <div class="relative h-48">
+              <img src="https://picsum.photos/seed/university5/600/400" alt="上海财经大学风景" class="w-full h-full object-cover">
+              <div class="absolute top-3 right-3 bg-primary/90 text-white text-xs font-medium px-2 py-1 rounded">
+                财经院校
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="text-xl font-bold">上海财经大学</h3>
+                <div class="flex items-center text-yellow-500">
+                  <i class="fa fa-star"></i>
+                  <span class="ml-1 text-sm font-medium">4.5</span>
+                </div>
+              </div>
+              <p class="text-dark/70 text-sm mb-4 line-clamp-3">
+                上海财经大学源于1917年南京高等师范学校创办的商科，是中国人自主创办的第一所研究商学的高等学府。
+              </p>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <img src="https://picsum.photos/seed/user5/40/40" alt="用户头像" class="w-8 h-8 rounded-full object-cover">
+                  <span class="ml-2 text-sm font-medium">陈静</span>
+                </div>
+                <div class="flex items-center text-dark/50 text-sm">
+                  <span class="mr-4"><i class="fa fa-eye mr-1"></i> 689</span>
+                  <span><i class="fa fa-heart mr-1"></i> 176</span>
+                </div>
+              </div>
+            </div>
+          </article>
+          
+          <!-- 帖子卡片 6 -->
+          <article class="bg-white rounded-xl overflow-hidden shadow-sm card-hover">
+            <div class="relative h-48">
+              <img src="https://picsum.photos/seed/university6/600/400" alt="浙江大学风景" class="w-full h-full object-cover">
+              <div class="absolute top-3 right-3 bg-primary/90 text-white text-xs font-medium px-2 py-1 rounded">
+                综合大学
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="text-xl font-bold">浙江大学</h3>
+                <div class="flex items-center text-yellow-500">
+                  <i class="fa fa-star"></i>
+                  <span class="ml-1 text-sm font-medium">4.8</span>
+                </div>
+              </div>
+              <p class="text-dark/70 text-sm mb-4 line-clamp-3">
+                浙江大学前身是创立于1897年的求是书院，是中国人自己最早创办的新式高等学校之一，1928年定名为国立浙江大学。
+              </p>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <img src="https://picsum.photos/seed/user6/40/40" alt="用户头像" class="w-8 h-8 rounded-full object-cover">
+                  <span class="ml-2 text-sm font-medium">赵强</span>
+                </div>
+                <div class="flex items-center text-dark/50 text-sm">
+                  <span class="mr-4"><i class="fa fa-eye mr-1"></i> 912</span>
+                  <span><i class="fa fa-heart mr-1"></i> 256</span>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+        
+        <!-- 加载更多按钮 -->
+        <div class="text-center mt-12">
+          <button class="btn-secondary">
+            <i class="fa fa-refresh mr-2"></i>加载更多
+          </button>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 发表表单 -->
+    <section id="post-form" class="py-16 bg-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+          <div class="text-center mb-12">
+            <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark mb-4">分享你的大学</h2>
+            <p class="text-dark/70">
+              填写以下表单，介绍你所在的大学，帮助更多人了解这所学校的特色和魅力
+            </p>
+          </div>
+          
+          <form id="university-form" class="bg-light rounded-xl p-8 shadow-sm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label for="name" class="block text-sm font-medium text-dark mb-2">
+                  你的名字
+                </label>
+                <input type="text" id="name" name="name" placeholder="请输入你的名字" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+              </div>
+              <div>
+                <label for="email" class="block text-sm font-medium text-dark mb-2">
+                  电子邮箱
+                </label>
+                <input type="email" id="email" name="email" placeholder="请输入你的邮箱" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+              </div>
+            </div>
+            
+            <div class="mb-6">
+              <label for="university" class="block text-sm font-medium text-dark mb-2">
+                大学名称
+              </label>
+              <input type="text" id="university" name="university" placeholder="请输入大学名称" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+            </div>
+            
+            <div class="mb-6">
+              <label for="type" class="block text-sm font-medium text-dark mb-2">
+                大学类型
+              </label>
+              <select id="type" name="type" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                <option value="" disabled="" selected="">请选择大学类型</option>
+                <option value="综合大学">综合大学</option>
+                <option value="理工院校">理工院校</option>
+                <option value="师范院校">师范院校</option>
+                <option value="财经院校">财经院校</option>
+                <option value="农林院校">农林院校</option>
+                <option value="医药院校">医药院校</option>
+                <option value="民族院校">民族院校</option>
+                <option value="语言院校">语言院校</option>
+                <option value="艺术院校">艺术院校</option>
+                <option value="体育院校">体育院校</option>
+                <option value="军事院校">军事院校</option>
+              </select>
+            </div>
+            
+            <div class="mb-6">
+              <label for="description" class="block text-sm font-medium text-dark mb-2">
+                大学介绍
+              </label>
+              <textarea id="description" name="description" rows="6" placeholder="请简要介绍这所大学的历史、特色和优势..." class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"></textarea>
+            </div>
+            
+            <div class="mb-6">
+              <label for="image" class="block text-sm font-medium text-dark mb-2">
+                上传图片
+              </label>
+              <div class="flex items-center justify-center w-full">
+                <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-white hover:bg-gray-50">
+                  <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                    <i class="fa fa-cloud-upload text-3xl text-gray-400 mb-2"></i>
+                    <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">点击上传</span> 或拖放文件</p>
+                    <p class="text-xs text-gray-500">支持 JPG, PNG, GIF 格式，最大 5MB</p>
+                  </div>
+                  <input id="dropzone-file" type="file" class="hidden" accept="image/*">
+                </label>
+              </div>
+            </div>
+            
+            <div class="flex items-start mb-6">
+              <div class="flex items-center h-5">
+                <input id="terms" name="terms" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/50">
+              </div>
+              <div class="ml-3 text-sm">
+                <label for="terms" class="text-gray-600">
+                  我同意我的帖子将被公开分享，并且遵守社区规则
+                </label>
+              </div>
+            </div>
+            
+            <div class="flex justify-center">
+              <button type="submit" class="btn-primary">
+                <i class="fa fa-paper-plane mr-2"></i>提交介绍
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 社区指南 -->
+    <section class="py-16 bg-light">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+          <div class="text-center mb-12">
+            <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark mb-4">社区指南</h2>
+            <p class="text-dark/70">
+              为了维护良好的社区氛围，请在发布内容时遵守以下规则
+            </p>
+          </div>
+          
+          <div class="bg-white rounded-xl p-8 shadow-sm">
+            <div class="space-y-6">
+              <div class="flex">
+                <div class="flex-shrink-0 bg-primary/10 p-3 rounded-lg text-primary">
+                  <i class="fa fa-check-circle text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-lg font-semibold text-dark mb-2">真实客观</h3>
+                  <p class="text-dark/70">
+                    请确保你提供的信息真实可靠，避免夸大或虚假宣传。客观介绍大学的优势和不足，帮助读者全面了解。
+                  </p>
+                </div>
+              </div>
+              
+              <div class="flex">
+                <div class="flex-shrink-0 bg-primary/10 p-3 rounded-lg text-primary">
+                  <i class="fa fa-check-circle text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-lg font-semibold text-dark mb-2">尊重他人</h3>
+                  <p class="text-dark/70">
+                    请尊重不同学校和个人的观点，避免发表歧视性或攻击性言论。保持礼貌和专业，共同维护良好的社区氛围。
+                  </p>
+                </div>
+              </div>
+              
+              <div class="flex">
+                <div class="flex-shrink-0 bg-primary/10 p-3 rounded-lg text-primary">
+                  <i class="fa fa-check-circle text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-lg font-semibold text-dark mb-2">内容原创</h3>
+                  <p class="text-dark/70">
+                    请确保你的内容是原创的，如需引用他人信息，请注明来源。避免抄袭或盗用他人作品。
+                  </p>
+                </div>
+              </div>
+              
+              <div class="flex">
+                <div class="flex-shrink-0 bg-primary/10 p-3 rounded-lg text-primary">
+                  <i class="fa fa-check-circle text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-lg font-semibold text-dark mb-2">积极分享</h3>
+                  <p class="text-dark/70">
+                    除了基本信息外，分享你的个人经历、学习感受和校园生活，让读者更深入了解这所大学的真实面貌。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white py-12">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <div class="flex items-center space-x-2 mb-4">
+            <span class="text-primary text-2xl"><i class="fa fa-graduation-cap"></i></span>
+            <span class="font-bold text-xl">大学介绍</span>
+          </div>
+          <p class="text-gray-400 mb-4">
+            分享大学故事，连接校园文化，让更多人了解不同大学的特色和魅力。
+          </p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-400 hover:text-primary transition-colors">
+              <i class="fa fa-weibo text-xl"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-primary transition-colors">
+              <i class="fa fa-wechat text-xl"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-primary transition-colors">
+              <i class="fa fa-qq text-xl"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-primary transition-colors">
+              <i class="fa fa-github text-xl"></i>
+            </a>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold text-lg mb-4">快速链接</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">首页</a></li>
+            <li><a href="#posts" class="text-gray-400 hover:text-white transition-colors">大学介绍</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">热门帖子</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">关于我们</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold text-lg mb-4">大学类型</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">综合大学</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">理工院校</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">师范院校</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">财经院校</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">更多类型</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold text-lg mb-4">联系我们</h3>
+          <ul class="space-y-2">
+            <li class="flex items-start">
+              <i class="fa fa-envelope text-primary mt-1 mr-2"></i>
+              <span class="text-gray-400">contact@universityintro.com</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-phone text-primary mt-1 mr-2"></i>
+              <span class="text-gray-400">+86 123 4567 8910</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-map-marker text-primary mt-1 mr-2"></i>
+              <span class="text-gray-400">北京市海淀区中关村南大街5号</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500 text-sm">
+        <p>© 2025 大学介绍 | 版权所有</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- 回到顶部按钮 -->
+  <button id="back-to-top" class="fixed bottom-6 right-6 bg-primary text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg opacity-0 invisible transition-all duration-300 hover:bg-primary/90">
+    <i class="fa fa-arrow-up"></i>
+  </button>
+  
+  <!-- JavaScript -->
+  <script>
+    // 移动端菜单切换
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      if (mobileMenu.classList.contains('hidden')) {
+        mobileMenuButton.innerHTML = '<i class="fa fa-bars text-xl"></i>';
+      } else {
+        mobileMenuButton.innerHTML = '<i class="fa fa-times text-xl"></i>';
+      }
+    });
+    
+    // 导航栏滚动效果
+    const header = document.querySelector('header');
+    
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 10) {
+        header.classList.add('shadow-md');
+        header.classList.remove('shadow-sm');
+      } else {
+        header.classList.remove('shadow-md');
+        header.classList.add('shadow-sm');
+      }
+    });
+    
+    // 回到顶部按钮
+    const backToTopButton = document.getElementById('back-to-top');
+    
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) {
+        backToTopButton.classList.remove('opacity-0', 'invisible');
+        backToTopButton.classList.add('opacity-100', 'visible');
+      } else {
+        backToTopButton.classList.add('opacity-0', 'invisible');
+        backToTopButton.classList.remove('opacity-100', 'visible');
+      }
+    });
+    
+    backToTopButton.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+    
+    // 表单提交处理
+    const form = document.getElementById('university-form');
+    
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      // 简单验证
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const university = document.getElementById('university').value;
+      const type = document.getElementById('type').value;
+      const description = document.getElementById('description').value;
+      const terms = document.getElementById('terms').checked;
+      
+      if (!name || !email || !university || !type || !description || !terms) {
+        alert('请填写所有必填字段并同意社区规则');
+        return;
+      }
+      
+      // 模拟表单提交
+      alert('提交成功！我们会尽快审核并发布你的大学介绍。');
+      form.reset();
+    });
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        
+        const targetId = this.getAttribute('href');
+        if (targetId === '#') return;
+        
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+          // 关闭移动菜单（如果打开）
+          if (!mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.add('hidden');
+            mobileMenuButton.innerHTML = '<i class="fa fa-bars text-xl"></i>';
+          }
+          
+          targetElement.scrollIntoView({
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+  </script>
+
+
+</body></html>
