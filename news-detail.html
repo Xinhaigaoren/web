@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>新闻详情 - 海林市高级中学校友会</title>
+  <meta name="description" content="海林市高级中学校友会新闻详情。" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="pages.css" />
+  <script src="config.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+
+  <header class="site-header" id="top">
+    <div class="header-top">
+      <div class="container top-inner">
+        <span>海林市高级中学校友会</span>
+        <nav aria-label="快捷链接" data-account></nav>
+      </div>
+    </div>
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html" aria-label="海林市高级中学校友会首页">
+        <img class="brand-logo" src="assets/haigao-logo.jpg" alt="海林市高级中学校徽" />
+        <span class="brand-text">
+          <strong>海林市高级中学校友会</strong>
+          <small>Hailin Senior High School Alumni Association</small>
+        </span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span></span><span></span><span></span>
+        <em>菜单</em>
+      </button>
+      <nav class="primary-nav" id="primary-nav" aria-label="主导航">
+        <a href="index.html">首页</a>
+        <a href="about.html">校友会介绍</a>
+        <a href="news.html" class="current">新闻公告</a>
+        <a href="events.html">活动中心</a>
+        <a href="index.html#figures">校友风采</a>
+        <a href="index.html#services">校友服务</a>
+        <a href="account.html">加入我们</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-section">
+      <div class="container">
+        <article class="article" id="articleBox">
+          <div class="empty-state" id="loadingState">正在加载新闻……</div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contact">
+    <div class="container footer-grid">
+      <div>
+        <h2>海林市高级中学校友会</h2>
+        <p>以校友情谊为纽带，以服务母校为使命。</p>
+      </div>
+      <div>
+        <h3>联系方式</h3>
+        <p>邮箱：alumni@example.com</p>
+        <p>地址：黑龙江省牡丹江市海林市</p>
+      </div>
+      <div>
+        <h3>常用入口</h3>
+        <a href="account.html">校友登录/注册</a>
+        <a href="directory.html">校友名录</a>
+        <a href="news.html">新闻公告</a>
+        <a href="events.html">活动报名</a>
+        <a href="admin/">管理员入口</a>
+      </div>
+    </div>
+    <div class="container copyright">
+      <span>© 2026 海林市高级中学校友会. All Rights Reserved.</span>
+      <a href="#top">返回顶部 ↑</a>
+    </div>
+  </footer>
+
+  <script src="site.js"></script>
+  <script>
+    (function () {
+      const XH = window.XH;
+      const box = document.getElementById('articleBox');
+      const slug = new URLSearchParams(location.search).get('slug');
+
+      function renderBody(content) {
+        const text = String(content || '').trim();
+        if (!text) return '<p>（暂无正文）</p>';
+        if (text.includes('<')) return text;
+        return text.split(/\n{2,}/).map((p) => `<p>${XH.escapeHtml(p).replace(/\n/g, '<br />')}</p>`).join('');
+      }
+
+      async function load() {
+        if (!slug) {
+          box.innerHTML = '<div class="empty-state">缺少新闻参数。</div>';
+          return;
+        }
+        try {
+          const data = await XH.api(`/api/news/${encodeURIComponent(slug)}`);
+          const item = data.article || {};
+          const cover = item.cover_url
+            ? `<div class="article-cover" style="background-image:url('${XH.escapeHtml(item.cover_url)}')"></div>` : '';
+          box.innerHTML = `
+            <a class="article-back" href="news.html">← 返回新闻列表</a>
+            <div class="article-head">
+              <span class="tag">${XH.escapeHtml(item.category || '综合')}</span>
+              <h1>${XH.escapeHtml(item.title)}</h1>
+              <div class="article-meta">
+                <span>${XH.escapeHtml(item.author || '校友会')}</span>
+                <span>${XH.formatDate(item.published_at, true)}</span>
+                <span>${item.view_count || 0} 次阅读</span>
+              </div>
+            </div>
+            ${cover}
+            <div class="article-body">${renderBody(item.content)}</div>
+          `;
+        } catch (error) {
+          box.innerHTML = `<div class="empty-state">${XH.escapeHtml(error.message)}</div>`;
+        }
+      }
+
+      load();
+    })();
+  </script>
+</body>
+</html>

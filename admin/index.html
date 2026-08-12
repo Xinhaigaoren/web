@@ -46,6 +46,7 @@
         <p class="status" id="inviteAcceptStatus"></p>
       </form>
       <p><button id="backToLoginBtn" class="ghost" type="button">返回登录</button></p>
+      </section>
 
 
     <section class="dashboard" id="dashboard" hidden>
@@ -67,6 +68,10 @@
         <button class="tab" data-tab="contentRequests" type="button">内容修改审批</button>
         <button class="tab" data-tab="admins" type="button">管理员管理</button>
         <button class="tab" data-tab="account" type="button">我的账号</button>
+        <button class="tab" data-tab="news" type="button">新闻管理</button>
+        <button class="tab" data-tab="events" type="button">活动管理</button>
+        <button class="tab" data-tab="stats" type="button">数据统计</button>
+        <button class="tab" data-tab="alumni" type="button">校友名录</button>
       </nav>
 
       <section class="panel active" id="applicationsPanel">
@@ -231,6 +236,151 @@
             <tbody id="adminRows"><tr><td colspan="5">暂无管理员</td></tr></tbody>
           </table>
         </div>
+      </section>
+
+      <section class="panel" id="newsPanel">
+        <div class="section-title">
+          <div>
+            <h2>新闻管理</h2>
+            <p>发布与管理官网「新闻公告」，保存后官网 news.html 立即可见。</p>
+          </div>
+          <button id="newNewsBtn" type="button" class="ghost">新建新闻</button>
+        </div>
+        <div class="editor-card compact-card" id="newsEditor" hidden>
+          <h3 id="newsEditorTitle">新建新闻</h3>
+          <form id="newsForm" class="editor-form">
+            <input type="hidden" name="id" />
+            <div class="three-fields">
+              <label>标题<input name="title" required /></label>
+              <label>分类<input name="category" placeholder="如：母校动态 / 校友活动" /></label>
+              <label>作者<input name="author" placeholder="选填" /></label>
+            </div>
+            <label>摘要<textarea name="summary" rows="2"></textarea></label>
+            <label>封面图地址（选填，支持 /api/uploads/xxx）<input name="cover_url" placeholder="https:// 或 /api/uploads/xxx" /></label>
+            <label>正文（支持简单 HTML）<textarea name="content" rows="10" placeholder="第一段用 <p> 包裹，可粘贴富文本"></textarea></label>
+            <label class="inline-check"><input type="checkbox" name="is_published" checked /> 立即发布</label>
+            <div class="form-actions">
+              <button type="submit">保存新闻</button>
+              <button type="button" id="newsCancelBtn" class="ghost">取消</button>
+            </div>
+            <p class="status" id="newsStatus"></p>
+          </form>
+        </div>
+        <div class="table-wrap spaced-table">
+          <table>
+            <thead>
+              <tr><th>标题</th><th>分类</th><th>发布时间</th><th>阅读</th><th>状态</th><th>操作</th></tr>
+            </thead>
+            <tbody id="newsRows"><tr><td colspan="6">暂无新闻</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="eventsPanel">
+        <div class="section-title">
+          <div>
+            <h2>活动管理</h2>
+            <p>发布与管理官网「活动中心」，并可查看活动报名情况。</p>
+          </div>
+          <button id="newEventBtn" type="button" class="ghost">新建活动</button>
+        </div>
+        <div class="editor-card compact-card" id="eventEditor" hidden>
+          <h3 id="eventEditorTitle">新建活动</h3>
+          <form id="eventForm" class="editor-form">
+            <input type="hidden" name="id" />
+            <div class="three-fields">
+              <label>标题<input name="title" required /></label>
+              <label>分类<input name="category" placeholder="校友活动" /></label>
+              <label>地点<input name="location" placeholder="如：海林市高级中学" /></label>
+            </div>
+            <div class="three-fields">
+              <label>开始时间<input name="start_time" type="datetime-local" /></label>
+              <label>结束时间<input name="end_time" type="datetime-local" /></label>
+              <label>报名截止<input name="signup_deadline" type="datetime-local" /></label>
+            </div>
+            <div class="three-fields">
+              <label>人数上限（选填）<input name="capacity" type="number" min="1" /></label>
+              <label>封面图地址（选填）<input name="cover_url" /></label>
+            </div>
+            <label>简介<textarea name="summary" rows="2"></textarea></label>
+            <label>详情（支持简单 HTML）<textarea name="content" rows="8"></textarea></label>
+            <label class="inline-check"><input type="checkbox" name="is_published" checked /> 立即发布</label>
+            <div class="form-actions">
+              <button type="submit">保存活动</button>
+              <button type="button" id="eventCancelBtn" class="ghost">取消</button>
+            </div>
+            <p class="status" id="eventStatus"></p>
+          </form>
+        </div>
+        <div class="table-wrap spaced-table">
+          <table>
+            <thead>
+              <tr><th>活动</th><th>时间</th><th>地点</th><th>报名</th><th>状态</th><th>操作</th></tr>
+            </thead>
+            <tbody id="eventRows"><tr><td colspan="6">暂无活动</td></tr></tbody>
+          </table>
+        </div>
+        <div class="editor-card compact-card" id="registrationsCard" hidden>
+          <div class="section-title">
+            <div>
+              <h3 id="registrationsTitle">活动报名</h3>
+              <p>查看与管理报名人员。</p>
+            </div>
+            <button id="closeRegistrationsBtn" type="button" class="ghost">关闭</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>姓名</th><th>电话</th><th>邮箱</th><th>备注</th><th>报名时间</th><th>状态</th><th>操作</th></tr>
+              </thead>
+              <tbody id="registrationRows"><tr><td colspan="7">暂无报名</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="statsPanel">
+        <div class="section-title">
+          <div>
+            <h2>数据统计</h2>
+            <p>平台核心数据概览。</p>
+          </div>
+          <button id="loadStatsBtn" type="button" class="ghost">刷新统计</button>
+        </div>
+        <div class="summary-grid" id="statsGrid">
+          <article><span id="statUsers">0</span><small>注册用户</small></article>
+          <article><span id="statAlumni">0</span><small>认证校友</small></article>
+          <article><span id="statNews">0</span><small>新闻</small></article>
+          <article><span id="statEvents">0</span><small>活动</small></article>
+          <article><span id="statRegistrations">0</span><small>活动报名</small></article>
+          <article><span id="statPending">0</span><small>待审核认证</small></article>
+          <article><span id="statApproved">0</span><small>认证通过</small></article>
+          <article><span id="statRejected">0</span><small>认证拒绝</small></article>
+        </div>
+      </section>
+
+      <section class="panel" id="alumniPanel">
+        <div class="section-title">
+          <div>
+            <h2>校友名录管理</h2>
+            <p>查看全部校友档案，支持搜索与导出（CSV，可用 Excel 打开）。</p>
+          </div>
+          <div class="form-actions">
+            <button id="exportAlumniBtn" type="button">导出通讯录 (CSV)</button>
+          </div>
+        </div>
+        <div class="toolbar-inline">
+          <input id="alumniSearch" placeholder="搜索姓名 / 单位 / 手机号" />
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>姓名</th><th>手机号</th><th>届别/班级</th><th>现居</th><th>单位/职务</th><th>公开电话</th></tr>
+            </thead>
+            <tbody id="alumniRows"><tr><td colspan="6">暂无数据</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination-row" id="alumniPagination"></div>
       </section>
 
       <section class="panel" id="accountPanel">

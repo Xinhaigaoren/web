@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>校友中心 - 海林市高级中学校友会</title>
+  <meta name="description" content="海林市高级中学校友登录、注册与校友认证。" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="pages.css" />
+  <script src="config.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+
+  <header class="site-header" id="top">
+    <div class="header-top">
+      <div class="container top-inner">
+        <span>海林市高级中学校友会</span>
+        <nav aria-label="快捷链接" data-account></nav>
+      </div>
+    </div>
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html" aria-label="海林市高级中学校友会首页">
+        <img class="brand-logo" src="assets/haigao-logo.jpg" alt="海林市高级中学校徽" />
+        <span class="brand-text">
+          <strong>海林市高级中学校友会</strong>
+          <small>Hailin Senior High School Alumni Association</small>
+        </span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span></span><span></span><span></span>
+        <em>菜单</em>
+      </button>
+      <nav class="primary-nav" id="primary-nav" aria-label="主导航">
+        <a href="index.html">首页</a>
+        <a href="about.html">校友会介绍</a>
+        <a href="news.html">新闻公告</a>
+        <a href="events.html">活动中心</a>
+        <a href="index.html#figures">校友风采</a>
+        <a href="index.html#services">校友服务</a>
+        <a href="account.html" class="current">加入我们</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <p class="eyebrow">Alumni Center</p>
+        <h1>校友中心</h1>
+        <p>登录、注册、校友认证与个人资料管理。</p>
+        <div class="crumb"><a href="index.html">首页</a> / 校友中心</div>
+      </div>
+    </section>
+
+    <section class="page-section soft">
+      <div class="container">
+
+        <!-- 未登录：登录 / 注册 -->
+        <div class="auth-wrap" id="authView">
+          <div class="auth-card">
+            <div class="auth-tabs">
+              <button type="button" data-auth-tab="login" class="active">登录</button>
+              <button type="button" data-auth-tab="register">注册</button>
+            </div>
+
+            <form id="loginForm" class="auth-form">
+              <div class="field"><label for="loginName">邮箱 / 手机号</label><input id="loginName" name="username" autocomplete="username" required placeholder="请输入邮箱或手机号" /></div>
+              <div class="field"><label for="loginPassword">密码</label><input id="loginPassword" name="password" type="password" autocomplete="current-password" required placeholder="请输入密码" /></div>
+              <div class="form-actions">
+                <button class="btn primary" type="submit">登录</button>
+              </div>
+              <p class="form-status" id="loginStatus" role="status" aria-live="polite"></p>
+            </form>
+
+            <form id="registerForm" class="auth-form" hidden>
+              <div class="field"><label for="regName">姓名</label><input id="regName" name="name" required placeholder="真实姓名" /></div>
+              <div class="field"><label for="regEmail">邮箱</label><input id="regEmail" name="email" type="email" autocomplete="email" required placeholder="name@example.com" /></div>
+              <div class="field"><label for="regPhone">手机号（选填）</label><input id="regPhone" name="phone" type="tel" placeholder="用于认证联系" /></div>
+              <div class="field"><label for="regPassword">密码（至少 8 位）</label><input id="regPassword" name="password" type="password" autocomplete="new-password" minlength="8" required /></div>
+              <div class="form-actions">
+                <button class="btn primary" type="submit">创建账号</button>
+                <span class="form-tip">注册后请继续提交校友认证资料。</span>
+              </div>
+              <p class="form-status" id="registerStatus" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
+
+        <!-- 已登录：个人中心 -->
+        <div id="centerView" hidden>
+          <div class="account-layout">
+            <nav class="account-menu" aria-label="个人中心菜单">
+              <a href="#certPanel" data-menu="cert" class="active">我的认证</a>
+              <a href="#profilePanel" data-menu="profile">我的资料</a>
+              <a href="directory.html">校友名录</a>
+              <a href="events.html">活动报名</a>
+              <a href="#" id="logoutBtn">退出登录</a>
+            </nav>
+
+            <div>
+              <!-- 我的认证 -->
+              <section class="account-panel" id="certPanel">
+                <h2>校友认证</h2>
+                <div id="certOverview"></div>
+                <form id="verifyForm" class="auth-form" hidden>
+                  <div class="form-grid">
+                    <div class="field"><label>姓名</label><input name="name" required /></div>
+                    <div class="field"><label>性别</label>
+                      <select name="gender"><option value="">请选择</option><option>男</option><option>女</option></select>
+                    </div>
+                    <div class="field"><label>手机号</label><input name="phone" type="tel" required /></div>
+                    <div class="field"><label>毕业届别</label><input name="graduation_year" placeholder="如 2006" /></div>
+                    <div class="field"><label>班级</label><input name="class_name" placeholder="如 三年一班" /></div>
+                    <div class="field"><label>班主任</label><input name="homeroom_teacher" placeholder="选填" /></div>
+                    <div class="field"><label>大学（选填）</label><input name="university_graduated" placeholder="最高学历院校" /></div>
+                  </div>
+                  <h3 style="color:var(--deep);margin:10px 0 12px">证明材料（隐私保护：仅管理员可见）</h3>
+                  <div class="field">
+                    <label>学信网截图 *</label>
+                    <div class="upload-box" data-upload="chsi" tabindex="0">点击选择「学信网」学历/学籍截图（JPG/PNG，≤5MB）</div>
+                    <div class="upload-preview" data-preview="chsi"></div>
+                    <input type="hidden" name="chsi_proof_url" />
+                  </div>
+                  <div class="field">
+                    <label>学生证 / 毕业证 / 录取通知书（选填）</label>
+                    <div class="upload-box" data-upload="student" tabindex="0">点击上传补充证明（选填）</div>
+                    <div class="upload-preview" data-preview="student"></div>
+                    <input type="hidden" name="student_card_url" />
+                  </div>
+                  <label class="consent-line"><input type="checkbox" name="consent_personal_info" checked /> 我同意校友会为认证目的收集并审核上述个人信息，仅用于校友身份核验。</label>
+                  <label class="consent-line"><input type="checkbox" name="consent_material_review" checked /> 我同意管理员查看证明材料进行审核。</label>
+                  <div class="form-actions">
+                    <button class="btn primary" type="submit">提交认证</button>
+                    <span class="form-tip">提交后由管理员审核，通过后开放校友名录。</span>
+                  </div>
+                  <p class="form-status" id="verifyStatus" role="status" aria-live="polite"></p>
+                </form>
+              </section>
+
+              <!-- 我的资料 -->
+              <section class="account-panel" id="profilePanel" hidden>
+                <h2>我的资料</h2>
+                <form id="profileForm" class="auth-form">
+                  <div class="form-grid">
+                    <div class="field"><label>行业</label><input name="industry" placeholder="如：互联网" /></div>
+                    <div class="field"><label>单位</label><input name="company" placeholder="如：某科技有限公司" /></div>
+                    <div class="field"><label>职务</label><input name="position_title" placeholder="如：产品经理" /></div>
+                    <div class="field"><label>微信</label><input name="wechat" placeholder="选填" /></div>
+                    <div class="field"><label>现居省份</label><input name="current_province" /></div>
+                    <div class="field"><label>现居城市</label><input name="current_city" /></div>
+                    <div class="field" style="grid-column:1/-1"><label>个人简介</label><textarea name="bio" rows="3" placeholder="简短介绍自己，便于校友认识你"></textarea></div>
+                  </div>
+                  <label class="consent-line"><input type="checkbox" name="public_contact" /> 在校友名录中公开我的联系电话</label>
+                  <div class="form-actions">
+                    <button class="btn primary" type="submit">保存资料</button>
+                  </div>
+                  <p class="form-status" id="profileStatus" role="status" aria-live="polite"></p>
+                </form>
+              </section>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contact">
+    <div class="container footer-grid">
+      <div>
+        <h2>海林市高级中学校友会</h2>
+        <p>以校友情谊为纽带，以服务母校为使命。</p>
+      </div>
+      <div>
+        <h3>联系方式</h3>
+        <p>邮箱：alumni@example.com</p>
+        <p>地址：黑龙江省牡丹江市海林市</p>
+      </div>
+      <div>
+        <h3>常用入口</h3>
+        <a href="account.html">校友登录/注册</a>
+        <a href="directory.html">校友名录</a>
+        <a href="news.html">新闻公告</a>
+        <a href="events.html">活动报名</a>
+        <a href="admin/">管理员入口</a>
+      </div>
+    </div>
+    <div class="container copyright">
+      <span>© 2026 海林市高级中学校友会. All Rights Reserved.</span>
+      <a href="#top">返回顶部 ↑</a>
+    </div>
+  </footer>
+
+  <script src="site.js"></script>
+  <script>
+    (function () {
+      const XH = window.XH;
+      const authView = document.getElementById('authView');
+      const centerView = document.getElementById('centerView');
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      const verifyForm = document.getElementById('verifyForm');
+      const profileForm = document.getElementById('profileForm');
+      const loginStatus = document.getElementById('loginStatus');
+      const registerStatus = document.getElementById('registerStatus');
+      const verifyStatus = document.getElementById('verifyStatus');
+      const profileStatus = document.getElementById('profileStatus');
+      const certOverview = document.getElementById('certOverview');
+      const certPanel = document.getElementById('certPanel');
+      const profilePanel = document.getElementById('profilePanel');
+
+      // 认证资料上传
+      function bindUpload(boxSelector, hiddenName) {
+        const box = document.querySelector(boxSelector);
+        const preview = document.querySelector(`[data-preview="${box.dataset.upload}"]`);
+        const hidden = verifyForm.querySelector(`input[name="${hiddenName}"]`);
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/jpeg,image/png,image/webp';
+        box.addEventListener('click', () => fileInput.click());
+        box.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
+        box.addEventListener('dragover', (e) => { e.preventDefault(); box.classList.add('dragover'); });
+        box.addEventListener('dragleave', () => box.classList.remove('dragover'));
+        box.addEventListener('drop', (e) => { e.preventDefault(); box.classList.remove('dragover'); if (e.dataTransfer.files[0]) handle(e.dataTransfer.files[0]); });
+        fileInput.addEventListener('change', () => { if (fileInput.files[0]) handle(fileInput.files[0]); fileInput.value = ''; });
+
+        async function handle(file) {
+          if (!file.type.startsWith('image/')) { XH.toast('请选择图片文件', 'error'); return; }
+          if (file.size > 5 * 1024 * 1024) { XH.toast('图片不能超过 5MB', 'error'); return; }
+          box.textContent = '正在上传……';
+          try {
+            const base64 = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(String(reader.result));
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+            const data = await XH.api('/api/uploads', {
+              method: 'POST',
+              body: JSON.stringify({ data: base64, filename: file.name, mime_type: file.type, purpose: hiddenName })
+            });
+            const url = data.upload && data.upload.url;
+            hidden.value = url;
+            preview.innerHTML = `<figure><img src="${XH.assetUrl(url)}" alt="上传预览" /><figcaption>已上传</figcaption></figure>`;
+            box.textContent = '已上传，点击可重新选择';
+            XH.toast('上传成功');
+          } catch (error) {
+            box.textContent = '上传失败，点击重试';
+            XH.toast(error.message, 'error');
+          }
+        }
+      }
+
+      function switchAuthTab(tab) {
+        document.querySelectorAll('[data-auth-tab]').forEach((btn) => btn.classList.toggle('active', btn.dataset.authTab === tab));
+        loginForm.hidden = tab !== 'login';
+        registerForm.hidden = tab !== 'register';
+        loginStatus.textContent = '';
+        registerStatus.textContent = '';
+      }
+      document.querySelectorAll('[data-auth-tab]').forEach((btn) => btn.addEventListener('click', () => switchAuthTab(btn.dataset.authTab)));
+
+      loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        loginStatus.textContent = '正在登录……';
+        loginStatus.className = 'form-status';
+        try {
+          const data = await XH.api('/api/auth/login', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(loginForm).entries())) });
+          XH.store.setToken(data.token);
+          XH.store.setUser(data.user || {});
+          await loadCenter();
+        } catch (error) {
+          loginStatus.textContent = error.message;
+          loginStatus.className = 'form-status error';
+        }
+      });
+
+      registerForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        registerStatus.textContent = '正在注册……';
+        registerStatus.className = 'form-status';
+        const body = Object.fromEntries(new FormData(registerForm).entries());
+        try {
+          const data = await XH.api('/api/auth/register', { method: 'POST', body: JSON.stringify(body) });
+          registerStatus.textContent = data.message || '注册成功，请登录';
+          registerStatus.className = 'form-status success';
+          registerForm.reset();
+          switchAuthTab('login');
+        } catch (error) {
+          registerStatus.textContent = error.message;
+          registerStatus.className = 'form-status error';
+        }
+      });
+
+      function statusBadge(status) {
+        return { pending: '待审核', approved: '已通过', rejected: '已拒绝', need_more_info: '需补充材料' }[status] || status || '未知';
+      }
+
+      function renderCertOverview(data) {
+        const profile = data.profile;
+        const verifications = data.verifications || [];
+        const latest = verifications[0];
+        certOverview.innerHTML = '';
+        if (profile && profile.status === 'active') {
+          certOverview.innerHTML = `<div class="info-item" style="margin-bottom:18px"><small>认证状态</small><strong>✅ 已认证校友</strong> — 你已可访问<a href="directory.html">校友名录</a>。</div>`;
+          return;
+        }
+        if (latest) {
+          const rejected = latest.status === 'rejected' || latest.status === 'need_more_info';
+          const reason = latest.reject_reason ? `<p class="form-tip" style="color:#b91c1c">审核意见：${XH.escapeHtml(latest.reject_reason)}</p>` : '';
+          certOverview.innerHTML = `
+            <div class="info-item" style="margin-bottom:18px">
+              <small>最新认证（${XH.formatDate(latest.created_at, true)}）</small>
+              <strong><span class="badge ${latest.status}">${statusBadge(latest.status)}</span></strong>
+              ${reason}
+            </div>
+          `;
+          if (rejected) {
+            verifyForm.hidden = false;
+            prefillVerify(latest);
+            return;
+          }
+          verifyForm.hidden = true;
+          return;
+        }
+        verifyForm.hidden = false;
+      }
+
+      function prefillVerify(item) {
+        if (!item) return;
+        const map = { name: 'name', phone: 'phone', graduation_year: 'graduation_year', class_name: 'class_name', homeroom_teacher: 'homeroom_teacher', university_graduated: 'university_graduated' };
+        Object.keys(map).forEach((key) => {
+          const input = verifyForm.querySelector(`[name="${map[key]}"]`);
+          if (input && item[key]) input.value = item[key];
+        });
+      }
+
+      async function loadCenter() {
+        const token = XH.store.getToken();
+        if (!token) {
+          authView.hidden = false;
+          centerView.hidden = true;
+          return;
+        }
+        authView.hidden = true;
+        centerView.hidden = false;
+        try {
+          const data = await XH.api('/api/alumni/me');
+          renderCertOverview(data);
+          const profile = data.profile || {};
+          Object.keys({ industry: 1, company: 1, position_title: 1, wechat: 1, current_province: 1, current_city: 1, bio: 1 }).forEach((key) => {
+            const input = profileForm.querySelector(`[name="${key}"]`);
+            if (input) input.value = profile[key] || '';
+          });
+          const pub = profileForm.querySelector('[name="public_contact"]');
+          if (pub) pub.checked = Boolean(profile.public_contact);
+        } catch (error) {
+          if (error.status === 401) {
+            XH.store.clearAuth();
+            location.reload();
+          }
+        }
+      }
+
+      verifyForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        verifyStatus.textContent = '正在提交……';
+        verifyStatus.className = 'form-status';
+        const formData = new FormData(verifyForm);
+        const body = Object.fromEntries(formData.entries());
+        if (!body.chsi_proof_url) {
+          verifyStatus.textContent = '请先上传学信网截图';
+          verifyStatus.className = 'form-status error';
+          return;
+        }
+        try {
+          const data = await XH.api('/api/alumni/verify', { method: 'POST', body: JSON.stringify(body) });
+          verifyStatus.textContent = data.message || '认证资料已提交，等待审核';
+          verifyStatus.className = 'form-status success';
+          verifyForm.hidden = true;
+          setTimeout(loadCenter, 1200);
+        } catch (error) {
+          verifyStatus.textContent = error.message;
+          verifyStatus.className = 'form-status error';
+        }
+      });
+
+      profileForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        profileStatus.textContent = '正在保存……';
+        profileStatus.className = 'form-status';
+        const formData = new FormData(profileForm);
+        const body = Object.fromEntries(formData.entries());
+        try {
+          const data = await XH.api('/api/alumni/me', { method: 'PUT', body: JSON.stringify(body) });
+          profileStatus.textContent = data.message || '资料已保存';
+          profileStatus.className = 'form-status success';
+        } catch (error) {
+          profileStatus.textContent = error.message;
+          profileStatus.className = 'form-status error';
+        }
+      });
+
+      document.querySelectorAll('.account-menu a[data-menu]').forEach((link) => {
+        link.addEventListener('click', (event) => {
+          event.preventDefault();
+          document.querySelectorAll('.account-menu a').forEach((a) => a.classList.remove('active'));
+          link.classList.add('active');
+          const target = link.dataset.menu;
+          certPanel.hidden = target !== 'cert';
+          profilePanel.hidden = target !== 'profile';
+          if (target === 'cert') loadCenter();
+        });
+      });
+
+      document.getElementById('logoutBtn').addEventListener('click', (event) => {
+        event.preventDefault();
+        XH.store.clearAuth();
+        location.reload();
+      });
+
+      bindUpload('[data-upload="chsi"]', 'chsi_proof_url');
+      bindUpload('[data-upload="student"]', 'student_card_url');
+      loadCenter();
+    })();
+  </script>
+</body>
+</html>

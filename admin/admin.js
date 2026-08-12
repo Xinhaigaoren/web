@@ -117,6 +117,10 @@ function setActiveTab(tabName) {
   if (tabName === 'contentRequests') loadContentRequests();
   if (tabName === 'admins') loadAdminManagement();
   if (tabName === 'account') loadMyAccount();
+  if (tabName === 'news') loadNews();
+  if (tabName === 'events') loadEvents();
+  if (tabName === 'stats') loadStats();
+  if (tabName === 'alumni') loadAlumniList();
 }
 
 tabs.forEach(tab => tab.addEventListener('click', () => setActiveTab(tab.dataset.tab)));
@@ -611,3 +615,427 @@ setupInviteFromUrl().then((handled) => {
     showLogin();
   }
 });
+
+// ==================== 内容系统与校友中心（V1 追加） ====================
+const newsRows = document.querySelector('#newsRows');
+const newsEditor = document.querySelector('#newsEditor');
+const newsForm = document.querySelector('#newsForm');
+const newsStatus = document.querySelector('#newsStatus');
+const newNewsBtn = document.querySelector('#newNewsBtn');
+const newsCancelBtn = document.querySelector('#newsCancelBtn');
+const eventRows = document.querySelector('#eventRows');
+const eventEditor = document.querySelector('#eventEditor');
+const eventForm = document.querySelector('#eventForm');
+const eventStatus = document.querySelector('#eventStatus');
+const newEventBtn = document.querySelector('#newEventBtn');
+const eventCancelBtn = document.querySelector('#eventCancelBtn');
+const registrationsCard = document.querySelector('#registrationsCard');
+const registrationsTitle = document.querySelector('#registrationsTitle');
+const registrationRows = document.querySelector('#registrationRows');
+const closeRegistrationsBtn = document.querySelector('#closeRegistrationsBtn');
+const loadStatsBtn = document.querySelector('#loadStatsBtn');
+const exportAlumniBtn = document.querySelector('#exportAlumniBtn');
+const alumniSearch = document.querySelector('#alumniSearch');
+const alumniRows = document.querySelector('#alumniRows');
+const alumniPagination = document.querySelector('#alumniPagination');
+
+function toDatetimeLocal(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function fromDatetimeLocal(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+// ---------- 新闻管理 ----------
+let newsPage = 1;
+async function loadNews(page = 1) {
+  newsPage = page;
+  if (!newsRows) return;
+  newsRows.innerHTML = '<tr><td colspan="6">正在加载……</td></tr>';
+  try {
+    const data = await api(`/api/admin/news?page=${page}&pageSize=20`);
+    const items = data.items || [];
+    if (!items.length) {
+      newsRows.innerHTML = '<tr><td colspan="6">暂无新闻，点击「新建新闻」发布第一篇。</td></tr>';
+      return;
+    }
+    newsRows.innerHTML = items.map(item => `
+      <tr>
+        <td><strong>${escapeHtml(item.title)}</strong></td>
+        <td>${escapeHtml(item.category || '综合')}</td>
+        <td>${escapeHtml(String(item.published_at || '').slice(0, 16).replace('T', ' '))}</td>
+        <td>${item.view_count || 0}</td>
+        <td>${item.is_published ? '<span class="badge approved">已发布</span>' : '<span class="badge draft">草稿</span>'}</td>
+        <td>
+          <div class="row-actions">
+            <button class="ghost" data-news-edit="${item.id}">编辑</button>
+            <button class="reject" data-news-delete="${item.id}">删除</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    newsRows.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+
+function openNewsEditor(item) {
+  if (!newsEditor) return;
+  newsEditor.hidden = false;
+  newsEditor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelector('#newsEditorTitle').textContent = item ? '编辑新闻' : '新建新闻';
+  newsForm.reset();
+  newsStatus.textContent = '';
+  if (item) {
+    newsForm.id.value = item.id;
+    newsForm.title.value = item.title || '';
+    newsForm.category.value = item.category || '';
+    newsForm.author.value = item.author || '';
+    newsForm.summary.value = item.summary || '';
+    newsForm.cover_url.value = item.cover_url || '';
+    newsForm.content.value = item.content || '';
+    newsForm.is_published.checked = item.is_published !== false;
+  }
+}
+
+if (newsForm) {
+  newsForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    newsStatus.textContent = '正在保存……';
+    newsStatus.className = 'status';
+    const body = Object.fromEntries(new FormData(newsForm).entries());
+    body.is_published = body.is_published === 'on';
+    const id = body.id;
+    delete body.id;
+    try {
+      const data = await api(id ? `/api/admin/news/${id}` : '/api/admin/news', {
+        method: id ? 'PATCH' : 'POST',
+        body: JSON.stringify(body)
+      });
+      newsStatus.textContent = data.message || '已保存';
+      newsStatus.className = 'status ok';
+      newsEditor.hidden = true;
+      await loadNews(newsPage);
+    } catch (error) {
+      newsStatus.textContent = error.message;
+      newsStatus.className = 'status';
+    }
+  });
+}
+
+if (newNewsBtn) newNewsBtn.addEventListener('click', () => openNewsEditor(null));
+if (newsCancelBtn) newsCancelBtn.addEventListener('click', () => { newsEditor.hidden = true; });
+
+if (newsRows) {
+  newsRows.addEventListener('click', async (event) => {
+    const edit = event.target.closest('button[data-news-edit]');
+    const del = event.target.closest('button[data-news-delete]');
+    if (edit) {
+      try {
+        const data = await api(`/api/admin/news/${edit.dataset.newsEdit}`);
+        openNewsEditor(data.article);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+    if (del) {
+      if (!confirm('确定删除这篇新闻吗？删除后不可恢复。')) return;
+      del.disabled = true;
+      try {
+        await api(`/api/admin/news/${del.dataset.newsDelete}`, { method: 'DELETE' });
+        await loadNews(newsPage);
+      } catch (error) {
+        alert(error.message);
+        del.disabled = false;
+      }
+    }
+  });
+}
+
+// ---------- 活动管理 ----------
+let eventPage = 1;
+async function loadEvents(page = 1) {
+  eventPage = page;
+  if (!eventRows) return;
+  eventRows.innerHTML = '<tr><td colspan="6">正在加载……</td></tr>';
+  try {
+    const data = await api(`/api/admin/events?page=${page}&pageSize=20`);
+    const items = data.items || [];
+    if (!items.length) {
+      eventRows.innerHTML = '<tr><td colspan="6">暂无活动，点击「新建活动」创建。</td></tr>';
+      return;
+    }
+    eventRows.innerHTML = items.map(item => `
+      <tr>
+        <td><strong>${escapeHtml(item.title)}</strong></td>
+        <td>${escapeHtml(item.start_time ? String(item.start_time).slice(0, 16).replace('T', ' ') : '待定')}</td>
+        <td>${escapeHtml(item.location || '')}</td>
+        <td>${item.registrations_count || 0}${item.capacity ? ` / ${item.capacity}` : ''}</td>
+        <td>${item.is_published ? '<span class="badge approved">已发布</span>' : '<span class="badge draft">草稿</span>'}</td>
+        <td>
+          <div class="row-actions">
+            <button class="ghost" data-event-regs="${item.id}" data-event-title="${escapeHtml(item.title)}">报名</button>
+            <button class="ghost" data-event-edit="${item.id}">编辑</button>
+            <button class="reject" data-event-delete="${item.id}">删除</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    eventRows.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+
+function openEventEditor(item) {
+  if (!eventEditor) return;
+  eventEditor.hidden = false;
+  eventEditor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelector('#eventEditorTitle').textContent = item ? '编辑活动' : '新建活动';
+  eventForm.reset();
+  eventStatus.textContent = '';
+  if (item) {
+    eventForm.id.value = item.id;
+    eventForm.title.value = item.title || '';
+    eventForm.category.value = item.category || '';
+    eventForm.location.value = item.location || '';
+    eventForm.start_time.value = toDatetimeLocal(item.start_time);
+    eventForm.end_time.value = toDatetimeLocal(item.end_time);
+    eventForm.signup_deadline.value = toDatetimeLocal(item.signup_deadline);
+    eventForm.capacity.value = item.capacity || '';
+    eventForm.cover_url.value = item.cover_url || '';
+    eventForm.summary.value = item.summary || '';
+    eventForm.content.value = item.content || '';
+    eventForm.is_published.checked = item.is_published !== false;
+  }
+}
+
+if (eventForm) {
+  eventForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    eventStatus.textContent = '正在保存……';
+    eventStatus.className = 'status';
+    const body = Object.fromEntries(new FormData(eventForm).entries());
+    body.is_published = body.is_published === 'on';
+    body.start_time = fromDatetimeLocal(body.start_time);
+    body.end_time = fromDatetimeLocal(body.end_time);
+    body.signup_deadline = fromDatetimeLocal(body.signup_deadline);
+    body.capacity = body.capacity ? Number(body.capacity) : null;
+    const id = body.id;
+    delete body.id;
+    try {
+      const data = await api(id ? `/api/admin/events/${id}` : '/api/admin/events', {
+        method: id ? 'PATCH' : 'POST',
+        body: JSON.stringify(body)
+      });
+      eventStatus.textContent = data.message || '已保存';
+      eventStatus.className = 'status ok';
+      eventEditor.hidden = true;
+      await loadEvents(eventPage);
+    } catch (error) {
+      eventStatus.textContent = error.message;
+      eventStatus.className = 'status';
+    }
+  });
+}
+
+if (newEventBtn) newEventBtn.addEventListener('click', () => openEventEditor(null));
+if (eventCancelBtn) eventCancelBtn.addEventListener('click', () => { eventEditor.hidden = true; });
+
+if (eventRows) {
+  eventRows.addEventListener('click', async (event) => {
+    const regs = event.target.closest('button[data-event-regs]');
+    const edit = event.target.closest('button[data-event-edit]');
+    const del = event.target.closest('button[data-event-delete]');
+    if (regs) {
+      await loadRegistrations(regs.dataset.eventRegs, regs.dataset.eventTitle);
+      return;
+    }
+    if (edit) {
+      try {
+        const data = await api(`/api/admin/events/${edit.dataset.eventEdit}`);
+        openEventEditor(data.event);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+    if (del) {
+      if (!confirm('确定删除该活动吗？相关报名记录也会一并删除。')) return;
+      del.disabled = true;
+      try {
+        await api(`/api/admin/events/${del.dataset.eventDelete}`, { method: 'DELETE' });
+        await loadEvents(eventPage);
+      } catch (error) {
+        alert(error.message);
+        del.disabled = false;
+      }
+    }
+  });
+}
+
+async function loadRegistrations(eventId, eventTitle) {
+  if (!registrationsCard) return;
+  registrationsCard.hidden = false;
+  registrationsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  registrationsTitle.dataset.eventId = eventId;
+  registrationsTitle.textContent = `活动报名：${eventTitle || ''}`;
+  registrationRows.innerHTML = '<tr><td colspan="7">正在加载……</td></tr>';
+  try {
+    const data = await api(`/api/admin/events/${eventId}/registrations`);
+    const items = data.registrations || [];
+    if (!items.length) {
+      registrationRows.innerHTML = '<tr><td colspan="7">暂无报名</td></tr>';
+      return;
+    }
+    registrationRows.innerHTML = items.map(item => {
+      const statusClass = { registered: 'registered', cancelled: 'cancelled', checked_in: 'checked_in' }[item.status] || 'draft';
+      const statusName = { registered: '已报名', cancelled: '已取消', checked_in: '已签到' }[item.status] || item.status;
+      return `
+        <tr>
+          <td>${escapeHtml(item.name)}</td>
+          <td>${escapeHtml(item.phone || '')}</td>
+          <td>${escapeHtml(item.email || '')}</td>
+          <td>${escapeHtml(item.remark || '')}</td>
+          <td>${escapeHtml(String(item.created_at || '').slice(0, 16).replace('T', ' '))}</td>
+          <td><span class="badge ${statusClass}">${statusName}</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="approve" data-reg-status="${item.id}" data-status="checked_in" ${item.status === 'checked_in' ? 'disabled' : ''}>签到</button>
+              <button class="ghost" data-reg-status="${item.id}" data-status="cancelled" ${item.status === 'cancelled' ? 'disabled' : ''}>取消</button>
+              <button class="ghost" data-reg-status="${item.id}" data-status="registered" ${item.status === 'registered' ? 'disabled' : ''}>恢复</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch (error) {
+    registrationRows.innerHTML = `<tr><td colspan="7">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+
+if (closeRegistrationsBtn) closeRegistrationsBtn.addEventListener('click', () => { registrationsCard.hidden = true; });
+
+if (registrationRows) {
+  registrationRows.addEventListener('click', async (event) => {
+    const button = event.target.closest('button[data-reg-status]');
+    if (!button) return;
+    button.disabled = true;
+    try {
+      await api(`/api/admin/event-registrations/${button.dataset.regStatus}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: button.dataset.status })
+      });
+      const title = registrationsTitle ? registrationsTitle.textContent.replace('活动报名：', '') : '';
+      await loadRegistrations(registrationsTitle.dataset.eventId || '', title);
+    } catch (error) {
+      alert(error.message);
+      button.disabled = false;
+    }
+  });
+}
+
+// ---------- 数据统计 ----------
+async function loadStats() {
+  const set = (id, value) => { const el = document.querySelector(`#${id}`); if (el) el.textContent = value; };
+  try {
+    const data = await api('/api/admin/stats');
+    const s = data.stats || {};
+    const v = s.verifications || {};
+    set('statUsers', s.users ?? 0);
+    set('statAlumni', s.alumni ?? 0);
+    set('statNews', s.news ?? 0);
+    set('statEvents', s.events ?? 0);
+    set('statRegistrations', s.registrations ?? 0);
+    set('statPending', v.pending ?? 0);
+    set('statApproved', v.approved ?? 0);
+    set('statRejected', v.rejected ?? 0);
+  } catch (error) {
+    const grid = document.querySelector('#statsGrid');
+    if (grid) grid.innerHTML = `<div class="empty-tip">${escapeHtml(error.message)}</div>`;
+  }
+}
+if (loadStatsBtn) loadStatsBtn.addEventListener('click', loadStats);
+
+// ---------- 校友名录管理 ----------
+let alumniPage = 1;
+async function loadAlumniList(page = 1) {
+  alumniPage = page;
+  if (!alumniRows) return;
+  alumniRows.innerHTML = '<tr><td colspan="6">正在加载……</td></tr>';
+  const q = alumniSearch ? alumniSearch.value.trim() : '';
+  const params = new URLSearchParams({ page, pageSize: 20 });
+  if (q) params.set('q', q);
+  try {
+    const data = await api(`/api/admin/alumni?${params.toString()}`);
+    const items = data.items || [];
+    if (!items.length) {
+      alumniRows.innerHTML = '<tr><td colspan="6">暂无数据</td></tr>';
+      if (alumniPagination) alumniPagination.innerHTML = '';
+      return;
+    }
+    alumniRows.innerHTML = items.map(item => `
+      <tr>
+        <td><strong>${escapeHtml(item.name)}</strong></td>
+        <td>${escapeHtml(item.phone || '')}</td>
+        <td>${escapeHtml(item.graduation_year || '')} ${escapeHtml(item.class_name || '')}</td>
+        <td>${escapeHtml([item.current_province, item.current_city, item.current_county].filter(Boolean).join(' / ') || '未填写')}</td>
+        <td>${escapeHtml([item.position_title, item.company].filter(Boolean).join(' · ') || '未填写')}</td>
+        <td>${item.public_contact ? '是' : '否'}</td>
+      </tr>
+    `).join('');
+    const totalPages = Math.max(1, Math.ceil((data.total || 0) / 20));
+    let html = `<span class="invite-hint" style="margin-right:auto">共 ${data.total || 0} 条</span>`;
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button type="button" data-alumni-page="${i}" class="${i === page ? 'active' : ''}">${i}</button>`;
+    }
+    alumniPagination.innerHTML = html;
+  } catch (error) {
+    alumniRows.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+
+if (alumniPagination) {
+  alumniPagination.addEventListener('click', (event) => {
+    const btn = event.target.closest('button[data-alumni-page]');
+    if (btn) loadAlumniList(Number(btn.dataset.alumniPage));
+  });
+}
+
+if (alumniSearch) {
+  let alumniSearchTimer = null;
+  alumniSearch.addEventListener('input', () => {
+    clearTimeout(alumniSearchTimer);
+    alumniSearchTimer = setTimeout(() => loadAlumniList(1), 350);
+  });
+}
+
+if (exportAlumniBtn) {
+  exportAlumniBtn.addEventListener('click', async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/alumni/export`, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || '导出失败');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `校友通讯录-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+}
