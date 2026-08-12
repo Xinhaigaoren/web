@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>新闻详情 - 海林市高级中学校友会</title>
-  <meta name="description" content="海林市高级中学校友会新闻详情。" />
+  <title>活动签到 - 海林市高级中学校友会</title>
+  <meta name="description" content="海林市高级中学校友会活动扫码签到。" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="pages.css" />
   <script src="config.js"></script>
@@ -34,7 +34,7 @@
       <nav class="primary-nav" id="primary-nav" aria-label="主导航">
         <a href="index.html">首页</a>
         <a href="about.html">校友会介绍</a>
-        <a href="news.html" class="current">新闻公告</a>
+        <a href="news.html">新闻公告</a>
         <a href="events.html">活动中心</a>
         <a href="index.html#figures">校友风采</a>
         <a href="index.html#services">校友服务</a>
@@ -44,11 +44,31 @@
   </header>
 
   <main id="main">
-    <section class="page-section">
+    <section class="page-hero">
       <div class="container">
-        <article class="article" id="articleBox">
-          <div class="empty-state" id="loadingState">正在加载新闻……</div>
-        </article>
+        <p class="eyebrow">Check-in</p>
+        <h1>活动签到</h1>
+        <p>扫码签到，记录你的每一次到场。</p>
+        <div class="crumb"><a href="index.html">首页</a> / 活动签到</div>
+      </div>
+    </section>
+
+    <section class="page-section soft">
+      <div class="container">
+        <div class="auth-wrap">
+          <div class="auth-card">
+            <h2>活动签到</h2>
+            <p>请填写你的姓名和手机号完成签到。</p>
+            <form id="checkinForm" class="auth-form">
+              <div class="field"><label for="checkinName">姓名 *</label><input id="checkinName" name="name" required placeholder="真实姓名" /></div>
+              <div class="field"><label for="checkinPhone">手机号 *</label><input id="checkinPhone" name="phone" type="tel" required placeholder="报名时填写的手机号" /></div>
+              <div class="form-actions">
+                <button class="btn primary" type="submit">确认签到</button>
+              </div>
+              <p class="form-status" id="checkinStatus" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
       </div>
     </section>
   </main>
@@ -70,11 +90,11 @@
         <a href="directory.html">校友名录</a>
         <a href="news.html">新闻公告</a>
         <a href="events.html">活动报名</a>
-        <a href="admin/">管理员入口</a>
         <a href="forum.html">校友论坛</a>
         <a href="jobs.html">校友招聘</a>
         <a href="donate.html">在线捐赠</a>
         <a href="map.html">校友地图</a>
+        <a href="admin/">管理员入口</a>
       </div>
     </div>
     <div class="container copyright">
@@ -87,46 +107,31 @@
   <script>
     (function () {
       const XH = window.XH;
-      const box = document.getElementById('articleBox');
-      const slug = new URLSearchParams(location.search).get('slug');
+      const params = new URLSearchParams(location.search);
+      const eventId = params.get('event');
+      const code = params.get('code');
 
-      function renderBody(content) {
-        const text = String(content || '').trim();
-        if (!text) return '<p>（暂无正文）</p>';
-        if (text.includes('<')) return text;
-        return text.split(/\n{2,}/).map((p) => `<p>${XH.escapeHtml(p).replace(/\n/g, '<br />')}</p>`).join('');
-      }
-
-      async function load() {
-        if (!slug) {
-          box.innerHTML = '<div class="empty-state">缺少新闻参数。</div>';
+      document.getElementById('checkinForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const status = document.getElementById('checkinStatus');
+        if (!eventId || !code) {
+          status.textContent = '签到链接无效，请扫描管理员提供的签到二维码';
+          status.className = 'form-status error';
           return;
         }
+        status.textContent = '正在签到……';
+        status.className = 'form-status';
+        const body = Object.fromEntries(new FormData(document.getElementById('checkinForm')).entries());
         try {
-          const data = await XH.api(`/api/news/${encodeURIComponent(slug)}`);
-          const item = data.article || {};
-          const cover = item.cover_url
-            ? `<div class="article-cover" style="background-image:url('${XH.escapeHtml(item.cover_url)}')"></div>` : '';
-          box.innerHTML = `
-            <a class="article-back" href="news.html">← 返回新闻列表</a>
-            <div class="article-head">
-              <span class="tag">${XH.escapeHtml(item.category || '综合')}</span>
-              <h1>${XH.escapeHtml(item.title)}</h1>
-              <div class="article-meta">
-                <span>${XH.escapeHtml(item.author || '校友会')}</span>
-                <span>${XH.formatDate(item.published_at, true)}</span>
-                <span>${item.view_count || 0} 次阅读</span>
-              </div>
-            </div>
-            ${cover}
-            <div class="article-body">${renderBody(item.content)}</div>
-          `;
+          const data = await XH.api('/api/events/checkin', { method: 'POST', body: JSON.stringify({ event_id: eventId, code, name: body.name, phone: body.phone }) });
+          status.textContent = data.message || '签到成功';
+          status.className = 'form-status success';
+          document.getElementById('checkinForm').reset();
         } catch (error) {
-          box.innerHTML = `<div class="empty-state">${XH.escapeHtml(error.message)}</div>`;
+          status.textContent = error.message;
+          status.className = 'form-status error';
         }
-      }
-
-      load();
+      });
     })();
   </script>
 </body>

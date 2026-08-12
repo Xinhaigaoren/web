@@ -73,6 +73,11 @@
         <button class="tab" data-tab="stats" type="button">数据统计</button>
         <button class="tab" data-tab="alumni" type="button">校友名录</button>
         <button class="tab" data-tab="users" type="button">用户管理</button>
+        <button class="tab" data-tab="content" type="button">内容区块</button>
+        <button class="tab" data-tab="forum" type="button">论坛管理</button>
+        <button class="tab" data-tab="jobs" type="button">招聘管理</button>
+        <button class="tab" data-tab="donations" type="button">捐赠管理</button>
+        <button class="tab" data-tab="notifications" type="button">消息推送</button>
       </nav>
 
       <section class="panel active" id="applicationsPanel">
@@ -408,6 +413,193 @@
         <div class="pagination-row" id="userPagination"></div>
       </section>
 
+      <section class="panel" id="contentPanel">
+        <div class="section-title">
+          <div>
+            <h2>网站内容区块管理</h2>
+            <p>官网各页面模块（首页横幅、公告、数据、校友风采、校友服务、联系方式等）均可在此直接编辑。主管理员保存后立即发布到官网。</p>
+          </div>
+          <div class="form-actions">
+            <select id="contentPageFilter">
+              <option value="">全部页面</option>
+              <option value="home">首页</option>
+              <option value="about">校友会介绍</option>
+              <option value="contact">联系我们</option>
+            </select>
+            <button id="contentRefreshBtn" type="button" class="ghost">刷新</button>
+          </div>
+        </div>
+        <div class="editor-card">
+          <h3>编辑内容区块</h3>
+          <form id="contentSectionForm" class="editor-form">
+            <input type="hidden" name="id" />
+            <div class="three-fields">
+              <label>所属页面
+                <select name="page_slug">
+                  <option value="home">首页</option>
+                  <option value="about">校友会介绍</option>
+                  <option value="contact">联系我们</option>
+                </select>
+              </label>
+              <label>区块标识（key）
+                <select name="section_key" id="contentSectionKey"></select>
+              </label>
+              <label>区块名称<input name="section_name" placeholder="如：首页横幅" /></label>
+            </div>
+            <label class="inline-check"><input type="checkbox" id="newSectionToggle" /> 新建区块（自定义区块标识）</label>
+            <label>内容（JSON 格式）
+              <textarea name="content" rows="10" placeholder='{"title":"区块标题","subtitle":"副标题","items":[{"name":"姓名","desc":"简介"}]}'></textarea>
+            </label>
+            <div class="three-fields">
+              <label>排序（数字越小越靠前）<input name="display_order" type="number" value="0" /></label>
+            </div>
+            <div class="form-actions">
+              <button type="submit">保存区块（立即发布）</button>
+              <button type="button" id="contentSectionClearBtn" class="ghost">清空表单</button>
+            </div>
+            <p class="status" id="contentSectionStatus"></p>
+          </form>
+        </div>
+        <div class="table-wrap spaced-table">
+          <table>
+            <thead><tr><th>页面</th><th>区块标识</th><th>区块名称</th><th>更新时间</th><th>操作</th></tr></thead>
+            <tbody id="contentSectionRows"><tr><td colspan="5">正在加载……</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="forumPanel">
+        <div class="section-title">
+          <div>
+            <h2>论坛管理</h2>
+            <p>管理校友论坛版块与帖子，可置顶、锁定、隐藏或删除。</p>
+          </div>
+          <button id="loadForumBtn" type="button" class="ghost">刷新</button>
+        </div>
+        <div class="editor-card compact-card">
+          <h3>版块管理</h3>
+          <div class="three-fields">
+            <input id="forumCategoryName" placeholder="新版块名称" />
+            <input id="forumCategoryDesc" placeholder="版块描述（选填）" />
+            <button id="forumCategoryAddBtn" type="button">添加版块</button>
+          </div>
+          <div class="table-wrap" id="forumCategoryBox"></div>
+        </div>
+        <div class="table-wrap spaced-table">
+          <table>
+            <thead><tr><th>标题</th><th>版块</th><th>作者</th><th>回复/浏览</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody id="forumPostRows"><tr><td colspan="6">正在加载……</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="jobsPanel">
+        <div class="section-title">
+          <div>
+            <h2>招聘管理</h2>
+            <p>管理校友招聘职位与简历投递记录。</p>
+          </div>
+          <button id="newJobBtn" type="button" class="ghost">发布职位</button>
+        </div>
+        <div class="editor-card compact-card" id="jobEditor" hidden>
+          <h3 id="jobEditorTitle">发布职位</h3>
+          <form id="jobForm" class="editor-form">
+            <input type="hidden" name="id" />
+            <div class="three-fields">
+              <label>公司名称<input name="company" required /></label>
+              <label>职位名称<input name="title" required /></label>
+              <label>工作地点<input name="location" /></label>
+            </div>
+            <div class="three-fields">
+              <label>类型<input name="type" placeholder="全职/兼职/实习" /></label>
+              <label>薪资待遇<input name="salary" placeholder="如 15-25K" /></label>
+              <label>状态<select name="is_published"><option value="true">发布</option><option value="false">下架</option></select></label>
+            </div>
+            <label>职位描述<textarea name="description" rows="5"></textarea></label>
+            <label>任职要求<textarea name="requirements" rows="5"></textarea></label>
+            <label>联系方式<textarea name="contact" rows="2"></textarea></label>
+            <div class="form-actions">
+              <button type="submit">保存职位</button>
+              <button type="button" id="jobCancelBtn" class="ghost">取消</button>
+            </div>
+            <p class="status" id="jobStatus"></p>
+          </form>
+        </div>
+        <div class="table-wrap spaced-table">
+          <table>
+            <thead><tr><th>职位</th><th>公司</th><th>地点</th><th>薪资</th><th>投递数</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody id="jobRows"><tr><td colspan="7">正在加载……</td></tr></tbody>
+          </table>
+        </div>
+        <div class="editor-card compact-card" id="jobApplicationsCard" hidden>
+          <div class="section-title">
+            <div>
+              <h3 id="jobApplicationsTitle">投递记录</h3>
+              <p>查看与跟进简历投递。</p>
+            </div>
+            <button id="closeJobApplicationsBtn" type="button" class="ghost">关闭</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>姓名</th><th>电话</th><th>邮箱</th><th>简历链接</th><th>备注</th><th>时间</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody id="jobApplicationRows"><tr><td colspan="8">暂无投递</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="donationsPanel">
+        <div class="section-title">
+          <div>
+            <h2>捐赠管理</h2>
+            <p>核对确认捐赠记录，确认后展示在官网「在线捐赠」页捐赠榜。</p>
+          </div>
+          <button id="loadDonationsBtn" type="button" class="ghost">刷新</button>
+        </div>
+        <div class="summary-grid" style="margin-bottom:18px">
+          <article><span id="donationTotal">0</span><small>已确认金额（元）</small></article>
+          <article><span id="donationCount">0</span><small>已确认笔数</small></article>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>捐赠人</th><th>金额</th><th>用途</th><th>方式</th><th>寄语</th><th>时间</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody id="donationRows"><tr><td colspan="8">正在加载……</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="notificationsPanel">
+        <div class="section-title">
+          <div>
+            <h2>消息推送</h2>
+            <p>向全部校友或指定用户推送站内通知（校友在「我的消息」中查看，后续可对接微信模板消息）。</p>
+          </div>
+          <button id="loadNotificationsBtn" type="button" class="ghost">刷新记录</button>
+        </div>
+        <div class="editor-card">
+          <h3>发送通知</h3>
+          <form id="notificationForm" class="editor-form">
+            <div class="three-fields">
+              <label>标题<input name="title" required /></label>
+              <label>目标<select name="target"><option value="all">全部用户</option><option value="user">指定用户</option></select></label>
+              <label>用户 ID<input name="user_id" placeholder="选择「指定用户」后填写" /></label>
+            </div>
+            <label>内容<textarea name="content" rows="4"></textarea></label>
+            <label>跳转链接（选填）<input name="link" placeholder="如 news.html、forum.html" /></label>
+            <div class="form-actions">
+              <button type="submit">发送通知</button>
+            </div>
+            <p class="status" id="notificationStatus"></p>
+          </form>
+        </div>
+        <div class="table-wrap spaced-table">
+          <table>
+            <thead><tr><th>标题</th><th>接收人</th><th>内容</th><th>时间</th><th>已读</th><th>操作</th></tr></thead>
+            <tbody id="notificationRows"><tr><td colspan="6">正在加载……</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="panel" id="accountPanel">
         <div class="editor-card">
           <div class="section-title">
@@ -446,6 +638,21 @@
           </form>
         </div>
       </section>
+
+      <div class="modal-overlay" id="checkinModal" hidden>
+        <div class="modal-card">
+          <button type="button" class="modal-close" id="checkinModalClose" aria-label="关闭">×</button>
+          <h3 id="checkinModalTitle">活动签到码</h3>
+          <p>校友扫码或打开链接即可签到。</p>
+          <div class="qr-box">
+            <img id="checkinQrImg" alt="签到二维码" />
+          </div>
+          <div class="mono-link" id="checkinUrlText"></div>
+          <div class="form-actions">
+            <button type="button" id="copyCheckinUrlBtn" class="ghost">复制链接</button>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 

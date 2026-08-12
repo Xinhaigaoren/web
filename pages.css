@@ -182,3 +182,60 @@
 .divider-or::before, .divider-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .btn-wechat { background: #07c160; color: #fff; width: 100%; }
 .btn-wechat:hover { background: #06ad56; }
+.auth-sub-tabs { display: flex; gap: 6px; background: var(--soft); padding: 4px; border-radius: 10px; margin-bottom: 14px; }
+.auth-sub-tabs button { flex: 1; border: 0; background: transparent; padding: 9px; border-radius: 8px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.auth-sub-tabs button.active { background: #fff; color: var(--deep); box-shadow: 0 4px 12px rgba(23,32,51,.08); }
+.code-row { display: flex; gap: 8px; align-items: center; }
+.code-row input { flex: 1; min-width: 0; }
+.code-row .btn { white-space: nowrap; }
+.form-link { font-size: 13px; color: var(--accent); text-decoration: none; margin-left: auto; }
+.form-link:hover { text-decoration: underline; }
+.auth-subtitle { margin: 0 0 6px; color: var(--deep); }
+.auth-card .btn.ghost { color: var(--deep); border-color: var(--line); background: #fff; }
+.auth-card .btn.ghost:hover { background: var(--soft); }
+.notify-item { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: #fff; }
+.notify-item.unread { border-color: var(--accent); background: #f4f9ff; }
+.notify-item strong { color: var(--deep); }
+.notify-item p { margin: 6px 0; font-size: 14px; color: #444; }
+.notify-item small { color: var(--muted); }
+/* 论坛 */
+.forum-post { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; cursor: pointer; transition: box-shadow .2s ease, transform .2s ease; }
+.forum-post:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.forum-post h3 { margin: 0 0 8px; color: var(--deep); font-size: 17px; }
+.forum-post-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; color: var(--muted); font-size: 13px; margin: 0; }
+.forum-replies { margin-top: 10px; }
+.forum-reply { border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+.forum-reply strong { color: var(--deep); margin-right: 10px; }
+.forum-reply small { color: var(--muted); }
+.forum-reply p { margin: 8px 0 0; white-space: pre-wrap; }
+
+/* 招聘 */
+.job-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; cursor: pointer; transition: box-shadow .2s ease, transform .2s ease; }
+.job-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.job-card h3 { margin: 0 0 4px; color: var(--deep); font-size: 17px; }
+.job-card-company { margin: 0 0 8px; color: var(--accent); font-weight: 700; }
+
+/* 捐赠 */
+.donate-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 26px; }
+.donate-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+.donate-item { border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; }
+.donate-item strong { color: var(--deep); }
+.donate-amount { color: var(--accent); font-weight: 800; }
+.donate-item small { color: var(--muted); }
+.donate-item p { grid-column: 1 / -1; margin: 4px 0 0; font-size: 14px; color: #444; }
+
+/* 地图 */
+.map-summary { margin-bottom: 22px; }
+.map-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+.map-bar-row { display: grid; grid-template-columns: 120px 1fr 60px; gap: 10px; align-items: center; margin-bottom: 10px; }
+.map-bar-name { color: var(--deep); font-weight: 600; font-size: 14px; }
+.map-bar-track { background: var(--soft); border-radius: 999px; height: 14px; overflow: hidden; }
+.map-bar-track i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #c9985f); border-radius: 999px; }
+.map-bar-count { color: var(--muted); font-size: 13px; text-align: right; }
+.map-city-item { display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; font-size: 14px; color: var(--deep); }
+
+@media (max-width: 860px) {
+  .donate-grid, .map-layout { grid-template-columns: 1fr; }
+  .donate-stats { grid-template-columns: 1fr; }
+  .map-bar-row { grid-template-columns: 90px 1fr 50px; }
+}

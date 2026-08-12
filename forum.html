@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>校友论坛 - 海林市高级中学校友会</title>
+  <meta name="description" content="海林市高级中学校友论坛，校友交流互助，分享工作生活。" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="pages.css" />
+  <script src="config.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+
+  <header class="site-header" id="top">
+    <div class="header-top">
+      <div class="container top-inner">
+        <span>海林市高级中学校友会</span>
+        <nav aria-label="快捷链接" data-account></nav>
+      </div>
+    </div>
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html" aria-label="海林市高级中学校友会首页">
+        <img class="brand-logo" src="assets/haigao-logo.jpg" alt="海林市高级中学校徽" />
+        <span class="brand-text">
+          <strong>海林市高级中学校友会</strong>
+          <small>Hailin Senior High School Alumni Association</small>
+        </span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span></span><span></span><span></span>
+        <em>菜单</em>
+      </button>
+      <nav class="primary-nav" id="primary-nav" aria-label="主导航">
+        <a href="index.html">首页</a>
+        <a href="about.html">校友会介绍</a>
+        <a href="news.html">新闻公告</a>
+        <a href="events.html">活动中心</a>
+        <a href="index.html#figures">校友风采</a>
+        <a href="index.html#services">校友服务</a>
+        <a href="account.html">加入我们</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <p class="eyebrow">Forum</p>
+        <h1>校友论坛</h1>
+        <p>校友交流互助，分享工作生活，重逢海高情谊。</p>
+        <div class="crumb"><a href="index.html">首页</a> / 校友论坛</div>
+      </div>
+    </section>
+
+    <section class="page-section soft">
+      <div class="container">
+
+        <div id="forumListView">
+          <div class="toolbar">
+            <div class="chip-row" id="forumCategoryRow"></div>
+            <input class="search-input" id="forumSearch" type="search" placeholder="搜索帖子…" aria-label="搜索帖子" />
+            <button class="btn primary" type="button" id="newPostBtn">发布新帖</button>
+          </div>
+          <div class="forum-list" id="forumList"></div>
+          <div class="empty-state" id="forumEmpty" hidden>暂无帖子，快来发布第一篇吧。</div>
+          <div class="pagination" id="forumPagination"></div>
+        </div>
+
+        <div id="postDetailView" hidden>
+          <button class="article-back" type="button" id="backToListBtn">← 返回帖子列表</button>
+          <article class="article">
+            <header class="article-head" id="postHead"></header>
+            <div class="article-body rich-text" id="postBody"></div>
+          </article>
+          <h3 style="color:var(--deep);margin-top:28px">回复（<span id="replyCount">0</span>）</h3>
+          <div class="forum-replies" id="replyList"></div>
+          <form id="replyForm" class="auth-form" style="margin-top:22px">
+            <div class="field"><label for="replyContent">发表回复</label><textarea id="replyContent" name="content" rows="3" required placeholder="友善交流，文明发言"></textarea></div>
+            <div class="form-actions">
+              <button class="btn primary" type="submit">提交回复</button>
+              <span class="form-tip" id="replyStatus"></span>
+            </div>
+          </form>
+        </div>
+
+        <div id="newPostView" hidden>
+          <button class="article-back" type="button" id="cancelPostBtn">← 返回帖子列表</button>
+          <h2 style="color:var(--deep);margin:16px 0 20px">发布新帖</h2>
+          <form id="postForm" class="auth-form">
+            <div class="field"><label for="postCategory">版块</label><select id="postCategory" name="category_id" required></select></div>
+            <div class="field"><label for="postTitle">标题</label><input id="postTitle" name="title" required maxlength="80" placeholder="一句话说清主题" /></div>
+            <div class="field"><label for="postContent">内容</label><textarea id="postContent" name="content" rows="8" required placeholder="详细描述你的话题"></textarea></div>
+            <div class="form-actions">
+              <button class="btn primary" type="submit">发布</button>
+              <span class="form-tip" id="postStatus"></span>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contact">
+    <div class="container footer-grid">
+      <div>
+        <h2>海林市高级中学校友会</h2>
+        <p>以校友情谊为纽带，以服务母校为使命。</p>
+      </div>
+      <div>
+        <h3>联系方式</h3>
+        <p>邮箱：alumni@example.com</p>
+        <p>地址：黑龙江省牡丹江市海林市</p>
+      </div>
+      <div>
+        <h3>常用入口</h3>
+        <a href="account.html">校友登录/注册</a>
+        <a href="directory.html">校友名录</a>
+        <a href="news.html">新闻公告</a>
+        <a href="events.html">活动报名</a>
+        <a href="forum.html">校友论坛</a>
+        <a href="jobs.html">校友招聘</a>
+        <a href="donate.html">在线捐赠</a>
+        <a href="map.html">校友地图</a>
+        <a href="admin/">管理员入口</a>
+      </div>
+    </div>
+    <div class="container copyright">
+      <span>© 2026 海林市高级中学校友会. All Rights Reserved.</span>
+      <a href="#top">返回顶部 ↑</a>
+    </div>
+  </footer>
+
+  <script src="site.js"></script>
+  <script>
+    (function () {
+      const XH = window.XH;
+      const listView = document.getElementById('forumListView');
+      const detailView = document.getElementById('postDetailView');
+      const newPostView = document.getElementById('newPostView');
+      const categoryRow = document.getElementById('forumCategoryRow');
+      const searchInput = document.getElementById('forumSearch');
+      const listBox = document.getElementById('forumList');
+      const emptyBox = document.getElementById('forumEmpty');
+      const pagination = document.getElementById('forumPagination');
+      const PAGE_SIZE = 10;
+      let categories = [];
+      let currentCategory = 0;
+      let page = 1;
+      let searchTimer = null;
+      let currentPostId = 0;
+
+      function showView(name) {
+        listView.hidden = name !== 'list';
+        detailView.hidden = name !== 'detail';
+        newPostView.hidden = name !== 'new';
+        if (name === 'list') window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function renderCategories() {
+        categoryRow.innerHTML = '<button class="chip active" data-cat="0" type="button">全部</button>' +
+          categories.map((c) => `<button class="chip" data-cat="${c.id}" type="button">${XH.escapeHtml(c.name)}（${c.post_count || 0}）</button>`).join('');
+        categoryRow.onclick = (event) => {
+          const btn = event.target.closest('button[data-cat]');
+          if (!btn) return;
+          categoryRow.querySelectorAll('.chip').forEach((b) => b.classList.toggle('active', b === btn));
+          currentCategory = Number(btn.dataset.cat);
+          page = 1;
+          loadPosts();
+        };
+      }
+
+      function renderPagination(total) {
+        const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+        let html = `<button type="button" data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''}>上一页</button>`;
+        for (let i = 1; i <= totalPages; i++) html += `<button type="button" data-page="${i}" class="${i === page ? 'active' : ''}">${i}</button>`;
+        html += `<button type="button" data-page="${page + 1}" ${page >= totalPages ? 'disabled' : ''}>下一页</button>`;
+        pagination.innerHTML = html;
+        pagination.onclick = (event) => {
+          const btn = event.target.closest('button[data-page]');
+          if (!btn || btn.disabled) return;
+          page = Number(btn.dataset.page);
+          loadPosts();
+        };
+      }
+
+      async function loadPosts() {
+        listBox.innerHTML = '';
+        emptyBox.hidden = true;
+        const params = new URLSearchParams({ page, pageSize: PAGE_SIZE });
+        if (currentCategory) params.set('categoryId', currentCategory);
+        const q = searchInput.value.trim();
+        if (q) params.set('q', q);
+        try {
+          const data = await XH.api(`/api/forum/posts?${params}`);
+          if (!data.items || !data.items.length) { emptyBox.hidden = false; pagination.innerHTML = ''; return; }
+          listBox.innerHTML = data.items.map((post) => `
+            <article class="forum-post" data-id="${post.id}">
+              <div class="forum-post-main">
+                <h3>${post.is_pinned ? '📌 ' : ''}${XH.escapeHtml(post.title)}</h3>
+                <p class="forum-post-meta">
+                  ${post.category_name ? `<span class="tag">${XH.escapeHtml(post.category_name)}</span>` : ''}
+                  <span>${XH.escapeHtml(post.author_name || '校友')}</span>
+                  <span>${XH.formatDate(post.created_at, true)}</span>
+                  <span>浏览 ${post.view_count}</span>
+                  <span>回复 ${post.reply_count}</span>
+                </p>
+              </div>
+            </article>
+          `).join('');
+          listBox.onclick = (event) => {
+            const card = event.target.closest('.forum-post');
+            if (card) openPost(Number(card.dataset.id));
+          };
+          renderPagination(data.total);
+        } catch (error) {
+          emptyBox.hidden = false;
+          emptyBox.textContent = error.message;
+        }
+      }
+
+      async function openPost(id) {
+        try {
+          const data = await XH.api(`/api/forum/posts/${id}`);
+          currentPostId = id;
+          document.getElementById('postHead').innerHTML = `
+            <p class="article-meta">
+              ${data.post.category_name ? `<span class="tag">${XH.escapeHtml(data.post.category_name)}</span>` : ''}
+              <span>${XH.escapeHtml(data.post.author_name || '校友')}</span>
+              <span>${XH.formatDate(data.post.created_at, true)}</span>
+              <span>浏览 ${data.post.view_count}</span>
+            </p>
+            <h1>${XH.escapeHtml(data.post.title)}</h1>
+          `;
+          document.getElementById('postBody').innerHTML = `<p style="white-space:pre-wrap">${XH.escapeHtml(data.post.content)}</p>`;
+          const replies = data.replies || [];
+          document.getElementById('replyCount').textContent = replies.length;
+          document.getElementById('replyList').innerHTML = replies.length
+            ? replies.map((r) => `
+                <div class="forum-reply">
+                  <strong>${XH.escapeHtml(r.author_name || '校友')}</strong>
+                  <small>${XH.formatDate(r.created_at, true)}</small>
+                  <p>${XH.escapeHtml(r.content)}</p>
+                </div>`).join('')
+            : '<div class="empty-state" style="padding:16px">还没有回复，来抢沙发～</div>';
+          document.getElementById('replyStatus').textContent = '';
+          document.getElementById('replyContent').value = '';
+          showView('detail');
+        } catch (error) {
+          XH.toast(error.message, 'error');
+        }
+      }
+
+      document.getElementById('backToListBtn').addEventListener('click', () => { showView('list'); });
+      document.getElementById('cancelPostBtn').addEventListener('click', () => { showView('list'); });
+
+      document.getElementById('newPostBtn').addEventListener('click', () => {
+        if (!XH.store.getToken()) { XH.toast('请先登录后发布帖子', 'info'); location.href = 'account.html'; return; }
+        const select = document.getElementById('postCategory');
+        select.innerHTML = categories.map((c) => `<option value="${c.id}">${XH.escapeHtml(c.name)}</option>`).join('');
+        document.getElementById('postForm').reset();
+        document.getElementById('postStatus').textContent = '';
+        showView('new');
+      });
+
+      document.getElementById('postForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const status = document.getElementById('postStatus');
+        status.textContent = '正在发布……';
+        const body = Object.fromEntries(new FormData(document.getElementById('postForm')).entries());
+        try {
+          const data = await XH.api('/api/forum/posts', { method: 'POST', body: JSON.stringify(body) });
+          status.textContent = data.message || '发布成功';
+          page = 1;
+          showView('list');
+          loadPosts();
+          XH.toast('发布成功');
+        } catch (error) {
+          status.textContent = error.message;
+        }
+      });
+
+      document.getElementById('replyForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const status = document.getElementById('replyStatus');
+        if (!XH.store.getToken()) { XH.toast('请先登录后回复', 'info'); location.href = 'account.html'; return; }
+        status.textContent = '正在提交……';
+        const body = Object.fromEntries(new FormData(document.getElementById('replyForm')).entries());
+        try {
+          await XH.api(`/api/forum/posts/${currentPostId}/replies`, { method: 'POST', body: JSON.stringify(body) });
+          openPost(currentPostId);
+        } catch (error) {
+          status.textContent = error.message;
+        }
+      });
+
+      searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => { page = 1; loadPosts(); }, 350);
+      });
+
+      (async function init() {
+        try {
+          const data = await XH.api('/api/forum/categories');
+          categories = data.categories || [];
+          renderCategories();
+        } catch (error) {
+          emptyBox.hidden = false;
+          emptyBox.textContent = error.message;
+        }
+        loadPosts();
+      })();
+    })();
+  </script>
+</body>
+</html>

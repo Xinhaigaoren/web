@@ -65,10 +65,29 @@
             </div>
 
             <form id="loginForm" class="auth-form">
-              <div class="field"><label for="loginName">邮箱 / 手机号</label><input id="loginName" name="username" autocomplete="username" required placeholder="请输入邮箱或手机号" /></div>
-              <div class="field"><label for="loginPassword">密码</label><input id="loginPassword" name="password" type="password" autocomplete="current-password" required placeholder="请输入密码" /></div>
-              <div class="form-actions">
-                <button class="btn primary" type="submit">登录</button>
+              <div class="auth-sub-tabs" role="tablist" aria-label="登录方式">
+                <button type="button" class="active" data-login-method="password">密码登录</button>
+                <button type="button" data-login-method="code">验证码登录</button>
+              </div>
+              <div data-login-pane="password">
+                <div class="field"><label for="loginName">邮箱 / 手机号</label><input id="loginName" name="username" autocomplete="username" required placeholder="请输入邮箱或手机号" /></div>
+                <div class="field"><label for="loginPassword">密码</label><input id="loginPassword" name="password" type="password" autocomplete="current-password" required placeholder="请输入密码" /></div>
+                <div class="form-actions">
+                  <button class="btn primary" type="submit">登录</button>
+                  <a class="form-link" href="#" id="forgotLink">忘记密码？</a>
+                </div>
+              </div>
+              <div data-login-pane="code" hidden>
+                <div class="field"><label for="loginCodeEmail">邮箱</label><input id="loginCodeEmail" name="email" type="email" autocomplete="email" required placeholder="name@example.com" /></div>
+                <div class="field"><label for="loginCode">验证码</label>
+                  <div class="code-row">
+                    <input id="loginCode" name="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required placeholder="6 位数字" />
+                    <button type="button" id="sendCodeBtn" class="btn ghost">获取验证码</button>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button class="btn primary" type="submit">验证码登录</button>
+                </div>
               </div>
               <div class="divider-or">或使用微信</div>
               <button type="button" id="wechatLoginBtn" class="btn btn-wechat">微信扫码登录</button>
@@ -86,6 +105,21 @@
               </div>
               <p class="form-status" id="registerStatus" role="status" aria-live="polite"></p>
             </form>
+
+            <div id="forgotView" hidden>
+              <h3 class="auth-subtitle">找回密码</h3>
+              <p class="form-tip">输入注册邮箱获取重置码（当前未接邮件服务，重置码将直接显示），30 分钟内有效。</p>
+              <form id="forgotForm" class="auth-form">
+                <div class="field"><label for="forgotEmail">邮箱</label><input id="forgotEmail" name="email" type="email" autocomplete="email" required placeholder="name@example.com" /></div>
+                <div class="field"><label for="forgotToken">重置码</label><input id="forgotToken" name="token" required placeholder="发送到邮箱的重置码" /></div>
+                <div class="field"><label for="forgotPassword">新密码（至少 8 位）</label><input id="forgotPassword" name="password" type="password" autocomplete="new-password" minlength="8" required /></div>
+                <div class="form-actions">
+                  <button class="btn primary" type="submit">重置密码</button>
+                  <button type="button" id="backToLoginBtn" class="btn ghost">返回登录</button>
+                </div>
+                <p class="form-status" id="forgotStatus" role="status" aria-live="polite"></p>
+              </form>
+            </div>
           </div>
         </div>
 
@@ -95,6 +129,8 @@
             <nav class="account-menu" aria-label="个人中心菜单">
               <a href="#certPanel" data-menu="cert" class="active">我的认证</a>
               <a href="#profilePanel" data-menu="profile">我的资料</a>
+              <a href="#passwordPanel" data-menu="password">修改密码</a>
+              <a href="#notifyPanel" data-menu="notify">我的消息</a>
               <a href="directory.html">校友名录</a>
               <a href="events.html">活动报名</a>
               <a href="#" id="logoutBtn">退出登录</a>
@@ -160,6 +196,26 @@
                   <p class="form-status" id="profileStatus" role="status" aria-live="polite"></p>
                 </form>
               </section>
+
+              <!-- 修改密码 -->
+              <section class="account-panel" id="passwordPanel" hidden>
+                <h2>修改密码</h2>
+                <form id="passwordForm" class="auth-form">
+                  <div class="field"><label for="oldPassword">原密码</label><input id="oldPassword" name="old_password" type="password" autocomplete="current-password" required /></div>
+                  <div class="field"><label for="newPassword">新密码（至少 8 位）</label><input id="newPassword" name="password" type="password" autocomplete="new-password" minlength="8" required /></div>
+                  <div class="field"><label for="newPasswordConfirm">确认新密码</label><input id="newPasswordConfirm" name="password_confirm" type="password" autocomplete="new-password" minlength="8" required /></div>
+                  <div class="form-actions">
+                    <button class="btn primary" type="submit">保存新密码</button>
+                  </div>
+                  <p class="form-status" id="passwordStatus" role="status" aria-live="polite"></p>
+                </form>
+              </section>
+
+              <!-- 我的消息 -->
+              <section class="account-panel" id="notifyPanel" hidden>
+                <h2>我的消息</h2>
+                <div id="notifyList"></div>
+              </section>
             </div>
           </div>
         </div>
@@ -186,6 +242,10 @@
         <a href="news.html">新闻公告</a>
         <a href="events.html">活动报名</a>
         <a href="admin/">管理员入口</a>
+        <a href="forum.html">校友论坛</a>
+        <a href="jobs.html">校友招聘</a>
+        <a href="donate.html">在线捐赠</a>
+        <a href="map.html">校友地图</a>
       </div>
     </div>
     <div class="container copyright">
@@ -211,6 +271,8 @@
       const certOverview = document.getElementById('certOverview');
       const certPanel = document.getElementById('certPanel');
       const profilePanel = document.getElementById('profilePanel');
+      const passwordPanel = document.getElementById('passwordPanel');
+      const notifyPanel = document.getElementById('notifyPanel');
 
       // 认证资料上传
       function bindUpload(boxSelector, hiddenName) {
@@ -258,17 +320,53 @@
         document.querySelectorAll('[data-auth-tab]').forEach((btn) => btn.classList.toggle('active', btn.dataset.authTab === tab));
         loginForm.hidden = tab !== 'login';
         registerForm.hidden = tab !== 'register';
+        if (forgotView) forgotView.hidden = true;
         loginStatus.textContent = '';
         registerStatus.textContent = '';
       }
       document.querySelectorAll('[data-auth-tab]').forEach((btn) => btn.addEventListener('click', () => switchAuthTab(btn.dataset.authTab)));
+
+      // 登录方式切换：密码 / 验证码
+      function currentLoginMethod() {
+        const active = document.querySelector('[data-login-method].active');
+        return active ? active.dataset.loginMethod : 'password';
+      }
+      document.querySelectorAll('[data-login-method]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-login-method]').forEach((b) => b.classList.toggle('active', b === btn));
+          document.querySelectorAll('[data-login-pane]').forEach((pane) => { pane.hidden = pane.dataset.loginPane !== btn.dataset.loginMethod; });
+          loginStatus.textContent = '';
+        });
+      });
+
+      const sendCodeBtn = document.getElementById('sendCodeBtn');
+      if (sendCodeBtn) {
+        sendCodeBtn.addEventListener('click', async () => {
+          const email = String(document.getElementById('loginCodeEmail').value || '').trim();
+          if (!email || !email.includes('@')) { XH.toast('请输入有效邮箱', 'error'); return; }
+          sendCodeBtn.disabled = true;
+          sendCodeBtn.textContent = '发送中…';
+          try {
+            const data = await XH.api('/api/auth/send-login-code', { method: 'POST', body: JSON.stringify({ email }) });
+            XH.toast(data.login_code ? `验证码：${data.login_code}（当前未接邮件服务，请直接使用）` : data.message, 'info');
+          } catch (error) {
+            XH.toast(error.message, 'error');
+          } finally {
+            sendCodeBtn.disabled = false;
+            sendCodeBtn.textContent = '获取验证码';
+          }
+        });
+      }
 
       loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         loginStatus.textContent = '正在登录……';
         loginStatus.className = 'form-status';
         try {
-          const data = await XH.api('/api/auth/login', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(loginForm).entries())) });
+          const method = currentLoginMethod();
+          const data = method === 'code'
+            ? await XH.api('/api/auth/code-login', { method: 'POST', body: JSON.stringify({ email: document.getElementById('loginCodeEmail').value, code: document.getElementById('loginCode').value }) })
+            : await XH.api('/api/auth/login', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(loginForm).entries())) });
           XH.store.setToken(data.token);
           XH.store.setUser(data.user || {});
           await loadCenter();
@@ -412,7 +510,10 @@
           const target = link.dataset.menu;
           certPanel.hidden = target !== 'cert';
           profilePanel.hidden = target !== 'profile';
+          passwordPanel.hidden = target !== 'password';
+          notifyPanel.hidden = target !== 'notify';
           if (target === 'cert') loadCenter();
+          if (target === 'notify') loadNotifications();
         });
       });
 
@@ -455,6 +556,93 @@
         }
       }
 
+      // 忘记密码
+      const forgotView = document.getElementById('forgotView');
+      const forgotForm = document.getElementById('forgotForm');
+      const forgotStatus = document.getElementById('forgotStatus');
+      const forgotLink = document.getElementById('forgotLink');
+      const backToLoginBtn = document.getElementById('backToLoginBtn');
+      if (forgotLink) {
+        forgotLink.addEventListener('click', (event) => {
+          event.preventDefault();
+          loginForm.hidden = true;
+          registerForm.hidden = true;
+          forgotView.hidden = false;
+          loginStatus.textContent = '';
+        });
+      }
+      if (backToLoginBtn) {
+        backToLoginBtn.addEventListener('click', () => {
+          forgotView.hidden = true;
+          loginForm.hidden = false;
+        });
+      }
+      if (forgotForm) {
+        forgotForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          forgotStatus.textContent = '正在提交……';
+          forgotStatus.className = 'form-status';
+          const body = Object.fromEntries(new FormData(forgotForm).entries());
+          try {
+            const data = await XH.api('/api/auth/reset-password', { method: 'POST', body: JSON.stringify(body) });
+            forgotStatus.textContent = data.message || '密码已重置';
+            forgotStatus.className = 'form-status success';
+            forgotForm.reset();
+            setTimeout(() => backToLoginBtn.click(), 1500);
+          } catch (error) {
+            forgotStatus.textContent = error.message;
+            forgotStatus.className = 'form-status error';
+          }
+        });
+      }
+
+      // 个人中心：修改密码
+      const passwordForm = document.getElementById('passwordForm');
+      const passwordStatus = document.getElementById('passwordStatus');
+      if (passwordForm) {
+        passwordForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          passwordStatus.textContent = '正在修改……';
+          passwordStatus.className = 'form-status';
+          const body = Object.fromEntries(new FormData(passwordForm).entries());
+          if (body.password !== body.password_confirm) {
+            passwordStatus.textContent = '两次输入的新密码不一致';
+            passwordStatus.className = 'form-status error';
+            return;
+          }
+          try {
+            const data = await XH.api('/api/auth/change-password', { method: 'POST', body: JSON.stringify({ old_password: body.old_password, password: body.password }) });
+            passwordStatus.textContent = data.message || '密码已修改';
+            passwordStatus.className = 'form-status success';
+            passwordForm.reset();
+          } catch (error) {
+            passwordStatus.textContent = error.message;
+            passwordStatus.className = 'form-status error';
+          }
+        });
+      }
+
+      // 个人中心：消息通知
+      async function loadNotifications() {
+        try {
+          const data = await XH.api('/api/notifications?page=1&pageSize=50');
+          const box = document.getElementById('notifyList');
+          if (!data.items || !data.items.length) {
+            box.innerHTML = '<div class="empty-state">暂无消息通知。</div>';
+            return;
+          }
+          box.innerHTML = data.items.map((item) => `
+            <div class="notify-item ${item.is_read ? '' : 'unread'}">
+              <strong>${XH.escapeHtml(item.title)}</strong>
+              <p>${XH.escapeHtml(item.content || '')}</p>
+              <small>${XH.formatDate(item.created_at, true)}</small>
+            </div>
+          `).join('');
+          await XH.api('/api/notifications/read', { method: 'POST', body: JSON.stringify({ all: true }) });
+        } catch (error) {
+          document.getElementById('notifyList').innerHTML = `<div class="empty-state">${XH.escapeHtml(error.message)}</div>`;
+        }
+      }
       bindUpload('[data-upload="chsi"]', 'chsi_proof_url');
       bindUpload('[data-upload="student"]', 'student_card_url');
       handleWechatCallback();

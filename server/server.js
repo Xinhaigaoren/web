@@ -1579,6 +1579,916 @@ app.post('/api/auth/wechat/login', async (req, res) => {
   }
 });
 
+// ==================== 密码重置 / 修改密码（V1 追加） ====================
+
+async function ensurePasswordResetTable() {
+  if (!pool) return;
+  await dbQuery(`create table if not exists public.password_resets (
+    id bigserial primary key,
+    user_id bigint not null references public.app_users(id) on delete cascade,
+    token_hash text not null,
+    expires_at timestamptz not null,
+    used boolean default false,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+  )`);
+}
+
+// 忘记密码：生成重置码（免费版未接邮件服务，直接返回重置码）
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body?.email);
+    if (!email || !email.includes('@')) return fail(res, 400, '请输入有效邮箱');
+    const r = await dbQuery(`select id from public.app_users where email=$1 limit 1`, [email]);
+    const user = r.rows[0];
+    if (!user) return fail(res, 404, '该邮箱未注册，请先注册账号');
+    await dbQuery(`delete from public.password_resets where user_id=$1 and used=false and expires_at < now()`, [user.id]).catch(() => {});
+    const token = crypto.randomBytes(24).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    await dbQuery(
+      `insert into public.password_resets (user_id, token_hash, expires_at)
+       values ($1,$2, now() + interval '30 minutes')`,
+      [user.id, tokenHash]
+    );
+    return ok(res, {
+      reset_token: token,
+      message: '已生成重置码（当前未接入邮件通知，请使用下方重置码，30 分钟内有效）'
+    });
+  } catch (e) {
+    return fail(res, 500, '生成重置码失败', { error: e.message });
+  }
+});
+
+// 使用重置码设置新密码
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body?.email);
+    const token = String(req.body?.token || '').trim();
+    const password = requireStrongPassword(req.body?.password);
+    if (!email || !token) return fail(res, 400, '邮箱与重置码不能为空');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const r = await dbQuery(
+      `select pr.id, pr.expires_at, u.id as user_id
+       from public.password_resets pr
+       join public.app_users u on u.id = pr.user_id
+       where lower(u.email) = lower($1) and pr.token_hash = $2 and pr.used = false
+       order by pr.created_at desc
+       limit 1`,
+      [email, tokenHash]
+    );
+    const row = r.rows[0];
+    if (!row) return fail(res, 400, '重置码无效或已使用');
+    if (new Date(row.expires_at) < new Date()) return fail(res, 400, '重置码已过期，请重新获取');
+    const hash = await bcrypt.hash(password, 10);
+    await dbQuery(`update public.app_users set password_hash=$1, updated_at=now() where id=$2`, [hash, row.user_id]);
+    await dbQuery(`update public.password_resets set used=true, updated_at=now() where id=$1`, [row.id]);
+    return ok(res, { message: '密码已重置，请使用新密码登录' });
+  } catch (e) {
+    return fail(res, 500, '重置密码失败', { error: e.message });
+  }
+});
+
+// 已登录用户自助修改密码（校友/管理员通用）
+app.post('/api/auth/change-password', requireAuth, async (req, res) => {
+  try {
+    const oldPassword = String(req.body?.old_password || '');
+    const password = requireStrongPassword(req.body?.password);
+    const r = await dbQuery(`select password_hash from public.app_users where id=$1 limit 1`, [req.user.user_id]);
+    const user = r.rows[0];
+    if (!user) return fail(res, 404, '用户不存在');
+    if (user.password_hash) {
+      const matched = await bcrypt.compare(oldPassword, user.password_hash);
+      if (!matched) return fail(res, 401, '原密码不正确');
+    }
+    const hash = await bcrypt.hash(password, 10);
+    await dbQuery(`update public.app_users set password_hash=$1, updated_at=now() where id=$2`, [hash, req.user.user_id]);
+    await audit(req, 'user_change_password', 'app_user', req.user.user_id, {});
+    return ok(res, { message: '密码已修改，下次登录请使用新密码' });
+  } catch (e) {
+    return fail(res, 500, '修改密码失败', { error: e.message });
+  }
+});
+
+// ==================== 第二阶段：验证码登录 / 论坛 / 招聘 / 捐赠 / 通知 / 地图 / 签到 ====================
+
+async function ensurePhase2Tables() {
+  if (!pool) return;
+  await dbQuery(`create table if not exists public.login_codes (
+    id bigserial primary key,
+    email text not null,
+    code_hash text not null,
+    purpose text default 'login',
+    expires_at timestamptz not null,
+    used boolean default false,
+    created_at timestamptz default now()
+  )`);
+  await dbQuery(`create index if not exists idx_login_codes_email on public.login_codes (email)`);
+  await dbQuery(`create table if not exists public.forum_categories (
+    id bigserial primary key,
+    name text not null,
+    description text,
+    sort_order integer default 0,
+    is_active boolean default true,
+    created_at timestamptz default now()
+  )`);
+  await dbQuery(`create table if not exists public.forum_posts (
+    id bigserial primary key,
+    category_id bigint references public.forum_categories(id) on delete set null,
+    user_id bigint references public.app_users(id) on delete set null,
+    author_name text,
+    title text not null,
+    content text not null,
+    view_count integer default 0,
+    reply_count integer default 0,
+    is_pinned boolean default false,
+    is_locked boolean default false,
+    status text default 'published',
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+  )`);
+  await dbQuery(`create table if not exists public.forum_replies (
+    id bigserial primary key,
+    post_id bigint not null references public.forum_posts(id) on delete cascade,
+    user_id bigint references public.app_users(id) on delete set null,
+    author_name text,
+    content text not null,
+    created_at timestamptz default now()
+  )`);
+  await dbQuery(`create table if not exists public.jobs (
+    id bigserial primary key,
+    company text not null,
+    title text not null,
+    location text,
+    type text default '全职',
+    salary text,
+    description text,
+    requirements text,
+    contact text,
+    is_published boolean default true,
+    created_by bigint,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+  )`);
+  await dbQuery(`create table if not exists public.job_applications (
+    id bigserial primary key,
+    job_id bigint not null references public.jobs(id) on delete cascade,
+    user_id bigint references public.app_users(id) on delete set null,
+    name text not null,
+    phone text,
+    email text,
+    resume_url text,
+    note text,
+    status text default 'submitted',
+    created_at timestamptz default now()
+  )`);
+  await dbQuery(`create table if not exists public.donations (
+    id bigserial primary key,
+    user_id bigint references public.app_users(id) on delete set null,
+    donor_name text not null,
+    amount numeric(12,2) not null,
+    purpose text default '校友基金',
+    message text,
+    payment_method text default '线下转账',
+    payment_ref text,
+    status text default 'pending',
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+  )`);
+  await dbQuery(`create table if not exists public.notifications (
+    id bigserial primary key,
+    user_id bigint references public.app_users(id) on delete cascade,
+    title text not null,
+    content text,
+    link text,
+    is_read boolean default false,
+    created_at timestamptz default now()
+  )`);
+  await dbQuery(`create index if not exists idx_notifications_user on public.notifications (user_id, is_read)`);
+}
+
+// ---------- 邮箱验证码登录 ----------
+app.post('/api/auth/send-login-code', async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body?.email);
+    if (!email || !email.includes('@')) return fail(res, 400, '请输入有效邮箱');
+    const r = await dbQuery(`select id from public.app_users where email=$1 limit 1`, [email]);
+    if (!r.rows[0]) return fail(res, 404, '该邮箱未注册，请先注册账号');
+    const code = String(crypto.randomInt(100000, 999999));
+    const codeHash = crypto.createHash('sha256').update(code).digest('hex');
+    await dbQuery(`delete from public.login_codes where email=$1 and used=false and expires_at < now()`, [email]).catch(() => {});
+    await dbQuery(
+      `insert into public.login_codes (email, code_hash, purpose, expires_at)
+       values ($1,$2,'login', now() + interval '10 minutes')`,
+      [email, codeHash]
+    );
+    return ok(res, {
+      login_code: code,
+      message: '验证码已生成（当前未接入邮件服务，请使用下方验证码，10 分钟内有效）'
+    });
+  } catch (e) {
+    return fail(res, 500, '发送验证码失败', { error: e.message });
+  }
+});
+
+app.post('/api/auth/code-login', async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body?.email);
+    const code = String(req.body?.code || '').trim();
+    if (!email || !/^\d{6}$/.test(code)) return fail(res, 400, '请输入邮箱和 6 位验证码');
+    const codeHash = crypto.createHash('sha256').update(code).digest('hex');
+    const r = await dbQuery(
+      `select lc.id, lc.expires_at, u.id as user_id, u.display_name, u.phone, u.role, u.status
+       from public.login_codes lc
+       join public.app_users u on lower(u.email) = lower($1)
+       where lc.email = lower($1) and lc.code_hash = $2 and lc.used = false and lc.purpose = 'login'
+       order by lc.created_at desc
+       limit 1`,
+      [email, codeHash]
+    );
+    const row = r.rows[0];
+    if (!row) return fail(res, 400, '验证码无效或已使用');
+    if (new Date(row.expires_at) < new Date()) return fail(res, 400, '验证码已过期，请重新获取');
+    await dbQuery(`update public.login_codes set used=true where id=$1`, [row.id]);
+    const token = jwt.sign(
+      { user_id: row.user_id, role: row.role, type: 'alumni' },
+      TOKEN_SECRET,
+      { expiresIn: '7d' }
+    );
+    await audit(req, 'auth_login_code', 'app_user', row.user_id, { email });
+    return ok(res, {
+      token,
+      user: { name: row.display_name, email, phone: row.phone, role: row.role, status: row.status },
+      message: '验证码登录成功'
+    });
+  } catch (e) {
+    return fail(res, 500, '验证码登录失败', { error: e.message });
+  }
+});
+
+// ---------- 校友论坛（公开） ----------
+app.get('/api/forum/categories', async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select fc.*, (select count(*)::int from public.forum_posts p where p.category_id=fc.id and p.status='published') as post_count
+       from public.forum_categories fc
+       where fc.is_active = true
+       order by fc.sort_order asc, fc.id asc`
+    );
+    return ok(res, { categories: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取论坛版块失败', { error: e.message });
+  }
+});
+
+app.get('/api/forum/posts', async (req, res) => {
+  try {
+    const page = parsePositiveInt(req.query.page, 1);
+    const pageSize = Math.min(parsePositiveInt(req.query.pageSize, 10), 50);
+    const categoryId = parsePositiveInt(req.query.categoryId, 0);
+    const q = req.query.q;
+    const params = [];
+    const wheres = [`p.status = 'published'`];
+    if (categoryId) { params.push(categoryId); wheres.push(`p.category_id = $${params.length}`); }
+    if (q) { params.push(`%${q}%`); wheres.push(`(p.title ilike $${params.length} or p.content ilike $${params.length})`); }
+    const where = wheres.join(' and ');
+    const count = await dbQuery(`select count(*)::int as total from public.forum_posts p where ${where}`, params);
+    const total = count.rows[0].total;
+    const offset = (page - 1) * pageSize;
+    const r = await dbQuery(
+      `select p.id, p.category_id, c.name as category_name, p.user_id, p.author_name, p.title, p.view_count,
+              p.reply_count, p.is_pinned, p.created_at, p.updated_at
+       from public.forum_posts p
+       left join public.forum_categories c on c.id = p.category_id
+       where ${where}
+       order by p.is_pinned desc, p.updated_at desc
+       limit $${params.length + 1} offset $${params.length + 2}`,
+      [...params, pageSize, offset]
+    );
+    return ok(res, { total, page, pageSize, items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取帖子失败', { error: e.message });
+  }
+});
+
+app.get('/api/forum/posts/:id', async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    if (!id) return fail(res, 400, '帖子不存在');
+    await dbQuery(`update public.forum_posts set view_count = view_count + 1 where id=$1 and status='published'`, [id]).catch(() => {});
+    const r = await dbQuery(
+      `select p.*, c.name as category_name
+       from public.forum_posts p
+       left join public.forum_categories c on c.id = p.category_id
+       where p.id=$1 and p.status='published'`,
+      [id]
+    );
+    const post = r.rows[0];
+    if (!post) return fail(res, 404, '帖子不存在');
+    const replies = await dbQuery(
+      `select * from public.forum_replies where post_id=$1 order by created_at asc`,
+      [id]
+    );
+    return ok(res, { post, replies: replies.rows });
+  } catch (e) {
+    return fail(res, 500, '获取帖子详情失败', { error: e.message });
+  }
+});
+
+app.post('/api/forum/posts', requireAuth, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const title = String(b.title || '').trim();
+    const content = String(b.content || '').trim();
+    const categoryId = parsePositiveInt(b.category_id, 0);
+    if (!title) return fail(res, 400, '标题不能为空');
+    if (content.length < 5) return fail(res, 400, '内容至少 5 个字');
+    if (!categoryId) return fail(res, 400, '请选择版块');
+    const me = await dbQuery(`select display_name from public.app_users where id=$1 limit 1`, [req.user.user_id]);
+    const authorName = (me.rows[0] && me.rows[0].display_name) || '校友';
+    const r = await dbQuery(
+      `insert into public.forum_posts (category_id, user_id, author_name, title, content)
+       values ($1,$2,$3,$4,$5) returning *`,
+      [categoryId, req.user.user_id, authorName, title, content]
+    );
+    await audit(req, 'forum_post_create', 'forum_post', r.rows[0].id, { title });
+    return ok(res, { post: r.rows[0], message: '发布成功' });
+  } catch (e) {
+    return fail(res, 500, '发布失败', { error: e.message });
+  }
+});
+
+app.post('/api/forum/posts/:id/replies', requireAuth, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const content = String(req.body?.content || '').trim();
+    if (!id) return fail(res, 400, '帖子不存在');
+    if (content.length < 2) return fail(res, 400, '回复内容至少 2 个字');
+    const post = await dbQuery(`select id, is_locked, status from public.forum_posts where id=$1 limit 1`, [id]);
+    if (!post.rows[0]) return fail(res, 404, '帖子不存在');
+    if (post.rows[0].is_locked) return fail(res, 403, '该帖已锁定，无法回复');
+    const me = await dbQuery(`select display_name from public.app_users where id=$1 limit 1`, [req.user.user_id]);
+    const authorName = (me.rows[0] && me.rows[0].display_name) || '校友';
+    const r = await dbQuery(
+      `insert into public.forum_replies (post_id, user_id, author_name, content)
+       values ($1,$2,$3,$4) returning *`,
+      [id, req.user.user_id, authorName, content]
+    );
+    await dbQuery(`update public.forum_posts set reply_count = reply_count + 1, updated_at = now() where id=$1`, [id]);
+    return ok(res, { reply: r.rows[0], message: '回复成功' });
+  } catch (e) {
+    return fail(res, 500, '回复失败', { error: e.message });
+  }
+});
+
+// ---------- 校友论坛（管理） ----------
+app.get('/api/admin/forum/posts', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select p.*, c.name as category_name
+       from public.forum_posts p
+       left join public.forum_categories c on c.id = p.category_id
+       order by p.created_at desc
+       limit 500`
+    );
+    return ok(res, { items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取帖子失败', { error: e.message });
+  }
+});
+
+app.patch('/api/admin/forum/posts/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const b = req.body || {};
+    const sets = [];
+    const params = [];
+    ['status', 'is_pinned', 'is_locked', 'title', 'content', 'category_id'].forEach((key) => {
+      if (b[key] !== undefined) {
+        params.push(b[key]);
+        sets.push(`${key} = $${params.length}`);
+      }
+    });
+    if (!sets.length) return fail(res, 400, '没有可更新的内容');
+    params.push(id);
+    const r = await dbQuery(
+      `update public.forum_posts set ${sets.join(', ')}, updated_at = now() where id = $${params.length} returning *`,
+      params
+    );
+    if (!r.rows[0]) return fail(res, 404, '帖子不存在');
+    await audit(req, 'forum_post_update', 'forum_post', id, {});
+    return ok(res, { post: r.rows[0], message: '已更新' });
+  } catch (e) {
+    return fail(res, 500, '更新帖子失败', { error: e.message });
+  }
+});
+
+app.delete('/api/admin/forum/posts/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    await dbQuery(`delete from public.forum_posts where id=$1`, [id]);
+    await audit(req, 'forum_post_delete', 'forum_post', id, {});
+    return ok(res, { message: '已删除' });
+  } catch (e) {
+    return fail(res, 500, '删除帖子失败', { error: e.message });
+  }
+});
+
+app.post('/api/admin/forum/categories', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const name = String(b.name || '').trim();
+    if (!name) return fail(res, 400, '版块名称不能为空');
+    const r = await dbQuery(
+      `insert into public.forum_categories (name, description, sort_order, is_active)
+       values ($1,$2,$3,$4) returning *`,
+      [name, b.description || null, parsePositiveInt(b.sort_order, 0), b.is_active !== false]
+    );
+    await audit(req, 'forum_category_create', 'forum_category', r.rows[0].id, { name });
+    return ok(res, { category: r.rows[0], message: '版块已创建' });
+  } catch (e) {
+    return fail(res, 500, '创建版块失败', { error: e.message });
+  }
+});
+
+app.patch('/api/admin/forum/categories/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const b = req.body || {};
+    const sets = [];
+    const params = [];
+    ['name', 'description', 'sort_order', 'is_active'].forEach((key) => {
+      if (b[key] !== undefined) {
+        params.push(b[key]);
+        sets.push(`${key} = $${params.length}`);
+      }
+    });
+    if (!sets.length) return fail(res, 400, '没有可更新的内容');
+    params.push(id);
+    const r = await dbQuery(`update public.forum_categories set ${sets.join(', ')} where id=$${params.length} returning *`, params);
+    if (!r.rows[0]) return fail(res, 404, '版块不存在');
+    return ok(res, { category: r.rows[0], message: '已更新' });
+  } catch (e) {
+    return fail(res, 500, '更新版块失败', { error: e.message });
+  }
+});
+
+// ---------- 校友招聘（公开） ----------
+app.get('/api/jobs', async (req, res) => {
+  try {
+    const page = parsePositiveInt(req.query.page, 1);
+    const pageSize = Math.min(parsePositiveInt(req.query.pageSize, 10), 50);
+    const q = req.query.q;
+    const params = [];
+    let where = `where is_published = true`;
+    if (q) {
+      params.push(`%${q}%`);
+      where += ` and (company ilike $${params.length} or title ilike $${params.length} or location ilike $${params.length})`;
+    }
+    const count = await dbQuery(`select count(*)::int as total from public.jobs ${where}`, params);
+    const offset = (page - 1) * pageSize;
+    const r = await dbQuery(
+      `select id, company, title, location, type, salary, is_published, created_at
+       from public.jobs ${where}
+       order by created_at desc
+       limit $${params.length + 1} offset $${params.length + 2}`,
+      [...params, pageSize, offset]
+    );
+    return ok(res, { total: count.rows[0].total, page, pageSize, items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取招聘信息失败', { error: e.message });
+  }
+});
+
+app.get('/api/jobs/:id', async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const r = await dbQuery(`select * from public.jobs where id=$1 and is_published=true`, [id]);
+    if (!r.rows[0]) return fail(res, 404, '招聘信息不存在');
+    return ok(res, { job: r.rows[0] });
+  } catch (e) {
+    return fail(res, 500, '获取招聘详情失败', { error: e.message });
+  }
+});
+
+app.post('/api/jobs/:id/apply', async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const b = req.body || {};
+    const name = String(b.name || '').trim();
+    const phone = String(b.phone || '').trim();
+    if (!name || !phone) return fail(res, 400, '姓名和联系电话不能为空');
+    const job = await dbQuery(`select id from public.jobs where id=$1 and is_published=true`, [id]);
+    if (!job.rows[0]) return fail(res, 404, '招聘信息不存在');
+    const r = await dbQuery(
+      `insert into public.job_applications (job_id, user_id, name, phone, email, resume_url, note)
+       values ($1,$2,$3,$4,$5,$6,$7) returning *`,
+      [id, req.user ? req.user.user_id : null, name, phone, b.email || null, b.resume_url || null, b.note || null]
+    );
+    return ok(res, { application: r.rows[0], message: '简历已投递，招聘方会尽快联系你' });
+  } catch (e) {
+    return fail(res, 500, '投递失败', { error: e.message });
+  }
+});
+
+// ---------- 校友招聘（管理） ----------
+app.get('/api/admin/jobs', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbQuery(`select j.*, (select count(*)::int from public.job_applications ja where ja.job_id = j.id) as applications_count from public.jobs j order by j.created_at desc limit 500`);
+    return ok(res, { items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取招聘列表失败', { error: e.message });
+  }
+});
+
+app.post('/api/admin/jobs', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const company = String(b.company || '').trim();
+    const title = String(b.title || '').trim();
+    if (!company || !title) return fail(res, 400, '公司和职位不能为空');
+    const r = await dbQuery(
+      `insert into public.jobs (company, title, location, type, salary, description, requirements, contact, is_published, created_by)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning *`,
+      [company, title, b.location || null, b.type || '全职', b.salary || null, b.description || null, b.requirements || null, b.contact || null, b.is_published !== false, req.user.admin_id]
+    );
+    await audit(req, 'job_create', 'job', r.rows[0].id, { company, title });
+    return ok(res, { job: r.rows[0], message: '招聘信息已发布' });
+  } catch (e) {
+    return fail(res, 500, '发布招聘失败', { error: e.message });
+  }
+});
+
+app.patch('/api/admin/jobs/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const b = req.body || {};
+    const sets = [];
+    const params = [];
+    ['company', 'title', 'location', 'type', 'salary', 'description', 'requirements', 'contact', 'is_published'].forEach((key) => {
+      if (b[key] !== undefined) {
+        params.push(b[key]);
+        sets.push(`${key} = $${params.length}`);
+      }
+    });
+    if (!sets.length) return fail(res, 400, '没有可更新的内容');
+    params.push(id);
+    const r = await dbQuery(`update public.jobs set ${sets.join(', ')}, updated_at = now() where id=$${params.length} returning *`, params);
+    if (!r.rows[0]) return fail(res, 404, '招聘信息不存在');
+    await audit(req, 'job_update', 'job', id, {});
+    return ok(res, { job: r.rows[0], message: '已更新' });
+  } catch (e) {
+    return fail(res, 500, '更新招聘失败', { error: e.message });
+  }
+});
+
+app.delete('/api/admin/jobs/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    await dbQuery(`delete from public.jobs where id=$1`, [id]);
+    await audit(req, 'job_delete', 'job', id, {});
+    return ok(res, { message: '已删除' });
+  } catch (e) {
+    return fail(res, 500, '删除招聘失败', { error: e.message });
+  }
+});
+
+app.get('/api/admin/jobs/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const r = await dbQuery(`select * from public.jobs where id=$1`, [id]);
+    if (!r.rows[0]) return fail(res, 404, '招聘信息不存在');
+    return ok(res, { job: r.rows[0] });
+  } catch (e) {
+    return fail(res, 500, '获取招聘详情失败', { error: e.message });
+  }
+});
+app.get('/api/admin/jobs/:id/applications', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const r = await dbQuery(
+      `select ja.*, j.company, j.title
+       from public.job_applications ja
+       join public.jobs j on j.id = ja.job_id
+       where ja.job_id = $1
+       order by ja.created_at desc`,
+      [id]
+    );
+    return ok(res, { items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取投递记录失败', { error: e.message });
+  }
+});
+
+app.patch('/api/admin/job-applications/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const status = String(req.body?.status || '').trim();
+    if (!['submitted', 'contacted', 'interview', 'accepted', 'rejected'].includes(status)) return fail(res, 400, '状态不正确');
+    const r = await dbQuery(`update public.job_applications set status=$1 where id=$2 returning *`, [status, id]);
+    if (!r.rows[0]) return fail(res, 404, '投递记录不存在');
+    return ok(res, { application: r.rows[0], message: '状态已更新' });
+  } catch (e) {
+    return fail(res, 500, '更新失败', { error: e.message });
+  }
+});
+
+// ---------- 在线捐赠 ----------
+app.get('/api/donations', async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select id, donor_name, amount, purpose, message, created_at
+       from public.donations where status='confirmed'
+       order by created_at desc
+       limit 100`
+    );
+    const sum = await dbQuery(`select coalesce(sum(amount),0)::numeric(12,2) as total, count(*)::int as count from public.donations where status='confirmed'`);
+    return ok(res, { items: r.rows, total: sum.rows[0].total, count: sum.rows[0].count });
+  } catch (e) {
+    return fail(res, 500, '获取捐赠记录失败', { error: e.message });
+  }
+});
+
+app.post('/api/donations', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const donorName = String(b.donor_name || '').trim();
+    const amount = Number(b.amount);
+    if (!donorName) return fail(res, 400, '请填写捐赠人姓名');
+    if (!Number.isFinite(amount) || amount <= 0) return fail(res, 400, '捐赠金额必须大于 0');
+    const r = await dbQuery(
+      `insert into public.donations (user_id, donor_name, amount, purpose, message, payment_method, payment_ref)
+       values ($1,$2,$3,$4,$5,$6,$7) returning *`,
+      [req.user ? req.user.user_id : null, donorName, amount.toFixed(2), b.purpose || '校友基金', b.message || null, b.payment_method || '线下转账', b.payment_ref || null]
+    );
+    return ok(res, { donation: r.rows[0], message: '捐赠意向已提交，管理员确认后将在捐赠榜展示' });
+  } catch (e) {
+    return fail(res, 500, '提交捐赠失败', { error: e.message });
+  }
+});
+
+app.get('/api/admin/donations', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbQuery(`select * from public.donations order by created_at desc limit 500`);
+    const sum = await dbQuery(`select coalesce(sum(amount),0)::numeric(12,2) as total, count(*)::int as count from public.donations where status='confirmed'`);
+    return ok(res, { items: r.rows, total: sum.rows[0].total, count: sum.rows[0].count });
+  } catch (e) {
+    return fail(res, 500, '获取捐赠列表失败', { error: e.message });
+  }
+});
+
+app.patch('/api/admin/donations/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const status = String(req.body?.status || '').trim();
+    if (!['pending', 'confirmed', 'rejected'].includes(status)) return fail(res, 400, '状态不正确');
+    const r = await dbQuery(`update public.donations set status=$1, updated_at=now() where id=$2 returning *`, [status, id]);
+    if (!r.rows[0]) return fail(res, 404, '捐赠记录不存在');
+    await audit(req, 'donation_' + status, 'donation', id, {});
+    return ok(res, { donation: r.rows[0], message: '已更新' });
+  } catch (e) {
+    return fail(res, 500, '更新捐赠失败', { error: e.message });
+  }
+});
+
+// ---------- 消息通知 ----------
+app.get('/api/notifications', requireAuth, async (req, res) => {
+  try {
+    const page = parsePositiveInt(req.query.page, 1);
+    const pageSize = Math.min(parsePositiveInt(req.query.pageSize, 20), 100);
+    const offset = (page - 1) * pageSize;
+    const count = await dbQuery(`select count(*)::int as total from public.notifications where user_id=$1`, [req.user.user_id]);
+    const r = await dbQuery(
+      `select * from public.notifications where user_id=$1 order by created_at desc limit $2 offset $3`,
+      [req.user.user_id, pageSize, offset]
+    );
+    return ok(res, { total: count.rows[0].total, page, pageSize, items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取通知失败', { error: e.message });
+  }
+});
+
+app.get('/api/notifications/unread-count', requireAuth, async (req, res) => {
+  try {
+    const r = await dbQuery(`select count(*)::int as count from public.notifications where user_id=$1 and is_read=false`, [req.user.user_id]);
+    return ok(res, { count: r.rows[0].count });
+  } catch (e) {
+    return fail(res, 500, '获取未读数量失败', { error: e.message });
+  }
+});
+
+app.post('/api/notifications/read', requireAuth, async (req, res) => {
+  try {
+    const body = req.body || {};
+    if (body.all) {
+      await dbQuery(`update public.notifications set is_read=true where user_id=$1`, [req.user.user_id]);
+    } else {
+      const ids = Array.isArray(body.ids) ? body.ids.map(Number).filter(Boolean) : [];
+      if (ids.length) {
+        await dbQuery(
+          `update public.notifications set is_read=true where user_id=$1 and id = any($2::bigint[])`,
+          [req.user.user_id, ids]
+        );
+      }
+    }
+    return ok(res, { message: '已标记为已读' });
+  } catch (e) {
+    return fail(res, 500, '操作失败', { error: e.message });
+  }
+});
+
+app.post('/api/admin/notifications/send', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const title = String(b.title || '').trim();
+    if (!title) return fail(res, 400, '通知标题不能为空');
+    const content = String(b.content || '').trim() || title;
+    const link = b.link ? String(b.link) : null;
+    const params = [title, content, link];
+    let result;
+    if (b.user_id) {
+      params.push(b.user_id);
+      result = await dbQuery(
+        `insert into public.notifications (user_id, title, content, link) values ($4,$1,$2,$3) returning *`,
+        params
+      );
+    } else {
+      // 广播给所有已注册用户
+      const users = await dbQuery(`select id from public.app_users`);
+      for (const row of users.rows) {
+        await dbQuery(
+          `insert into public.notifications (user_id, title, content, link) values ($1,$2,$3,$4)`,
+          [row.id, title, content, link]
+        );
+      }
+      result = { rows: [{ id: null }], sent: users.rows.length };
+    }
+    await audit(req, 'notification_send', 'notification', result.rows[0].id, { title, broadcast: !b.user_id });
+    return ok(res, { message: b.user_id ? '通知已发送' : `通知已广播给 ${result.sent} 位用户` });
+  } catch (e) {
+    return fail(res, 500, '发送通知失败', { error: e.message });
+  }
+});
+
+// ---------- 校友地图 ----------
+app.get('/api/alumni/map', requireAuth, async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select current_province, current_city, count(*)::int as count
+       from public.alumni_profiles
+       where status='approved' and current_province is not null and current_province <> ''
+       group by current_province, current_city
+       order by count desc`
+    );
+    const provinces = await dbQuery(
+      `select current_province, count(*)::int as count
+       from public.alumni_profiles
+       where status='approved' and current_province is not null and current_province <> ''
+       group by current_province
+       order by count desc`
+    );
+    return ok(res, { cities: r.rows, provinces: provinces.rows });
+  } catch (e) {
+    return fail(res, 500, '获取校友分布失败', { error: e.message });
+  }
+});
+
+// ---------- 活动二维码签到 ----------
+function checkinToken(eventId) {
+  const payload = `checkin:${eventId}`;
+  return crypto.createHmac('sha256', TOKEN_SECRET).update(payload).digest('hex').slice(0, 24);
+}
+
+app.post('/api/admin/events/:id/checkin-code', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const r = await dbQuery(`select id, title from public.events where id=$1`, [id]);
+    if (!r.rows[0]) return fail(res, 404, '活动不存在');
+    const token = checkinToken(id);
+    const checkinUrl = `${PUBLIC_SITE_URL}/checkin.html?event=${id}&code=${token}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(checkinUrl)}`;
+    return ok(res, { checkin_url: checkinUrl, qr_image_url: qrUrl, token });
+  } catch (e) {
+    return fail(res, 500, '生成签到码失败', { error: e.message });
+  }
+});
+
+app.post('/api/events/checkin', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const eventId = parsePositiveInt(b.event_id, 0);
+    const code = String(b.code || '').trim();
+    const name = String(b.name || '').trim();
+    const phone = String(b.phone || '').trim();
+    if (!eventId || !code) return fail(res, 400, '参数不完整');
+    if (checkinToken(eventId) !== code) return fail(res, 403, '签到码无效');
+    if (!name || !phone) return fail(res, 400, '请填写姓名和手机号');
+    const reg = await dbQuery(
+      `select id from public.event_registrations where event_id=$1 and phone=$2 limit 1`,
+      [eventId, phone]
+    );
+    if (reg.rows[0]) {
+      await dbQuery(`update public.event_registrations set status='checked_in', updated_at=now() where id=$1`, [reg.rows[0].id]);
+    } else {
+      await dbQuery(
+        `insert into public.event_registrations (event_id, user_id, name, phone, status)
+         values ($1,$2,$3,$4,'checked_in')`,
+        [eventId, req.user ? req.user.user_id : null, name, phone]
+      ).catch(async () => {
+        const dup = await dbQuery(`select id from public.event_registrations where event_id=$1 and phone=$2 limit 1`, [eventId, phone]);
+        if (dup.rows[0]) await dbQuery(`update public.event_registrations set status='checked_in', updated_at=now() where id=$1`, [dup.rows[0].id]);
+      });
+    }
+    await audit(req, 'event_checkin', 'event', eventId, { name, phone });
+    return ok(res, { message: `${name}，签到成功！` });
+  } catch (e) {
+    return fail(res, 500, '签到失败', { error: e.message });
+  }
+});
+
+// ==================== 第三轮补充：管理端通知/版块/内容区块种子 ====================
+
+async function ensureSiteSectionsSeed() {
+  if (!pool) return;
+  const seed = [
+    { page_slug: 'home', section_key: 'home_hero', section_name: '首页横幅', content: { hero_title: '共忆青春海高路，同筑未来校友情', hero_subtitle: '海林市高级中学校友会欢迎你', hero_bg_url: '', btn_text: '加入我们', btn_link: 'account.html' } },
+    { page_slug: 'home', section_key: 'home_notice', section_name: '首页公告', content: { notice_text: '欢迎校友回家！请登录后完成校友认证。' } },
+    { page_slug: 'home', section_key: 'home_stats', section_name: '数据概览', content: { stats: [{ label: '校友会员', value: '0' }, { label: '活动组织', value: '0' }, { label: '服务母校', value: '0' }] } },
+    { page_slug: 'home', section_key: 'home_figures', section_name: '校友风采', content: { title: '校友风采', subtitle: '杰出的海高人在各行各业发光发热', items: [] } },
+    { page_slug: 'home', section_key: 'home_services', section_name: '校友服务', content: { title: '校友服务', subtitle: '为校友提供更贴心的服务', items: [] } },
+    { page_slug: 'about', section_key: 'about_intro', section_name: '校友会介绍', content: { title: '校友会介绍', content: '' } },
+    { page_slug: 'about', section_key: 'about_contact', section_name: '联系方式', content: { email: 'alumni@example.com', address: '黑龙江省牡丹江市海林市', phone: '' } },
+    { page_slug: 'contact', section_key: 'contact_info', section_name: '联系我们', content: { email: 'alumni@example.com', address: '黑龙江省牡丹江市海林市', phone: '', wechat: '' } }
+  ];
+  for (const item of seed) {
+    const exists = await dbQuery(`select id from public.site_sections where section_key=$1 limit 1`, [item.section_key]);
+    if (!exists.rows[0]) {
+      await dbQuery(
+        `insert into public.site_sections (page_slug, section_key, section_name, content, display_order)
+         values ($1,$2,$3,$4,$5) on conflict (section_key) do nothing`,
+        [item.page_slug, item.section_key, item.section_name, JSON.stringify(item.content), 0]
+      );
+    }
+  }
+}
+
+app.get('/api/admin/forum/categories', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select fc.*, (select count(*)::int from public.forum_posts p where p.category_id=fc.id) as post_count
+       from public.forum_categories fc
+       order by fc.sort_order asc, fc.id asc`
+    );
+    return ok(res, { items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取版块失败', { error: e.message });
+  }
+});
+
+app.get('/api/admin/notifications', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const page = parsePositiveInt(req.query.page, 1);
+    const pageSize = Math.min(parsePositiveInt(req.query.pageSize, 50), 200);
+    const offset = (page - 1) * pageSize;
+    const count = await dbQuery(`select count(*)::int as total from public.notifications`);
+    const r = await dbQuery(
+      `select n.*, u.display_name as user_name
+       from public.notifications n
+       left join public.app_users u on u.id = n.user_id
+       order by n.created_at desc
+       limit $1 offset $2`,
+      [pageSize, offset]
+    );
+    return ok(res, { total: count.rows[0].total, page, pageSize, items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取通知记录失败', { error: e.message });
+  }
+});
+
+app.delete('/api/admin/notifications/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    if (!id) return fail(res, 400, '通知不存在');
+    await dbQuery(`delete from public.notifications where id=$1`, [id]);
+    await audit(req, 'notification_delete', 'notification', id, {});
+    return ok(res, { message: '已删除' });
+  } catch (e) {
+    return fail(res, 500, '删除通知失败', { error: e.message });
+  }
+});
+
+// 管理端读取全部内容区块（含未公开页面）
+app.get('/api/admin/content/sections', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const page = req.query.page;
+    const params = [];
+    let where = '';
+    if (page) { params.push(page); where = 'where page_slug=$1'; }
+    const r = await dbQuery(`select * from public.site_sections ${where} order by page_slug asc, display_order asc, created_at asc`, params);
+    return ok(res, { sections: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取内容区块失败', { error: e.message });
+  }
+});
 app.use((req, res) => {
   fail(res, 404, '接口不存在');
 });
@@ -1586,6 +2496,9 @@ app.use((req, res) => {
 ensureRootAdmin()
   .then(() => ensureContentTables())
   .then(() => ensureUserTableExtras())
+  .then(() => ensurePasswordResetTable())
+  .then(() => ensurePhase2Tables())
+  .then(() => ensureSiteSectionsSeed())
   .then(() => {
     app.listen(PORT, () => {
       console.log(`hailin alumni backend running on http://localhost:${PORT}`);

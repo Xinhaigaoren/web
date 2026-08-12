@@ -145,3 +145,13 @@ select {
 .badge.checked_in { background: #dbeafe; color: #1d40af; }
 .badge.draft { background: #f1f5f9; color: #64748b; }
 .editor-form .three-fields input[type="datetime-local"] { min-width: 0; }
+/* 弹窗（签到二维码等） */
+.modal-overlay[hidden] { display: none; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(10,16,28,.55); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+.modal-card { background: #fff; border-radius: 16px; padding: 26px; max-width: 440px; width: 100%; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,.3); }
+.modal-card h3 { margin: 0 0 8px; }
+.modal-card p { margin: 0 0 14px; color: #6b7280; font-size: 14px; }
+.modal-close { position: absolute; top: 12px; right: 14px; border: 0; background: transparent; font-size: 22px; cursor: pointer; color: #6b7280; }
+.qr-box { display: flex; justify-content: center; padding: 10px 0 14px; }
+.qr-box img { width: 260px; height: 260px; border: 1px solid #e5e7eb; border-radius: 12px; }
+.mono-link { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; font-size: 12px; word-break: break-all; color: #374151; margin-bottom: 10px; }

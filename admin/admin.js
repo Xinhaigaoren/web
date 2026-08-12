@@ -122,6 +122,11 @@ function setActiveTab(tabName) {
   if (tabName === 'stats') loadStats();
   if (tabName === 'alumni') loadAlumniList();
   if (tabName === 'users') loadUsers();
+  if (tabName === 'content') loadContentSections();
+  if (tabName === 'forum') loadForum();
+  if (tabName === 'jobs') loadJobsAdmin();
+  if (tabName === 'donations') loadDonationsAdmin();
+  if (tabName === 'notifications') loadNotificationsAdmin();
 }
 
 tabs.forEach(tab => tab.addEventListener('click', () => setActiveTab(tab.dataset.tab)));
@@ -783,6 +788,7 @@ async function loadEvents(page = 1) {
         <td>
           <div class="row-actions">
             <button class="ghost" data-event-regs="${item.id}" data-event-title="${escapeHtml(item.title)}">报名</button>
+            <button class="ghost" data-event-checkin="${item.id}" data-event-title="${escapeHtml(item.title)}">签到码</button>
             <button class="ghost" data-event-edit="${item.id}">编辑</button>
             <button class="reject" data-event-delete="${item.id}">删除</button>
           </div>
@@ -852,10 +858,20 @@ if (eventCancelBtn) eventCancelBtn.addEventListener('click', () => { eventEditor
 if (eventRows) {
   eventRows.addEventListener('click', async (event) => {
     const regs = event.target.closest('button[data-event-regs]');
+    const checkin = event.target.closest('button[data-event-checkin]');
     const edit = event.target.closest('button[data-event-edit]');
     const del = event.target.closest('button[data-event-delete]');
     if (regs) {
       await loadRegistrations(regs.dataset.eventRegs, regs.dataset.eventTitle);
+      return;
+    }
+    if (checkin) {
+      try {
+        const data = await api(`/api/admin/events/${checkin.dataset.eventCheckin}/checkin-code`, { method: 'POST' });
+        showCheckinModal(data, checkin.dataset.eventTitle);
+      } catch (error) {
+        alert(error.message);
+      }
       return;
     }
     if (edit) {
@@ -1181,4 +1197,479 @@ if (importAlumniBtn && importAlumniFile) {
       importStatus.className = 'status';
     }
   });
+}
+// ==================== 第二阶段：内容区块 / 论坛 / 招聘 / 捐赠 / 消息 / 签到 ====================
+
+// ---------- 活动签到码 ----------
+function showCheckinModal(data, title) {
+  const modal = document.querySelector('#checkinModal');
+  if (!modal) return;
+  document.querySelector('#checkinModalTitle').textContent = `签到码：${title || ''}`;
+  document.querySelector('#checkinQrImg').src = data.qr_image_url || '';
+  document.querySelector('#checkinUrlText').textContent = data.checkin_url || '';
+  modal.hidden = false;
+}
+if (document.querySelector('#checkinModal')) {
+  document.querySelector('#checkinModalClose').addEventListener('click', () => { document.querySelector('#checkinModal').hidden = true; });
+  document.querySelector('#checkinModal').addEventListener('click', (event) => {
+    if (event.target === event.currentTarget) document.querySelector('#checkinModal').hidden = true;
+  });
+  document.querySelector('#copyCheckinUrlBtn').addEventListener('click', async () => {
+    const url = document.querySelector('#checkinUrlText').textContent;
+    try {
+      await navigator.clipboard.writeText(url);
+      alert('签到链接已复制');
+    } catch (error) {
+      alert('复制失败，请手动复制上方链接');
+    }
+  });
+}
+
+// ---------- 内容区块管理 ----------
+let contentSectionsCache = [];
+const CONTENT_PAGES = { home: '首页', about: '校友会介绍', contact: '联系我们' };
+function contentPageName(slug) {
+  return CONTENT_PAGES[slug] || slug || '';
+}
+function fillSectionKeySelect() {
+  const select = document.querySelector('#contentSectionKey');
+  if (!select) return;
+  const seen = [];
+  select.innerHTML = '<option value="">选择已有区块</option>' + contentSectionsCache
+    .filter((s) => {
+      if (seen.includes(s.section_key)) return false;
+      seen.push(s.section_key);
+      return true;
+    })
+    .map((s) => `<option value="${escapeHtml(s.section_key)}">${escapeHtml(s.section_key)}</option>`).join('');
+}
+function toggleSectionKeyInput() {
+  const select = document.querySelector('#contentSectionKey');
+  if (!select) return;
+  const isNew = document.querySelector('#newSectionToggle').checked;
+  let custom = document.querySelector('#contentSectionKeyCustom');
+  if (isNew && !custom) {
+    custom = document.createElement('input');
+    custom.id = 'contentSectionKeyCustom';
+    custom.name = 'section_key';
+    custom.placeholder = '如 home_about、footer_links';
+    select.insertAdjacentElement('afterend', custom);
+  }
+  if (custom) custom.hidden = !isNew;
+  if (isNew) {
+    select.removeAttribute('name');
+    custom.value = '';
+    custom.focus();
+  } else {
+    select.setAttribute('name', 'section_key');
+    if (custom) custom.removeAttribute('name');
+  }
+}
+async function loadContentSections() {
+  const rowsBox = document.querySelector('#contentSectionRows');
+  if (!rowsBox) return;
+  const pageFilter = document.querySelector('#contentPageFilter')?.value || '';
+  rowsBox.innerHTML = '<tr><td colspan="5">正在加载……</td></tr>';
+  try {
+    const data = await api(`/api/admin/content/sections${pageFilter ? `?page=${encodeURIComponent(pageFilter)}` : ''}`);
+    contentSectionsCache = data.sections || [];
+    if (!contentSectionsCache.length) {
+      rowsBox.innerHTML = '<tr><td colspan="5">暂无内容区块，点击下方表单新建。</td></tr>';
+    } else {
+      rowsBox.innerHTML = contentSectionsCache.map((s, i) => `
+        <tr>
+          <td>${contentPageName(s.page_slug)}</td>
+          <td><code>${escapeHtml(s.section_key)}</code></td>
+          <td>${escapeHtml(s.section_name)}</td>
+          <td>${escapeHtml(String(s.updated_at || s.created_at || '').slice(0, 16).replace('T', ' '))}</td>
+          <td><div class="row-actions"><button class="ghost" data-content-edit="${i}">编辑</button></div></td>
+        </tr>`).join('');
+    }
+    fillSectionKeySelect();
+  } catch (error) {
+    rowsBox.innerHTML = `<tr><td colspan="5">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+if (document.querySelector('#contentSectionRows')) {
+  document.querySelector('#contentSectionRows').addEventListener('click', (event) => {
+    const btn = event.target.closest('button[data-content-edit]');
+    if (!btn) return;
+    const s = contentSectionsCache[Number(btn.dataset.contentEdit)];
+    if (!s) return;
+    const form = document.querySelector('#contentSectionForm');
+    form.querySelector('[name="id"]').value = s.id || '';
+    form.querySelector('[name="page_slug"]').value = s.page_slug;
+    form.querySelector('[name="section_name"]').value = s.section_name || '';
+    form.querySelector('[name="display_order"]').value = s.display_order ?? 0;
+    form.querySelector('[name="content"]').value = JSON.stringify(safeJson(s.content), null, 2);
+    document.querySelector('#newSectionToggle').checked = false;
+    toggleSectionKeyInput();
+    fillSectionKeySelect();
+    form.querySelector('[name="section_key"]').value = s.section_key;
+    document.querySelector('#contentSectionStatus').textContent = '';
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  document.querySelector('#contentSectionForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const status = document.querySelector('#contentSectionStatus');
+    status.textContent = '正在保存……';
+    status.className = 'status';
+    const fd = new FormData(event.currentTarget);
+    let content;
+    try {
+      content = JSON.parse(fd.get('content') || '{}');
+    } catch (error) {
+      status.textContent = '内容不是有效的 JSON，请检查格式';
+      return;
+    }
+    const sectionKey = String(fd.get('section_key') || '').trim();
+    if (!sectionKey) {
+      status.textContent = '请选择或填写区块标识';
+      return;
+    }
+    try {
+      const data = await api('/api/admin/content/sections', {
+        method: 'POST',
+        body: JSON.stringify({
+          page_slug: fd.get('page_slug'),
+          section_key: sectionKey,
+          section_name: String(fd.get('section_name') || '').trim() || sectionKey,
+          content,
+          display_order: Number(fd.get('display_order') || 0)
+        })
+      });
+      status.textContent = data.message || '已发布';
+      status.className = 'status ok';
+      loadContentSections();
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  });
+  document.querySelector('#contentSectionClearBtn').addEventListener('click', () => {
+    const form = document.querySelector('#contentSectionForm');
+    form.reset();
+    document.querySelector('#newSectionToggle').checked = false;
+    toggleSectionKeyInput();
+    fillSectionKeySelect();
+    document.querySelector('#contentSectionStatus').textContent = '';
+  });
+  document.querySelector('#newSectionToggle').addEventListener('change', toggleSectionKeyInput);
+  document.querySelector('#contentPageFilter').addEventListener('change', () => { loadContentSections(); });
+  document.querySelector('#contentRefreshBtn').addEventListener('click', () => { loadContentSections(); });
+}
+
+// ---------- 论坛管理 ----------
+async function loadForum() {
+  const postBox = document.querySelector('#forumPostRows');
+  const catBox = document.querySelector('#forumCategoryBox');
+  if (!postBox || !catBox) return;
+  postBox.innerHTML = '<tr><td colspan="6">正在加载……</td></tr>';
+  catBox.innerHTML = '';
+  try {
+    const [postsData, catsData] = await Promise.all([
+      api('/api/admin/forum/posts'),
+      api('/api/admin/forum/categories')
+    ]);
+    const cats = catsData.items || [];
+    catBox.innerHTML = `<table>
+      <thead><tr><th>版块</th><th>描述</th><th>帖子数</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody>${cats.map((c) => `
+        <tr>
+          <td>${escapeHtml(c.name)}</td>
+          <td>${escapeHtml(c.description || '')}</td>
+          <td>${c.post_count || 0}</td>
+          <td>${c.is_active ? '<span class="badge approved">启用</span>' : '<span class="badge draft">停用</span>'}</td>
+          <td><div class="row-actions"><button class="ghost" data-forum-cat-toggle="${c.id}" data-active="${c.is_active ? 1 : 0}">${c.is_active ? '停用' : '启用'}</button></div></td>
+        </tr>`).join('') || '<tr><td colspan="5">暂无版块</td></tr>'}</tbody>
+    </table>`;
+    const posts = postsData.items || [];
+    postBox.innerHTML = posts.length ? posts.map((p) => `
+      <tr>
+        <td><strong>${p.is_pinned ? '📌 ' : ''}${escapeHtml(p.title)}</strong></td>
+        <td>${escapeHtml(p.category_name || '')}</td>
+        <td>${escapeHtml(p.author_name || '')}</td>
+        <td>${p.reply_count} / ${p.view_count}</td>
+        <td>${p.status === 'published' ? '<span class="badge approved">正常</span>' : '<span class="badge draft">隐藏</span>'}${p.is_locked ? ' <span class="badge draft">锁定</span>' : ''}</td>
+        <td><div class="row-actions">
+          <button class="ghost" data-forum-post-pin="${p.id}" data-pin="${p.is_pinned ? 1 : 0}">${p.is_pinned ? '取消置顶' : '置顶'}</button>
+          <button class="ghost" data-forum-post-lock="${p.id}" data-lock="${p.is_locked ? 1 : 0}">${p.is_locked ? '解锁' : '锁定'}</button>
+          <button class="ghost" data-forum-post-status="${p.id}" data-status="${p.status === 'published' ? 'hidden' : 'published'}">${p.status === 'published' ? '隐藏' : '恢复'}</button>
+          <button class="reject" data-forum-post-delete="${p.id}">删除</button>
+        </div></td>
+      </tr>`).join('') : '<tr><td colspan="6">暂无帖子</td></tr>';
+  } catch (error) {
+    postBox.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+if (document.querySelector('#forumCategoryBox')) {
+  document.querySelector('#forumCategoryBox').addEventListener('click', async (event) => {
+    const btn = event.target.closest('button[data-forum-cat-toggle]');
+    if (!btn) return;
+    try {
+      await api(`/api/admin/forum/categories/${btn.dataset.forumCatToggle}`, { method: 'PATCH', body: JSON.stringify({ is_active: btn.dataset.active === '1' ? false : true }) });
+      loadForum();
+    } catch (error) { alert(error.message); }
+  });
+  document.querySelector('#forumCategoryAddBtn').addEventListener('click', async () => {
+    const nameInput = document.querySelector('#forumCategoryName');
+    const name = nameInput.value.trim();
+    if (!name) { alert('请输入版块名称'); return; }
+    try {
+      await api('/api/admin/forum/categories', { method: 'POST', body: JSON.stringify({ name, description: document.querySelector('#forumCategoryDesc').value.trim() }) });
+      nameInput.value = '';
+      document.querySelector('#forumCategoryDesc').value = '';
+      loadForum();
+    } catch (error) { alert(error.message); }
+  });
+  document.querySelector('#forumPostRows').addEventListener('click', async (event) => {
+    const pin = event.target.closest('button[data-forum-post-pin]');
+    const lock = event.target.closest('button[data-forum-post-lock]');
+    const status = event.target.closest('button[data-forum-post-status]');
+    const del = event.target.closest('button[data-forum-post-delete]');
+    try {
+      if (pin) await api(`/api/admin/forum/posts/${pin.dataset.forumPostPin}`, { method: 'PATCH', body: JSON.stringify({ is_pinned: pin.dataset.pin === '1' ? false : true }) });
+      if (lock) await api(`/api/admin/forum/posts/${lock.dataset.forumPostLock}`, { method: 'PATCH', body: JSON.stringify({ is_locked: lock.dataset.lock === '1' ? false : true }) });
+      if (status) await api(`/api/admin/forum/posts/${status.dataset.forumPostStatus}`, { method: 'PATCH', body: JSON.stringify({ status: status.dataset.status }) });
+      if (del) {
+        if (!confirm('确定删除该帖子吗？')) return;
+        await api(`/api/admin/forum/posts/${del.dataset.forumPostDelete}`, { method: 'DELETE' });
+      }
+      loadForum();
+    } catch (error) { alert(error.message); }
+  });
+  document.querySelector('#loadForumBtn').addEventListener('click', () => { loadForum(); });
+}
+
+// ---------- 招聘管理 ----------
+let currentJobApplicationsId = 0;
+function openJobEditor(item) {
+  const editor = document.querySelector('#jobEditor');
+  if (!editor) return;
+  editor.hidden = false;
+  editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelector('#jobEditorTitle').textContent = item ? '编辑职位' : '发布职位';
+  const form = document.querySelector('#jobForm');
+  form.reset();
+  form.querySelector('[name="id"]').value = item ? item.id : '';
+  if (item) {
+    ['company', 'title', 'location', 'type', 'salary', 'description', 'requirements', 'contact'].forEach((key) => {
+      const input = form.querySelector(`[name="${key}"]`);
+      if (input) input.value = item[key] || '';
+    });
+    form.querySelector('[name="is_published"]').value = item.is_published === false ? 'false' : 'true';
+  }
+  document.querySelector('#jobStatus').textContent = '';
+}
+async function loadJobsAdmin() {
+  const box = document.querySelector('#jobRows');
+  if (!box) return;
+  box.innerHTML = '<tr><td colspan="7">正在加载……</td></tr>';
+  try {
+    const data = await api('/api/admin/jobs');
+    const items = data.items || [];
+    box.innerHTML = items.length ? items.map((j) => `
+      <tr>
+        <td><strong>${escapeHtml(j.title)}</strong></td>
+        <td>${escapeHtml(j.company)}</td>
+        <td>${escapeHtml(j.location || '')}</td>
+        <td>${escapeHtml(j.salary || '')}</td>
+        <td>${j.applications_count || 0}</td>
+        <td>${j.is_published ? '<span class="badge approved">发布中</span>' : '<span class="badge draft">已下架</span>'}</td>
+        <td><div class="row-actions">
+          <button class="ghost" data-job-apps="${j.id}" data-job-title="${escapeHtml(j.title)}">投递</button>
+          <button class="ghost" data-job-edit="${j.id}">编辑</button>
+          <button class="reject" data-job-delete="${j.id}">删除</button>
+        </div></td>
+      </tr>`).join('') : '<tr><td colspan="7">暂无招聘职位</td></tr>';
+  } catch (error) {
+    box.innerHTML = `<tr><td colspan="7">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+async function loadJobApplications(jobId, jobTitle) {
+  const card = document.querySelector('#jobApplicationsCard');
+  if (!card) return;
+  card.hidden = false;
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  currentJobApplicationsId = jobId;
+  document.querySelector('#jobApplicationsTitle').textContent = `投递记录：${jobTitle || ''}`;
+  const box = document.querySelector('#jobApplicationRows');
+  box.innerHTML = '<tr><td colspan="8">正在加载……</td></tr>';
+  try {
+    const data = await api(`/api/admin/jobs/${jobId}/applications`);
+    const items = data.items || [];
+    const statusMap = { submitted: '待联系', contacted: '已联系', interview: '面试中', accepted: '已录用', rejected: '未通过' };
+    box.innerHTML = items.length ? items.map((a) => `
+      <tr>
+        <td>${escapeHtml(a.name)}</td>
+        <td>${escapeHtml(a.phone || '')}</td>
+        <td>${escapeHtml(a.email || '')}</td>
+        <td>${a.resume_url ? `<a href="${escapeHtml(a.resume_url)}" target="_blank" rel="noopener">查看</a>` : ''}</td>
+        <td>${escapeHtml(a.note || '')}</td>
+        <td>${escapeHtml(String(a.created_at || '').slice(0, 16).replace('T', ' '))}</td>
+        <td><span class="badge draft">${statusMap[a.status] || a.status}</span></td>
+        <td><div class="row-actions">
+          <select data-app-status="${a.id}" style="min-height:32px;border:1px solid #e5e7eb;border-radius:8px;padding:0 6px">
+            ${Object.entries(statusMap).map(([k, v]) => `<option value="${k}" ${k === a.status ? 'selected' : ''}>${v}</option>`).join('')}
+          </select>
+        </div></td>
+      </tr>`).join('') : '<tr><td colspan="8">暂无投递</td></tr>';
+    box.querySelectorAll('select[data-app-status]').forEach((sel) => {
+      sel.addEventListener('change', async () => {
+        try {
+          await api(`/api/admin/job-applications/${sel.dataset.appStatus}`, { method: 'PATCH', body: JSON.stringify({ status: sel.value }) });
+          loadJobApplications(currentJobApplicationsId, document.querySelector('#jobApplicationsTitle').textContent.replace('投递记录：', ''));
+        } catch (error) { alert(error.message); }
+      });
+    });
+  } catch (error) {
+    box.innerHTML = `<tr><td colspan="8">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+if (document.querySelector('#jobRows')) {
+  document.querySelector('#newJobBtn').addEventListener('click', () => { openJobEditor(null); });
+  document.querySelector('#jobCancelBtn').addEventListener('click', () => { document.querySelector('#jobEditor').hidden = true; });
+  document.querySelector('#jobForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const status = document.querySelector('#jobStatus');
+    status.textContent = '正在保存……';
+    const fd = new FormData(event.currentTarget);
+    const id = fd.get('id');
+    const body = {
+      company: fd.get('company'),
+      title: fd.get('title'),
+      location: fd.get('location'),
+      type: fd.get('type'),
+      salary: fd.get('salary'),
+      description: fd.get('description'),
+      requirements: fd.get('requirements'),
+      contact: fd.get('contact'),
+      is_published: fd.get('is_published') !== 'false'
+    };
+    try {
+      const data = id
+        ? await api(`/api/admin/jobs/${id}`, { method: 'PATCH', body: JSON.stringify(body) })
+        : await api('/api/admin/jobs', { method: 'POST', body: JSON.stringify(body) });
+      status.textContent = data.message || '已保存';
+      status.className = 'status ok';
+      document.querySelector('#jobEditor').hidden = true;
+      loadJobsAdmin();
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  });
+  document.querySelector('#jobRows').addEventListener('click', async (event) => {
+    const apps = event.target.closest('button[data-job-apps]');
+    const edit = event.target.closest('button[data-job-edit]');
+    const del = event.target.closest('button[data-job-delete]');
+    if (apps) { await loadJobApplications(apps.dataset.jobApps, apps.dataset.jobTitle); return; }
+    if (edit) {
+      try {
+        const data = await api(`/api/admin/jobs/${edit.dataset.jobEdit}`);
+        openJobEditor(data.job);
+      } catch (error) { alert(error.message); }
+    }
+    if (del) {
+      if (!confirm('确定删除该职位吗？')) return;
+      try { await api(`/api/admin/jobs/${del.dataset.jobDelete}`, { method: 'DELETE' }); loadJobsAdmin(); }
+      catch (error) { alert(error.message); }
+    }
+  });
+  document.querySelector('#closeJobApplicationsBtn').addEventListener('click', () => { document.querySelector('#jobApplicationsCard').hidden = true; });
+}
+
+// ---------- 捐赠管理 ----------
+async function loadDonationsAdmin() {
+  const box = document.querySelector('#donationRows');
+  if (!box) return;
+  box.innerHTML = '<tr><td colspan="8">正在加载……</td></tr>';
+  try {
+    const data = await api('/api/admin/donations');
+    document.querySelector('#donationTotal').textContent = Number(data.total || 0).toLocaleString('zh-CN');
+    document.querySelector('#donationCount').textContent = data.count || 0;
+    const items = data.items || [];
+    const statusMap = { pending: '待确认', confirmed: '已确认', rejected: '已拒绝' };
+    box.innerHTML = items.length ? items.map((d) => `
+      <tr>
+        <td>${escapeHtml(d.donor_name)}</td>
+        <td><strong>¥${Number(d.amount).toLocaleString('zh-CN')}</strong></td>
+        <td>${escapeHtml(d.purpose || '校友基金')}</td>
+        <td>${escapeHtml(d.payment_method || '')}</td>
+        <td>${escapeHtml(d.message || '')}</td>
+        <td>${escapeHtml(String(d.created_at || '').slice(0, 16).replace('T', ' '))}</td>
+        <td><span class="badge ${d.status === 'confirmed' ? 'approved' : d.status === 'rejected' ? 'cancelled' : 'pending'}">${statusMap[d.status] || d.status}</span></td>
+        <td><div class="row-actions">
+          <button class="approve" data-donation-status="${d.id}" data-status="confirmed" ${d.status === 'confirmed' ? 'disabled' : ''}>确认</button>
+          <button class="reject" data-donation-status="${d.id}" data-status="rejected" ${d.status === 'rejected' ? 'disabled' : ''}>拒绝</button>
+        </div></td>
+      </tr>`).join('') : '<tr><td colspan="8">暂无捐赠记录</td></tr>';
+  } catch (error) {
+    box.innerHTML = `<tr><td colspan="8">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+if (document.querySelector('#donationRows')) {
+  document.querySelector('#donationRows').addEventListener('click', async (event) => {
+    const btn = event.target.closest('button[data-donation-status]');
+    if (!btn) return;
+    try {
+      await api(`/api/admin/donations/${btn.dataset.donationStatus}`, { method: 'PATCH', body: JSON.stringify({ status: btn.dataset.status }) });
+      loadDonationsAdmin();
+    } catch (error) { alert(error.message); }
+  });
+  document.querySelector('#loadDonationsBtn').addEventListener('click', () => { loadDonationsAdmin(); });
+}
+
+// ---------- 消息推送 ----------
+async function loadNotificationsAdmin() {
+  const box = document.querySelector('#notificationRows');
+  if (!box) return;
+  box.innerHTML = '<tr><td colspan="6">正在加载……</td></tr>';
+  try {
+    const data = await api('/api/admin/notifications?page=1&pageSize=100');
+    const items = data.items || [];
+    box.innerHTML = items.length ? items.map((n) => `
+      <tr>
+        <td><strong>${escapeHtml(n.title)}</strong></td>
+        <td>${n.user_id ? escapeHtml(n.user_name || `用户#${n.user_id}`) : '全部用户'}</td>
+        <td>${escapeHtml((n.content || '').slice(0, 40))}</td>
+        <td>${escapeHtml(String(n.created_at || '').slice(0, 16).replace('T', ' '))}</td>
+        <td>${n.is_read ? '已读' : '<span class="badge pending">未读</span>'}</td>
+        <td><div class="row-actions"><button class="reject" data-notification-delete="${n.id}">删除</button></div></td>
+      </tr>`).join('') : '<tr><td colspan="6">暂无通知记录</td></tr>';
+  } catch (error) {
+    box.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+if (document.querySelector('#notificationRows')) {
+  document.querySelector('#notificationRows').addEventListener('click', async (event) => {
+    const btn = event.target.closest('button[data-notification-delete]');
+    if (!btn) return;
+    if (!confirm('确定删除该通知吗？')) return;
+    try {
+      await api(`/api/admin/notifications/${btn.dataset.notificationDelete}`, { method: 'DELETE' });
+      loadNotificationsAdmin();
+    } catch (error) { alert(error.message); }
+  });
+  document.querySelector('#notificationForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const status = document.querySelector('#notificationStatus');
+    status.textContent = '正在发送……';
+    const fd = new FormData(event.currentTarget);
+    const target = fd.get('target');
+    const body = {
+      title: fd.get('title'),
+      content: fd.get('content'),
+      link: fd.get('link'),
+      ...(target === 'user' ? { user_id: Number(fd.get('user_id')) || undefined } : {})
+    };
+    try {
+      const data = await api('/api/admin/notifications/send', { method: 'POST', body: JSON.stringify(body) });
+      status.textContent = data.message || '已发送';
+      status.className = 'status ok';
+      event.currentTarget.reset();
+      loadNotificationsAdmin();
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  });
+  document.querySelector('#loadNotificationsBtn').addEventListener('click', () => { loadNotificationsAdmin(); });
 }
