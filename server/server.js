@@ -1359,12 +1359,233 @@ app.get('/api/admin/events/:id', requireAuth, requireAdmin, async (req, res) => 
     return fail(res, 500, '获取活动失败', { error: e.message });
   }
 });
+// ==================== 用户管理 / 校友导入 / 微信登录（V1 追加） ====================
+
+const WECHAT_APPID = process.env.WECHAT_APPID || '';
+const WECHAT_SECRET = process.env.WECHAT_SECRET || '';
+const WECHAT_LOGIN_REDIRECT = (process.env.WECHAT_LOGIN_REDIRECT || `${PUBLIC_SITE_URL}/account.html`).replace(/\/$/, '');
+
+async function ensureUserTableExtras() {
+  if (!pool) return;
+  await dbQuery(`alter table public.app_users add column if not exists wechat_openid text`);
+  await dbQuery(`create unique index if not exists idx_app_users_wechat_openid on public.app_users(wechat_openid) where wechat_openid is not null`);
+}
+
+// ---------- 用户管理 ----------
+app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const page = parsePositiveInt(req.query.page, 1);
+    const pageSize = Math.min(parsePositiveInt(req.query.pageSize, 20), 100);
+    const q = req.query.q;
+    const params = [];
+    const wheres = [];
+    if (q) {
+      params.push(`%${q}%`);
+      wheres.push(`(u.display_name ilike $${params.length} or u.phone ilike $${params.length} or u.email ilike $${params.length})`);
+    }
+    const where = wheres.length ? 'where ' + wheres.join(' and ') : '';
+    const count = await dbQuery(`select count(*)::int as total from public.app_users u ${where}`, params);
+    const offset = (page - 1) * pageSize;
+    const r = await dbQuery(
+      `select u.id, u.display_name, u.email, u.phone, u.role, u.status, u.created_at, u.last_login_at, u.wechat_openid,
+              a.admin_level, a.status as admin_status,
+              p.graduation_year, p.class_name
+       from public.app_users u
+       left join public.admin_accounts a on a.user_id = u.id
+       left join public.alumni_profiles p on p.user_id = u.id
+       ${where}
+       order by u.id desc
+       limit $${params.length + 1} offset $${params.length + 2}`,
+      [...params, pageSize, offset]
+    );
+    return ok(res, { total: count.rows[0].total, page, pageSize, items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取用户列表失败', { error: e.message });
+  }
+});
+
+app.patch('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const b = req.body || {};
+    const allowedRoles = ['pending_alumni', 'alumni', 'admin'];
+    const allowedStatus = ['pending', 'active', 'disabled'];
+    if (b.role && !allowedRoles.includes(b.role)) return fail(res, 400, '用户角色不正确');
+    if (b.status && !allowedStatus.includes(b.status)) return fail(res, 400, '用户状态不正确');
+
+    const current = await dbQuery(`select * from public.app_users where id=$1 limit 1`, [id]);
+    if (!current.rows[0]) return fail(res, 404, '用户不存在');
+    if (current.rows[0].phone === 'ROOT_ADMIN') return fail(res, 403, '不能修改主管理员账号');
+
+    const r = await dbQuery(
+      `update public.app_users set role=coalesce($1, role), status=coalesce($2, status), updated_at=now()
+       where id=$3 returning id, display_name, role, status`,
+      [b.role || null, b.status || null, id]
+    );
+    await audit(req, 'user_update', 'app_user', id, { role: b.role, status: b.status });
+    return ok(res, { user: r.rows[0], message: '用户信息已更新' });
+  } catch (e) {
+    return fail(res, 500, '更新用户失败', { error: e.message });
+  }
+});
+
+app.post('/api/admin/users/:id/reset-password', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const current = await dbQuery(`select * from public.app_users where id=$1 limit 1`, [id]);
+    if (!current.rows[0]) return fail(res, 404, '用户不存在');
+    if (current.rows[0].phone === 'ROOT_ADMIN') return fail(res, 403, '主管理员请通过环境变量修改密码');
+    const newPassword = String(req.body?.password || '').trim() || crypto.randomBytes(6).toString('base64url');
+    if (newPassword.length < 8) return fail(res, 400, '新密码至少 8 位');
+    const hash = await bcrypt.hash(newPassword, 10);
+    await dbQuery(`update public.app_users set password_hash=$1, updated_at=now() where id=$2`, [hash, id]);
+    await audit(req, 'user_reset_password', 'app_user', id, {});
+    return ok(res, { message: '密码已重置', temp_password: newPassword });
+  } catch (e) {
+    return fail(res, 500, '重置密码失败', { error: e.message });
+  }
+});
+
+// ---------- 校友数据导入（CSV，Excel 另存为 CSV 即可） ----------
+function parseCsvLine(line) {
+  const cells = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { current += '"'; i++; } else { inQuotes = false; }
+      } else { current += ch; }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { cells.push(current.trim()); current = ''; }
+      else { current += ch; }
+    }
+  }
+  cells.push(current.trim());
+  return cells;
+}
+
+app.post('/api/admin/alumni/import', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const csv = String(req.body?.csv || '').replace(/^\ufeff/, '').trim();
+    if (!csv) return fail(res, 400, '请提供 CSV 内容');
+    const lines = csv.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    if (lines.length < 2) return fail(res, 400, 'CSV 至少需要表头和一行数据');
+
+    const headers = parseCsvLine(lines[0]);
+    const map = {};
+    headers.forEach((header, i) => {
+      const key = String(header || '').toLowerCase();
+      if (key.includes('姓名') || key === 'name') map.name = i;
+      if (key.includes('手机') || key.includes('电话') || key === 'phone') map.phone = i;
+      if (key.includes('届') || key.includes('毕业年份') || key.includes('年份')) map.graduation_year = i;
+      if (key.includes('班级') || key === 'class') map.class_name = i;
+      if (key.includes('行业')) map.industry = i;
+      if (key.includes('单位') || key.includes('公司')) map.company = i;
+      if (key.includes('职务')) map.position_title = i;
+      if (key.includes('现居') || key.includes('所在城市')) map.current_city = i;
+    });
+    if (map.name === undefined || map.phone === undefined) return fail(res, 400, 'CSV 表头需包含「姓名」和「手机号」两列');
+
+    let imported = 0;
+    let skipped = 0;
+    const errors = [];
+    for (let idx = 1; idx < lines.length; idx++) {
+      const cells = parseCsvLine(lines[idx]);
+      const name = String(cells[map.name] || '').trim();
+      const phone = String(cells[map.phone] || '').trim();
+      if (!name || !phone) { skipped++; continue; }
+      try {
+        const u = await dbQuery(
+          `insert into public.app_users (phone, display_name, role, status, is_phone_verified)
+           values ($1,$2,'alumni','active',true)
+           on conflict (phone) do update set display_name=excluded.display_name, role='alumni', status='active', updated_at=now()
+           returning id`,
+          [phone, name]
+        );
+        const userId = u.rows[0].id;
+        await dbQuery(
+          `insert into public.alumni_profiles
+           (user_id, name, phone, graduation_year, class_name, industry, company, position_title, current_city, status)
+           values ($1,$2,$3,$4,$5,$6,$7,$8,$9,'active')
+           on conflict (user_id) do update set
+            name=excluded.name, phone=excluded.phone, graduation_year=excluded.graduation_year, class_name=excluded.class_name,
+            industry=excluded.industry, company=excluded.company, position_title=excluded.position_title,
+            current_city=excluded.current_city, status='active', updated_at=now()`,
+          [userId, name, phone, cells[map.graduation_year] || null, cells[map.class_name] || null, cells[map.industry] || null, cells[map.company] || null, cells[map.position_title] || null, cells[map.current_city] || null]
+        );
+        imported++;
+      } catch (e) {
+        skipped++;
+        if (errors.length < 10) errors.push(`第 ${idx + 1} 行：${e.message}`);
+      }
+    }
+    await audit(req, 'alumni_import', 'alumni_profile', null, { imported, skipped });
+    return ok(res, { imported, skipped, errors, message: `导入完成：成功 ${imported} 条，跳过 ${skipped} 条` });
+  } catch (e) {
+    return fail(res, 500, '导入失败', { error: e.message });
+  }
+});
+
+// ---------- 微信登录 ----------
+app.get('/api/auth/wechat/config', (req, res) => {
+  const enabled = Boolean(WECHAT_APPID && WECHAT_SECRET);
+  return ok(res, {
+    enabled,
+    appid: WECHAT_APPID || '',
+    authorize_url: enabled
+      ? `https://open.weixin.qq.com/connect/qrconnect?appid=${encodeURIComponent(WECHAT_APPID)}&redirect_uri=${encodeURIComponent(WECHAT_LOGIN_REDIRECT)}&response_type=code&scope=snsapi_login#wechat_redirect`
+      : ''
+  });
+});
+
+app.post('/api/auth/wechat/login', async (req, res) => {
+  try {
+    const code = String(req.body?.code || '').trim();
+    if (!code) return fail(res, 400, '缺少微信授权码');
+    if (!WECHAT_APPID || !WECHAT_SECRET) return fail(res, 400, '微信登录尚未配置（缺少 WECHAT_APPID / WECHAT_SECRET 环境变量）');
+
+    const tokenUrl = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${encodeURIComponent(WECHAT_APPID)}&secret=${encodeURIComponent(WECHAT_SECRET)}&code=${encodeURIComponent(code)}&grant_type=authorization_code`;
+    const wxResponse = await fetch(tokenUrl);
+    const wx = await wxResponse.json();
+    if (!wx.openid) return fail(res, 401, '微信授权失败：' + (wx.errmsg || '未知错误'));
+
+    const found = await dbQuery(
+      `select id as user_id, display_name, email, phone, role, status, wechat_openid
+       from public.app_users
+       where wechat_openid = $1
+       limit 1`,
+      [wx.openid]
+    );
+    let user = found.rows[0];
+    if (!user) {
+      const created = await dbQuery(
+        `insert into public.app_users (display_name, role, status, wechat_openid, is_phone_verified)
+         values ($1,'pending_alumni','pending',$2,false)
+         returning id as user_id, display_name, email, phone, role, status, wechat_openid`,
+        ['微信用户', wx.openid]
+      );
+      user = created.rows[0];
+    }
+    if (user.status === 'disabled') return fail(res, 403, '账号已禁用');
+
+    const token = signToken({ ...user, admin_id: null, admin_level: null });
+    await dbQuery(`update public.app_users set last_login_at=now(), updated_at=now() where id=$1`, [user.user_id]).catch(() => {});
+    return ok(res, { token, user: { name: user.display_name, email: user.email, phone: user.phone, role: user.role, status: user.status }, message: '微信登录成功' });
+  } catch (e) {
+    return fail(res, 500, '微信登录失败', { error: e.message });
+  }
+});
+
 app.use((req, res) => {
   fail(res, 404, '接口不存在');
 });
 
 ensureRootAdmin()
   .then(() => ensureContentTables())
+  .then(() => ensureUserTableExtras())
   .then(() => {
     app.listen(PORT, () => {
       console.log(`hailin alumni backend running on http://localhost:${PORT}`);

@@ -72,6 +72,7 @@
         <button class="tab" data-tab="events" type="button">活动管理</button>
         <button class="tab" data-tab="stats" type="button">数据统计</button>
         <button class="tab" data-tab="alumni" type="button">校友名录</button>
+        <button class="tab" data-tab="users" type="button">用户管理</button>
       </nav>
 
       <section class="panel active" id="applicationsPanel">
@@ -371,6 +372,8 @@
         </div>
         <div class="toolbar-inline">
           <input id="alumniSearch" placeholder="搜索姓名 / 单位 / 手机号" />
+          <button id="importAlumniBtn" type="button" class="ghost">导入 CSV</button>
+          <input type="file" id="importAlumniFile" accept=".csv,text/csv" hidden />
         </div>
         <div class="table-wrap">
           <table>
@@ -381,6 +384,28 @@
           </table>
         </div>
         <div class="pagination-row" id="alumniPagination"></div>
+        <p class="status" id="importStatus"></p>
+      </section>
+
+      <section class="panel" id="usersPanel">
+        <div class="section-title">
+          <div>
+            <h2>用户管理</h2>
+            <p>查看与管理平台用户（校友、管理员），支持启用/停用、重置密码。</p>
+          </div>
+          <div class="toolbar-inline" style="margin:0">
+            <input id="userSearch" placeholder="搜索姓名 / 手机号 / 邮箱" />
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>用户</th><th>联系方式</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr>
+            </thead>
+            <tbody id="userRows"><tr><td colspan="6">暂无数据</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination-row" id="userPagination"></div>
       </section>
 
       <section class="panel" id="accountPanel">

@@ -121,6 +121,7 @@ function setActiveTab(tabName) {
   if (tabName === 'events') loadEvents();
   if (tabName === 'stats') loadStats();
   if (tabName === 'alumni') loadAlumniList();
+  if (tabName === 'users') loadUsers();
 }
 
 tabs.forEach(tab => tab.addEventListener('click', () => setActiveTab(tab.dataset.tab)));
@@ -1036,6 +1037,148 @@ if (exportAlumniBtn) {
       URL.revokeObjectURL(url);
     } catch (error) {
       alert(error.message);
+    }
+  });
+}
+// ==================== 用户管理 / 校友导入（V1 追加） ====================
+const userRows = document.querySelector('#userRows');
+const userSearch = document.querySelector('#userSearch');
+const userPagination = document.querySelector('#userPagination');
+const importAlumniBtn = document.querySelector('#importAlumniBtn');
+const importAlumniFile = document.querySelector('#importAlumniFile');
+const importStatus = document.querySelector('#importStatus');
+
+let userPage = 1;
+function userRoleText(role) {
+  return { super_admin: '主管理员', admin: '管理员', alumni: '认证校友', pending_alumni: '待认证校友' }[role] || role || '未知';
+}
+
+async function loadUsers(page = 1) {
+  userPage = page;
+  if (!userRows) return;
+  userRows.innerHTML = '<tr><td colspan="6">正在加载……</td></tr>';
+  const q = userSearch ? userSearch.value.trim() : '';
+  const params = new URLSearchParams({ page, pageSize: 20 });
+  if (q) params.set('q', q);
+  try {
+    const data = await api(`/api/admin/users?${params.toString()}`);
+    const items = data.items || [];
+    if (!items.length) {
+      userRows.innerHTML = '<tr><td colspan="6">暂无用户</td></tr>';
+      userPagination.innerHTML = '';
+      return;
+    }
+    userRows.innerHTML = items.map(item => {
+      const isRoot = item.phone === 'ROOT_ADMIN' || item.admin_level === 'super_admin';
+      const statusClass = { active: 'approved', disabled: 'rejected', pending: 'pending' }[item.status] || 'draft';
+      const source = item.wechat_openid ? '微信用户' : '';
+      return `
+        <tr>
+          <td><strong>${escapeHtml(item.display_name)}</strong>${source ? `<br><small>${escapeHtml(source)}</small>` : ''}</td>
+          <td>${escapeHtml(item.phone || '')}<br>${escapeHtml(item.email || '')}</td>
+          <td>${userRoleText(item.role)}${item.admin_level ? `<br><small>${adminLevelText(item.admin_level)}</small>` : ''}</td>
+          <td><span class="badge ${statusClass}">${statusText(item.status)}</span></td>
+          <td>${escapeHtml(String(item.created_at || '').slice(0, 10))}</td>
+          <td>
+            <div class="row-actions">
+              <button class="ghost" data-user-role="${item.id}" data-role="${item.role === 'alumni' ? 'pending_alumni' : 'alumni'}" ${isRoot ? 'disabled' : ''}>${item.role === 'alumni' ? '取消认证' : '设为校友'}</button>
+              <button class="ghost" data-user-status="${item.id}" data-status="${item.status === 'disabled' ? 'active' : 'disabled'}" ${isRoot ? 'disabled' : ''}>${item.status === 'disabled' ? '启用' : '停用'}</button>
+              <button class="ghost" data-user-reset="${item.id}" ${isRoot ? 'disabled' : ''}>重置密码</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    const totalPages = Math.max(1, Math.ceil((data.total || 0) / 20));
+    let html = `<span class="invite-hint" style="margin-right:auto">共 ${data.total || 0} 条</span>`;
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button type="button" data-user-page="${i}" class="${i === page ? 'active' : ''}">${i}</button>`;
+    }
+    userPagination.innerHTML = html;
+  } catch (error) {
+    userRows.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+
+if (userPagination) {
+  userPagination.addEventListener('click', (event) => {
+    const btn = event.target.closest('button[data-user-page]');
+    if (btn) loadUsers(Number(btn.dataset.userPage));
+  });
+}
+
+if (userSearch) {
+  let userSearchTimer = null;
+  userSearch.addEventListener('input', () => {
+    clearTimeout(userSearchTimer);
+    userSearchTimer = setTimeout(() => loadUsers(1), 350);
+  });
+}
+
+if (userRows) {
+  userRows.addEventListener('click', async (event) => {
+    const roleBtn = event.target.closest('button[data-user-role]');
+    const statusBtn = event.target.closest('button[data-user-status]');
+    const resetBtn = event.target.closest('button[data-user-reset]');
+    if (roleBtn) {
+      roleBtn.disabled = true;
+      try {
+        await api(`/api/admin/users/${roleBtn.dataset.userRole}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ role: roleBtn.dataset.role })
+        });
+        await loadUsers(userPage);
+      } catch (error) { alert(error.message); roleBtn.disabled = false; }
+    }
+    if (statusBtn) {
+      statusBtn.disabled = true;
+      try {
+        await api(`/api/admin/users/${statusBtn.dataset.userStatus}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: statusBtn.dataset.status })
+        });
+        await loadUsers(userPage);
+      } catch (error) { alert(error.message); statusBtn.disabled = false; }
+    }
+    if (resetBtn) {
+      const password = prompt('请输入新密码（至少 8 位，留空则自动生成）：');
+      if (password === null) return;
+      resetBtn.disabled = true;
+      try {
+        const data = await api(`/api/admin/users/${resetBtn.dataset.userReset}/reset-password`, {
+          method: 'POST',
+          body: JSON.stringify({ password })
+        });
+        alert(`密码已重置：${data.temp_password || '（已设置）'}`);
+        await loadUsers(userPage);
+      } catch (error) { alert(error.message); resetBtn.disabled = false; }
+    }
+  });
+}
+
+// ---------- 校友 CSV 导入 ----------
+if (importAlumniBtn && importAlumniFile) {
+  importAlumniBtn.addEventListener('click', () => importAlumniFile.click());
+  importAlumniFile.addEventListener('change', async () => {
+    const file = importAlumniFile.files[0];
+    importAlumniFile.value = '';
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { alert('文件不能超过 2MB'); return; }
+    if (!importStatus) return;
+    importStatus.textContent = `正在读取 ${file.name}……`;
+    importStatus.className = 'status';
+    try {
+      const text = await file.text();
+      const data = await api('/api/admin/alumni/import', {
+        method: 'POST',
+        body: JSON.stringify({ csv: text })
+      });
+      importStatus.textContent = (data.message || '导入完成') + (data.errors && data.errors.length ? '；错误：' + data.errors.join('；') : '');
+      importStatus.className = 'status ok';
+      await loadAlumniList(1);
+    } catch (error) {
+      importStatus.textContent = error.message;
+      importStatus.className = 'status';
     }
   });
 }

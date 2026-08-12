@@ -70,6 +70,8 @@
               <div class="form-actions">
                 <button class="btn primary" type="submit">登录</button>
               </div>
+              <div class="divider-or">或使用微信</div>
+              <button type="button" id="wechatLoginBtn" class="btn btn-wechat">微信扫码登录</button>
               <p class="form-status" id="loginStatus" role="status" aria-live="polite"></p>
             </form>
 
@@ -420,8 +422,42 @@
         location.reload();
       });
 
+            // 微信登录
+      const wechatLoginBtn = document.getElementById('wechatLoginBtn');
+      if (wechatLoginBtn) {
+        wechatLoginBtn.addEventListener('click', async () => {
+          try {
+            const data = await XH.api('/api/auth/wechat/config');
+            if (!data.enabled) {
+              XH.toast('微信登录尚未配置，请先使用邮箱注册', 'info');
+              return;
+            }
+            if (data.authorize_url) location.href = data.authorize_url;
+          } catch (error) {
+            XH.toast(error.message, 'error');
+          }
+        });
+      }
+
+      async function handleWechatCallback() {
+        const code = new URLSearchParams(location.search).get('code');
+        if (!code) return;
+        try {
+          const data = await XH.api('/api/auth/wechat/login', { method: 'POST', body: JSON.stringify({ code }) });
+          XH.store.setToken(data.token);
+          XH.store.setUser(data.user || {});
+          history.replaceState(null, '', location.pathname);
+          await loadCenter();
+          XH.toast(data.message || '微信登录成功');
+        } catch (error) {
+          XH.toast(error.message, 'error');
+          history.replaceState(null, '', location.pathname);
+        }
+      }
+
       bindUpload('[data-upload="chsi"]', 'chsi_proof_url');
       bindUpload('[data-upload="student"]', 'student_card_url');
+      handleWechatCallback();
       loadCenter();
     })();
   </script>

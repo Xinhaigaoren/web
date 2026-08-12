@@ -177,3 +177,8 @@
 .modal h3 { margin: 0 0 6px; color: var(--deep); }
 .modal .modal-sub { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
 .modal-close { float: right; border: 0; background: transparent; font-size: 24px; cursor: pointer; color: var(--muted); line-height: 1; padding: 0; }
+/* 微信登录 */
+.divider-or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; margin: 2px 0 14px; }
+.divider-or::before, .divider-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.btn-wechat { background: #07c160; color: #fff; width: 100%; }
+.btn-wechat:hover { background: #06ad56; }

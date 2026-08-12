@@ -16,6 +16,7 @@ create table if not exists public.app_users (
   is_phone_verified boolean default false,
   is_email_verified boolean default false,
   last_login_at timestamptz,
+  wechat_openid text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -264,3 +265,6 @@ create index if not exists idx_news_published on public.news_articles(published_
 create index if not exists idx_events_time on public.events(start_time);
 create index if not exists idx_event_regs_event on public.event_registrations(event_id);
 create index if not exists idx_audit_logs_created on public.audit_logs(created_at desc);
+-- 微信登录补充列（对已存在的表执行）
+alter table public.app_users add column if not exists wechat_openid text;
+create unique index if not exists idx_app_users_wechat_openid on public.app_users(wechat_openid) where wechat_openid is not null;
