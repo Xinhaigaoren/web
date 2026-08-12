@@ -787,6 +787,39 @@ app.patch('/api/admin/invites/:id/review', requireAuth, requireSuperAdmin, async
   }
 });
 
+
+// 直接创建管理员：主管理员在后台添加，无需邀请链接
+app.post('/api/admin/accounts', requireAuth, requireSuperAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const email = normalizeEmail(b.email);
+    const name = String(b.name || b.display_name || '').trim();
+    const phone = String(b.phone || '').trim() || null;
+    const password = requireStrongPassword(b.password);
+    const adminLevel = ['super_admin', 'admin', 'editor', 'reviewer', 'viewer'].includes(b.admin_level) ? b.admin_level : 'admin';
+    if (!email || !email.includes('@')) return fail(res, 400, '请输入有效邮箱');
+    if (!name) return fail(res, 400, '请输入姓名');
+    const passwordHash = await bcrypt.hash(password, 10);
+    const u = await dbQuery(
+      `insert into public.app_users (email, phone, display_name, role, status, password_hash, is_email_verified)
+       values ($1,$2,$3,'admin','active',$4,true)
+       on conflict (email) do update set role='admin', status='active', display_name=excluded.display_name, phone=excluded.phone, password_hash=excluded.password_hash, updated_at=now()
+       returning id`,
+      [email, phone, name, passwordHash]
+    );
+    await dbQuery(
+      `insert into public.admin_accounts (user_id, admin_level, status, approved_by, approved_at, title, department, permissions, note)
+       values ($1,$2,'approved',$3,now(),$4,$5,$6,$7)
+       on conflict (user_id) do update set admin_level=excluded.admin_level, status='approved', approved_by=$3, approved_at=now(), title=excluded.title, department=excluded.department, permissions=excluded.permissions, updated_at=now()`,
+      [u.rows[0].id, adminLevel, req.user.admin_id, b.title || null, b.department || null, JSON.stringify(normalizePermissions(b.permissions)), b.note || '后台直接创建']
+    );
+    await audit(req, 'admin_account_create', 'admin_account', u.rows[0].id, { email, adminLevel });
+    return ok(res, { admin: { user_id: u.rows[0].id, email, name, admin_level: adminLevel }, message: '管理员已直接创建：对方用邮箱 + 初始密码即可登录后台，登录后可自行修改密码。若该邮箱已有账号，将自动升级为管理员。' });
+  } catch (e) {
+    return fail(res, 500, '创建管理员失败', { error: e.message });
+  }
+});
+
 // 地区数据接口，后面导入全国省市区县后可直接用
 app.get('/api/regions', async (req, res) => {
   try {

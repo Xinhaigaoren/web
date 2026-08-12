@@ -22,6 +22,8 @@ const acceptInviteForm = document.querySelector('#acceptInviteForm');
 const inviteAcceptStatus = document.querySelector('#inviteAcceptStatus');
 const backToLoginBtn = document.querySelector('#backToLoginBtn');
 const inviteAdminForm = document.querySelector('#inviteAdminForm');
+const directAdminForm = document.querySelector('#directAdminForm');
+const directAdminStatus = document.querySelector('#directAdminStatus');
 const inviteStatus = document.querySelector('#inviteStatus');
 const inviteLinkOutput = document.querySelector('#inviteLinkOutput');
 const inviteRows = document.querySelector('#inviteRows');
@@ -541,6 +543,35 @@ if (inviteAdminForm) {
     } catch (error) {
       inviteStatus.textContent = error.message;
       inviteStatus.className = 'status';
+    }
+  });
+}
+
+if (directAdminForm) {
+  const genAdminPwdBtn = document.querySelector('#genAdminPwdBtn');
+  if (genAdminPwdBtn) {
+    genAdminPwdBtn.addEventListener('click', () => {
+      const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+      let pwd = '';
+      for (let i = 0; i < 10; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+      const input = directAdminForm.querySelector('input[name="password"]');
+      if (input) input.value = pwd;
+    });
+  }
+  directAdminForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    directAdminStatus.textContent = '正在创建……';
+    directAdminStatus.className = 'status';
+    try {
+      const body = Object.fromEntries(new FormData(directAdminForm).entries());
+      const data = await api('/api/admin/accounts', { method: 'POST', body: JSON.stringify(body) });
+      directAdminStatus.textContent = data.message || '管理员已创建';
+      directAdminStatus.className = 'status ok';
+      directAdminForm.reset();
+      await loadAdmins();
+    } catch (error) {
+      directAdminStatus.textContent = error.message;
+      directAdminStatus.className = 'status';
     }
   });
 }

@@ -215,6 +215,35 @@
         </div>
 
         <div class="editor-card compact-card">
+          <h3>直接创建管理员（无需邀请）</h3>
+          <form id="directAdminForm" class="editor-form">
+            <div class="three-fields">
+              <label>邮箱<input name="email" type="email" placeholder="name@example.com" required /></label>
+              <label>姓名<input name="name" required /></label>
+              <label>联系电话<input name="phone" placeholder="可选" /></label>
+            </div>
+            <div class="three-fields">
+              <label>权限级别
+                <select name="admin_level">
+                  <option value="admin">普通管理员</option>
+                  <option value="editor">内容编辑员</option>
+                  <option value="reviewer">审核员</option>
+                  <option value="viewer">只读查看</option>
+                </select>
+              </label>
+              <label>职务/身份<input name="title" placeholder="如：联络员" /></label>
+              <label>部门/地区<input name="department" placeholder="如：北京校友联络站" /></label>
+            </div>
+            <div class="three-fields">
+              <label>初始密码（至少 8 位）<input name="password" type="text" placeholder="用于对方首次登录" required /></label>
+              <label><button type="button" id="genAdminPwdBtn" class="ghost">随机生成</button></label>
+            </div>
+            <button type="submit">创建管理员</button>
+            <p class="status" id="directAdminStatus"></p>
+          </form>
+        </div>
+
+        <div class="editor-card compact-card">
           <h3>邀请管理员</h3>
           <form id="inviteAdminForm" class="editor-form">
             <div class="three-fields">
