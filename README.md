@@ -68,6 +68,12 @@ window.HAILIN_CONFIG = {
 
 ## 部署
 
+完整上线步骤见 **docs/上线部署指南.md**（Supabase 建库 → Render 后端 → GitHub Pages 前端 → 微信配置 → 安全清单）。仓库已内置：
+
+- .github/workflows/deploy-pages.yml：推送到 main 自动发布 GitHub Pages
+- server/Dockerfile + server/Procfile + server/render.yaml：后端容器化 / Render 部署
+
+
 - 前台：GitHub Pages 部署仓库根目录即可
 - 后端：部署到任意 Node.js 服务（Render / Railway / 云服务器），设置环境变量
 - 微信登录：配置 `.env` 中的 `WECHAT_APPID` / `WECHAT_SECRET` 后自动启用
