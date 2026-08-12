@@ -127,14 +127,14 @@
           if (content && typeof content === 'object') {
             if (node.dataset.field) {
               const value = content[node.dataset.field];
-              if (value !== undefined && value !== null) node.textContent = String(value);
+              if (value !== undefined && value !== null && value !== '') node.textContent = String(value);
             } else if (typeof content.html === 'string') {
               if (content.html) node.innerHTML = content.html;
             } else {
               Object.keys(content).forEach((key) => {
                 const child = node.querySelector(`[data-field="${key}"]`);
                 const value = content[key];
-                if (child && value !== undefined && value !== null) child.textContent = String(value);
+                if (child && value !== undefined && value !== null && value !== '') child.textContent = String(value);
               });
             }
           } else if (typeof content === 'string' && content) {
