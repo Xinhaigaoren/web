@@ -97,5 +97,57 @@
   }
   renderAccountLink();
 
+  // content system: admin edits show up on the public site after refresh
+  function detectSiteSlug() {
+    const name = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    if (name === '' || name === 'index.html') return 'home';
+    if (name === 'about.html') return 'about';
+    if (name === 'contact.html') return 'contact';
+    return null;
+  }
+
+  async function loadSiteContent() {
+    const slug = detectSiteSlug();
+    if (!slug) return;
+    try {
+      const data = await api(`/api/site/${slug}?t=${Date.now()}`);
+      const page = data.page || {};
+      if (page.title) document.title = page.title;
+      if (page.description) {
+        const meta = document.querySelector('meta[name="description"]');
+        if (meta) meta.setAttribute('content', page.description);
+      }
+      (data.sections || []).forEach((section) => {
+        let content = section.content;
+        if (typeof content === 'string') {
+          try { content = JSON.parse(content); } catch (_) { /* keep raw */ }
+        }
+        const nodes = document.querySelectorAll(`[data-section="${section.section_key}"]`);
+        nodes.forEach((node) => {
+          if (content && typeof content === 'object') {
+            if (node.dataset.field) {
+              const value = content[node.dataset.field];
+              if (value !== undefined && value !== null) node.textContent = String(value);
+            } else if (typeof content.html === 'string') {
+              if (content.html) node.innerHTML = content.html;
+            } else {
+              Object.keys(content).forEach((key) => {
+                const child = node.querySelector(`[data-field="${key}"]`);
+                const value = content[key];
+                if (child && value !== undefined && value !== null) child.textContent = String(value);
+              });
+            }
+          } else if (typeof content === 'string' && content) {
+            node.innerHTML = content;
+          }
+        });
+      });
+    } catch (error) {
+      // keep static content if the API is unavailable
+      console.warn('[site] content load skipped:', error.message);
+    }
+  }
+  loadSiteContent();
+
   window.XH = { API_BASE_URL, api, assetUrl, formatDate, escapeHtml, toast, store };
 })();
