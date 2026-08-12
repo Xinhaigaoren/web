@@ -4,6 +4,8 @@ const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -77,6 +79,13 @@ function normalizePermissions(value) {
   if (!value) return {};
   if (typeof value === 'object') return value;
   try { return JSON.parse(value); } catch { return {}; }
+}
+
+async function bootstrapSchema() {
+  if (!pool) return;
+  const schemaFile = path.join(__dirname, 'schema.sql');
+  if (!fs.existsSync(schemaFile)) return;
+  await dbQuery(fs.readFileSync(schemaFile, 'utf8'));
 }
 
 async function ensureRootAdmin() {
@@ -2895,7 +2904,8 @@ app.use((req, res) => {
   fail(res, 404, '接口不存在');
 });
 
-ensureRootAdmin()
+bootstrapSchema()
+  .then(() => ensureRootAdmin())
   .then(() => ensureContentTables())
   .then(() => ensureUserTableExtras())
   .then(() => ensurePasswordResetTable())
