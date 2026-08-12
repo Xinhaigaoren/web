@@ -1,0 +1,4 @@
+﻿User-agent: *
+Allow: /
+
+Sitemap: https://zwx-hub.github.io/hailin-high-school-alumni/sitemap.xml

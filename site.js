@@ -16,7 +16,12 @@
     const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
     const token = store.getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
-    const response = await fetch(`${API_BASE_URL}${path}`, Object.assign({}, options, { headers }));
+    let response;
+    try {
+      response = await fetch(`${API_BASE_URL}${path}`, Object.assign({}, options, { headers }));
+    } catch (e) {
+      throw new Error('网络异常：服务可能正在启动，请稍后刷新重试');
+    }
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) {
       const err = new Error(data.message || '请求失败，请稍后重试');
@@ -127,14 +132,14 @@
           if (content && typeof content === 'object') {
             if (node.dataset.field) {
               const value = content[node.dataset.field];
-              if (value !== undefined && value !== null && value !== '') node.textContent = String(value);
+              if (value !== undefined && value !== null && value !== '') node.innerHTML = String(value);
             } else if (typeof content.html === 'string') {
               if (content.html) node.innerHTML = content.html;
             } else {
               Object.keys(content).forEach((key) => {
                 const child = node.querySelector(`[data-field="${key}"]`);
                 const value = content[key];
-                if (child && value !== undefined && value !== null && value !== '') child.textContent = String(value);
+                if (child && value !== undefined && value !== null && value !== '') child.innerHTML = String(value);
               });
             }
           } else if (typeof content === 'string' && content) {
@@ -148,6 +153,42 @@
     }
   }
   loadSiteContent();
+
+  // 首页动态内容：新闻与活动从接口加载，点击可进入详情页
+  async function loadHomeDynamic() {
+    try {
+      const newsData = await api('/api/news?page=1&pageSize=3&t=' + Date.now());
+      const newsItems = newsData.items || [];
+      if (newsItems.length) {
+        const list = document.getElementById('homeNewsList');
+        if (list) {
+          list.innerHTML = newsItems.map((item) =>
+            `<a href="news-detail.html?slug=${encodeURIComponent(item.slug)}"><time>${formatDate(item.published_at)}</time><span>${escapeHtml(item.title)}</span></a>`
+          ).join('');
+        }
+        const feature = document.getElementById('homeNewsFeature');
+        if (feature) {
+          const first = newsItems[0];
+          feature.innerHTML = `<div class="feature-img"></div><div class="feature-body"><time>${formatDate(first.published_at)}</time><h3><a href="news-detail.html?slug=${encodeURIComponent(first.slug)}">${escapeHtml(first.title)}</a></h3><p>${escapeHtml(first.summary || '')}</p></div>`;
+        }
+      }
+    } catch (error) { /* 接口不可用时保留静态内容 */ }
+
+    try {
+      const eventsData = await api('/api/events?page=1&pageSize=3&t=' + Date.now());
+      const eventItems = eventsData.items || [];
+      const box = document.getElementById('homeEvents');
+      if (box && eventItems.length) {
+        box.innerHTML = eventItems.map((item) => {
+          const d = new Date(item.start_time);
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `<a class="event-link" href="events.html"><time><strong>${day}</strong><span>${month}月</span></time><div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.summary || '')}</p></div></a>`;
+        }).join('');
+      }
+    } catch (error) { /* 接口不可用时保留静态内容 */ }
+  }
+  loadHomeDynamic();
 
   window.XH = { API_BASE_URL, api, assetUrl, formatDate, escapeHtml, toast, store };
 })();

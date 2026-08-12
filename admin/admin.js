@@ -209,6 +209,20 @@ async function loadHomeContent() {
     homeForm.stats_founded.value = stats.founded || '';
     homeForm.stats_alumni.value = stats.alumni || '';
     homeForm.stats_regions.value = stats.regions || '';
+    const about = sections.home_about || {};
+    const figures = sections.home_figures || {};
+    const services = sections.home_services || {};
+    const join = sections.home_join || {};
+    const donate = sections.home_donate || {};
+    homeForm.about_title.value = about.title || '';
+    homeForm.about_intro.value = about.content || '';
+    homeForm.figures_title.value = figures.title || '';
+    homeForm.figures_subtitle.value = figures.subtitle || '';
+    homeForm.services_title.value = services.title || '';
+    homeForm.services_subtitle.value = services.subtitle || '';
+    homeForm.join_title.value = join.title || '';
+    homeForm.donate_title.value = donate.title || '';
+    homeForm.donate_intro.value = donate.intro || '';
     homeStatus.textContent = '首页内容已读取。';
     homeStatus.className = 'status ok';
   } catch (error) {
@@ -260,6 +274,41 @@ homeForm.addEventListener('submit', async (event) => {
         alumni: form.stats_alumni || '',
         regions: form.stats_regions || ''
       }
+    }));
+    results.push(await saveSection({
+      page_slug: 'home',
+      section_key: 'home_about',
+      section_name: '校友会概况',
+      display_order: 4,
+      content: { title: form.about_title || '', content: form.about_intro || '' }
+    }));
+    results.push(await saveSection({
+      page_slug: 'home',
+      section_key: 'home_figures',
+      section_name: '校友风采',
+      display_order: 5,
+      content: { title: form.figures_title || '', subtitle: form.figures_subtitle || '' }
+    }));
+    results.push(await saveSection({
+      page_slug: 'home',
+      section_key: 'home_services',
+      section_name: '校友服务',
+      display_order: 6,
+      content: { title: form.services_title || '', subtitle: form.services_subtitle || '' }
+    }));
+    results.push(await saveSection({
+      page_slug: 'home',
+      section_key: 'home_join',
+      section_name: '加入我们',
+      display_order: 7,
+      content: { title: form.join_title || '' }
+    }));
+    results.push(await saveSection({
+      page_slug: 'home',
+      section_key: 'home_donate',
+      section_name: '支持母校',
+      display_order: 8,
+      content: { title: form.donate_title || '', intro: form.donate_intro || '' }
     }));
     homeStatus.textContent = results.map(item => item.message || '保存成功').join('\n');
     homeStatus.className = 'status ok';

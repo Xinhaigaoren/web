@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>海林市高级中学校友会官方网站</title>
   <meta name="description" content="海林市高级中学校友会官方网站，连接母校、凝聚校友、服务社会。" />
+  <meta name="keywords" content="海林市高级中学,海高校友会,校友会,海林高中" />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://zwx-hub.github.io/hailin-high-school-alumni/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="海林市高级中学校友会" />
+  <meta property="og:description" content="连接母校、凝聚校友、服务社会的海林市高级中学校友平台。" />
+  <meta property="og:url" content="https://zwx-hub.github.io/hailin-high-school-alumni/" />
+  <meta property="og:image" content="https://zwx-hub.github.io/hailin-high-school-alumni/assets/haigao-logo.jpg" />
   <link rel="stylesheet" href="style.css" />
   <script src="config.js"></script>
 </head>
@@ -76,8 +84,8 @@
       <div class="container two-col">
         <div>
           <p class="section-kicker">About Association</p>
-          <h2>校友会概况</h2>
-          <p>海林市高级中学校友会以“联络校友、服务校友、回馈母校、助力家乡”为宗旨，持续建设跨届别、跨行业、跨地域的校友共同体。</p>
+          <h2 data-section="home_about" data-field="title">校友会概况</h2>
+          <p data-section="home_about" data-field="content">海林市高级中学校友会以“联络校友、服务校友、回馈母校、助力家乡”为宗旨，持续建设跨届别、跨行业、跨地域的校友共同体。</p>
           <p>网站采用原创高校门户设计语言，突出新闻发布、活动组织、校友服务与母校支持四项核心功能。</p>
         </div>
         <div class="about-grid">
@@ -108,11 +116,11 @@
             <p class="section-kicker">News</p>
             <h2>新闻动态</h2>
           </div>
-          <a class="more-link" href="#">更多新闻 →</a>
+          <a class="more-link" href="news.html">更多新闻 →</a>
         </div>
 
         <div class="news-layout">
-          <article class="feature-news">
+          <article class="feature-news" id="homeNewsFeature">
             <div class="feature-img"></div>
             <div class="feature-body">
               <time datetime="2026-06-17">2026.06.17</time>
@@ -121,20 +129,20 @@
             </div>
           </article>
 
-          <div class="news-list" aria-label="新闻列表">
-            <a href="#">
+          <div class="news-list" id="homeNewsList" aria-label="新闻列表">
+            <a href="news.html">
               <time>2026.06.10</time>
               <span>校友会筹备组召开线上工作会议</span>
             </a>
-            <a href="#">
+            <a href="news.html">
               <time>2026.05.28</time>
               <span>“薪火相传”优秀校友访谈计划启动</span>
             </a>
-            <a href="#">
+            <a href="news.html">
               <time>2026.05.16</time>
               <span>毕业二十周年返校活动报名通道开放</span>
             </a>
-            <a href="#">
+            <a href="news.html">
               <time>2026.04.30</time>
               <span>海高校友公益奖学金项目进入征集阶段</span>
             </a>
@@ -150,9 +158,9 @@
             <p class="section-kicker">Events</p>
             <h2>校友活动</h2>
           </div>
-          <a class="more-link" href="#">活动日历 →</a>
+          <a class="more-link" href="events.html">活动日历 →</a>
         </div>
-        <div class="event-cards">
+        <div class="event-cards" id="homeEvents">
           <article>
             <time><strong>08</strong><span>月</span></time>
             <div>
@@ -183,9 +191,10 @@
         <div class="section-head">
           <div>
             <p class="section-kicker">Stories</p>
-            <h2>校友风采</h2>
+            <h2 data-section="home_figures" data-field="title">校友风采</h2>
+            <p class="section-sub" data-section="home_figures" data-field="subtitle">记录海高校友在科研、教育、医疗、企业与公共服务中的成长故事。</p>
           </div>
-          <a class="more-link" href="#">投稿故事 →</a>
+          <a class="more-link" href="forum.html">投稿故事 →</a>
         </div>
         <div class="story-grid">
           <article>
@@ -211,8 +220,8 @@
       <div class="container service-wrap">
         <div>
           <p class="section-kicker">Services</p>
-          <h2>校友服务</h2>
-          <p>为校友提供认证、联络、活动、合作、公益与母校信息服务。</p>
+          <h2 data-section="home_services" data-field="title">校友服务</h2>
+          <p data-section="home_services" data-field="subtitle">为校友提供认证、联络、活动、合作、公益与母校信息服务。</p>
         </div>
         <div class="service-list">
           <a href="#join"><span>01</span>校友认证与信息登记</a>
@@ -227,7 +236,7 @@
       <div class="container join-card">
         <div>
           <p class="section-kicker">Join Us</p>
-          <h2>加入海高校友会</h2>
+          <h2 data-section="home_join" data-field="title">加入海高校友会</h2>
           <p>欢迎历届毕业生、曾在海林市高级中学学习或工作的师生加入校友网络。已完成认证的校友可<a href="directory.html" style="color:var(--accent);font-weight:700">查看校友名录</a>。</p>
         </div>
         <form class="join-form" aria-label="校友登记表单">
@@ -247,8 +256,8 @@
     <section class="section donate" id="donate">
       <div class="container donate-inner">
         <p class="section-kicker">Giving</p>
-        <h2>支持母校发展</h2>
-        <p>可围绕奖助学金、图书阅读、科技创新、体育美育、校园改善等方向发起校友公益项目。</p>
+        <h2 data-section="home_donate" data-field="title">支持母校发展</h2>
+        <p data-section="home_donate" data-field="intro">可围绕奖助学金、图书阅读、科技创新、体育美育、校园改善等方向发起校友公益项目。</p>
         <a class="btn light" href="#contact">联系项目负责人</a>
       </div>
     </section>
@@ -286,6 +295,9 @@
     </div>
   </footer>
 
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":"海林市高级中学校友会","url":"https://zwx-hub.github.io/hailin-high-school-alumni/","logo":"https://zwx-hub.github.io/hailin-high-school-alumni/assets/haigao-logo.jpg"}
+</script>
   <script src="site.js"></script>
   <script src="script.js"></script>
 </body>

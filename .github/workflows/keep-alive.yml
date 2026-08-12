@@ -1,0 +1,13 @@
+﻿name: Keep backend awake
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render API health endpoint
+        run: curl -fsS --max-time 60 https://hailin-alumni-api.onrender.com/api/health || true
