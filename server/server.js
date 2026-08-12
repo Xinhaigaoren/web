@@ -2476,6 +2476,24 @@ app.post('/api/events/checkin', async (req, res) => {
 
 // ==================== 第三轮补充：管理端通知/版块/内容区块种子 ====================
 
+async function ensureSitePagesSeed() {
+  if (!pool) return;
+  const pages = [
+    { slug: 'home', title: '首页', description: '海林市高级中学校友会官方网站首页' },
+    { slug: 'about', title: '校友会介绍', description: '海林市高级中学校友会简介' },
+    { slug: 'news', title: '新闻公告', description: '校友会新闻与公告' },
+    { slug: 'events', title: '活动中心', description: '校友会活动' },
+    { slug: 'contact', title: '联系我们', description: '联系我们' },
+    { slug: 'alumni', title: '校友风采', description: '杰出校友风采展示' }
+  ];
+  for (const p of pages) {
+    const exists = await dbQuery("select id from public.site_pages where slug=$1 limit 1", [p.slug]);
+    if (!exists.rows[0]) {
+      await dbQuery('insert into public.site_pages (slug, title, description, is_public, sort_order) ' + 'values ($1,$2,$3,true,0) on conflict (slug) do nothing', [p.slug, p.title, p.description]);
+    }
+  }
+}
+
 async function ensureSiteSectionsSeed() {
   if (!pool) return;
   const seed = [
@@ -2910,6 +2928,7 @@ bootstrapSchema()
   .then(() => ensureUserTableExtras())
   .then(() => ensurePasswordResetTable())
   .then(() => ensurePhase2Tables())
+  .then(() => ensureSitePagesSeed())
   .then(() => ensureSiteSectionsSeed())
   .then(() => ensurePhase3Tables())
   .then(() => {
