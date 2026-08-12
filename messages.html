@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>校友私信 - 海林市高级中学校友会</title>
+  <meta name="description" content="海林市高级中学校友站内私信，校友即时沟通。" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="pages.css" />
+  <script src="config.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+
+  <header class="site-header" id="top">
+    <div class="header-top">
+      <div class="container top-inner">
+        <span>海林市高级中学校友会</span>
+        <nav aria-label="快捷链接" data-account></nav>
+      </div>
+    </div>
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html" aria-label="海林市高级中学校友会首页">
+        <img class="brand-logo" src="assets/haigao-logo.jpg" alt="海林市高级中学校徽" />
+        <span class="brand-text">
+          <strong>海林市高级中学校友会</strong>
+          <small>Hailin Senior High School Alumni Association</small>
+        </span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span></span><span></span><span></span>
+        <em>菜单</em>
+      </button>
+      <nav class="primary-nav" id="primary-nav" aria-label="主导航">
+        <a href="index.html">首页</a>
+        <a href="about.html">校友会介绍</a>
+        <a href="news.html">新闻公告</a>
+        <a href="events.html">活动中心</a>
+        <a href="index.html#figures">校友风采</a>
+        <a href="index.html#services">校友服务</a>
+        <a href="account.html">加入我们</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <p class="eyebrow">Messages</p>
+        <h1>校友私信</h1>
+        <p>站内即时沟通，聊聊近况、约场球、叙叙旧。</p>
+        <div class="crumb"><a href="index.html">首页</a> / 校友私信</div>
+      </div>
+    </section>
+
+    <section class="page-section soft">
+      <div class="container">
+        <div id="msgLoginTip" class="empty-state" hidden>请先<a href="account.html">登录</a>并完成校友认证后使用私信。</div>
+        <div id="msgApp" class="msg-app" hidden>
+          <aside class="msg-side">
+            <div class="msg-side-head">
+              <strong>会话</strong>
+              <button type="button" id="newChatBtn" class="btn primary" style="min-height:34px;padding:0 14px;font-size:13px">发起私信</button>
+            </div>
+            <div id="conversationList" class="msg-conv-list"><div class="empty-state">加载中…</div></div>
+          </aside>
+          <section class="msg-chat">
+            <div class="msg-chat-head" id="chatHead">选择一个会话开始聊天</div>
+            <div class="msg-chat-body" id="chatBody"></div>
+            <form class="msg-composer" id="chatForm">
+              <textarea id="chatInput" rows="2" maxlength="2000" placeholder="输入消息，Enter 发送，Shift+Enter 换行" required></textarea>
+              <button class="btn primary" type="submit">发送</button>
+            </form>
+          </section>
+        </div>
+
+        <div class="editor-card" id="newChatPanel" hidden style="margin-top:22px">
+          <h3>发起新私信</h3>
+          <p class="form-tip">从已认证校友中选择聊天对象：</p>
+          <div class="toolbar-inline">
+            <input id="peerSearch" placeholder="搜索姓名 / 单位" />
+            <select id="peerSelect"><option value="">选择校友…</option></select>
+            <button type="button" id="peerConfirmBtn" class="btn primary">开始聊天</button>
+            <button type="button" id="peerCancelBtn" class="btn ghost">取消</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contact">
+    <div class="container footer-grid">
+      <div>
+        <h2>海林市高级中学校友会</h2>
+        <p>以校友情谊为纽带，以服务母校为使命。</p>
+      </div>
+      <div>
+        <h3>联系方式</h3>
+        <p>邮箱：alumni@example.com</p>
+        <p>地址：黑龙江省牡丹江市海林市</p>
+      </div>
+      <div>
+        <h3>常用入口</h3>
+        <a href="account.html">校友登录/注册</a>
+        <a href="directory.html">校友名录</a>
+        <a href="news.html">新闻公告</a>
+        <a href="events.html">活动报名</a>
+        <a href="forum.html">校友论坛</a>
+        <a href="jobs.html">校友招聘</a>
+        <a href="donate.html">在线捐赠</a>
+        <a href="map.html">校友地图</a>
+        <a href="messages.html">校友私信</a>
+        <a href="companies.html">校友企业</a>
+        <a href="admin/">管理员入口</a>
+      </div>
+    </div>
+    <div class="container copyright">
+      <span>© 2026 海林市高级中学校友会. All Rights Reserved.</span>
+      <a href="#top">返回顶部 ↑</a>
+    </div>
+  </footer>
+
+  <script src="site.js"></script>
+  <script>
+    (function () {
+      const XH = window.XH;
+      const msgApp = document.getElementById('msgApp');
+      const loginTip = document.getElementById('msgLoginTip');
+      const conversationList = document.getElementById('conversationList');
+      const chatHead = document.getElementById('chatHead');
+      const chatBody = document.getElementById('chatBody');
+      const chatForm = document.getElementById('chatForm');
+      const chatInput = document.getElementById('chatInput');
+      const newChatPanel = document.getElementById('newChatPanel');
+      const peerSelect = document.getElementById('peerSelect');
+      const peerSearch = document.getElementById('peerSearch');
+      let conversations = [];
+      let currentConvoId = 0;
+      let peerAlumni = [];
+      let pollTimer = null;
+      let myUserId = null;
+
+      if (!XH.store.getToken()) {
+        loginTip.hidden = false;
+      } else {
+        msgApp.hidden = false;
+        XH.api('/api/auth/me').then((data) => { myUserId = data.user && data.user.user_id; }).catch(() => {});
+        loadConversations();
+        loadPeerOptions();
+        pollTimer = setInterval(refreshTick, 5000);
+      }
+
+      function escapeForAttr(value) {
+        return XH.escapeHtml(String(value ?? ''));
+      }
+
+      function renderConversations() {
+        if (!conversations.length) {
+          conversationList.innerHTML = '<div class="empty-state">暂无会话，点击「发起私信」开始聊天。</div>';
+          return;
+        }
+        conversationList.innerHTML = conversations.map((c) => `
+          <div class="msg-conv-item ${c.id === currentConvoId ? 'active' : ''}" data-conv="${c.id}">
+            <div class="msg-conv-name">${escapeForAttr(c.peer_name || '校友')}${c.unread_count ? `<span class="badge pending">${c.unread_count}</span>` : ''}</div>
+            <div class="msg-conv-last">${escapeForAttr(c.last_message || '')}</div>
+            <small>${XH.formatDate(c.last_message_at2 || c.last_message_at, true)}</small>
+          </div>`).join('');
+        conversationList.onclick = (event) => {
+          const item = event.target.closest('[data-conv]');
+          if (item) openConversation(Number(item.dataset.conv));
+        };
+      }
+
+      async function loadConversations() {
+        try {
+          const data = await XH.api('/api/messages/conversations');
+          conversations = data.conversations || [];
+          renderConversations();
+        } catch (error) {
+          if (error.status === 401) { XH.store.clearAuth(); location.href = 'account.html'; }
+        }
+      }
+
+      async function openConversation(id) {
+        currentConvoId = id;
+        renderConversations();
+        chatHead.textContent = '聊天中…';
+        chatBody.innerHTML = '';
+        try {
+          const data = await XH.api(`/api/messages/conversations/${id}`);
+          chatHead.textContent = `与 ${data.peer_name || '校友'} 的对话`;
+          chatBody.innerHTML = data.messages && data.messages.length
+            ? data.messages.map((m) => `
+                <div class="msg-bubble ${m.sender_id === myUserId ? 'mine' : 'theirs'}">
+                  <p>${escapeForAttr(m.content)}</p>
+                  <small>${XH.formatDate(m.created_at, true)}</small>
+                </div>`).join('')
+            : '<div class="empty-state">还没有消息，说句你好吧～</div>';
+          chatBody.scrollTop = chatBody.scrollHeight;
+          // 刷新会话列表中的未读数
+          loadConversations();
+        } catch (error) {
+          chatBody.innerHTML = `<div class="empty-state">${escapeForAttr(error.message)}</div>`;
+        }
+      }
+
+
+
+      chatForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!currentConvoId) return;
+        const content = chatInput.value.trim();
+        if (!content) return;
+        chatInput.value = '';
+        try {
+          await XH.api(`/api/messages/conversations/${currentConvoId}`, { method: 'POST', body: JSON.stringify({ content }) });
+          openConversation(currentConvoId);
+        } catch (error) {
+          XH.toast(error.message, 'error');
+        }
+      });
+      chatInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          chatForm.requestSubmit();
+        }
+      });
+
+      async function loadPeerOptions() {
+        try {
+          const data = await XH.api('/api/alumni/directory');
+          peerAlumni = data.alumni || [];
+          renderPeerOptions();
+        } catch (error) {
+          XH.toast(error.message, 'error');
+        }
+      }
+      function renderPeerOptions() {
+        const q = peerSearch.value.trim();
+        const list = q ? peerAlumni.filter((a) => (a.name || '').includes(q) || (a.company || '').includes(q)) : peerAlumni;
+        peerSelect.innerHTML = '<option value="">选择校友…</option>' + list.map((a) =>
+          `<option value="${a.user_id}">${escapeForAttr(a.name)}${a.graduation_year ? '（' + escapeForAttr(a.graduation_year) + '届）' : ''}${a.company ? ' - ' + escapeForAttr(a.company) : ''}</option>`).join('');
+      }
+      peerSearch.addEventListener('input', renderPeerOptions);
+
+      document.getElementById('newChatBtn').addEventListener('click', () => {
+        newChatPanel.hidden = false;
+        newChatPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      document.getElementById('peerCancelBtn').addEventListener('click', () => { newChatPanel.hidden = true; });
+      document.getElementById('peerConfirmBtn').addEventListener('click', async () => {
+        const peerId = Number(peerSelect.value || 0);
+        if (!peerId) { XH.toast('请选择聊天对象', 'info'); return; }
+        try {
+          const data = await XH.api('/api/messages/conversations', { method: 'POST', body: JSON.stringify({ peer_id: peerId }) });
+          newChatPanel.hidden = true;
+          await loadConversations();
+          openConversation(data.conversation.id);
+        } catch (error) {
+          XH.toast(error.message, 'error');
+        }
+      });
+
+      function refreshTick() {
+        if (!XH.store.getToken()) return;
+        loadConversations();
+        if (currentConvoId) {
+          XH.api(`/api/messages/conversations/${currentConvoId}`)
+            .then((data) => {
+              if (!document.hidden) {
+                const html = data.messages && data.messages.length
+                  ? data.messages.map((m) => `
+                      <div class="msg-bubble ${m.sender_id === myUserId ? 'mine' : 'theirs'}">
+                        <p>${escapeForAttr(m.content)}</p>
+                        <small>${XH.formatDate(m.created_at, true)}</small>
+                      </div>`).join('')
+                  : '<div class="empty-state">还没有消息</div>';
+                const wasNearBottom = chatBody.scrollHeight - chatBody.scrollTop - chatBody.clientHeight < 80;
+                chatBody.innerHTML = html;
+                if (wasNearBottom) chatBody.scrollTop = chatBody.scrollHeight;
+              }
+            })
+            .catch(() => {});
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

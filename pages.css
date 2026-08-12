@@ -239,3 +239,46 @@
   .donate-stats { grid-template-columns: 1fr; }
   .map-bar-row { grid-template-columns: 90px 1fr 50px; }
 }
+
+/* 私信 */
+.msg-app { display: grid; grid-template-columns: 300px 1fr; gap: 18px; min-height: 560px; align-items: stretch; }
+.msg-side { background: #fff; border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; }
+.msg-side-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.msg-side-head strong { color: var(--deep); }
+.msg-conv-list { flex: 1; overflow-y: auto; }
+.msg-conv-item { padding: 14px 16px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.msg-conv-item:hover { background: var(--soft); }
+.msg-conv-item.active { background: #f4f9ff; border-left: 3px solid var(--accent); }
+.msg-conv-name { font-weight: 700; color: var(--deep); display: flex; align-items: center; gap: 8px; }
+.msg-conv-last { font-size: 13px; color: var(--muted); margin: 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-conv-item small { color: var(--muted); font-size: 12px; }
+.msg-chat { background: #fff; border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; }
+.msg-chat-head { padding: 14px 18px; border-bottom: 1px solid var(--line); font-weight: 700; color: var(--deep); }
+.msg-chat-body { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 12px; max-height: 460px; }
+.msg-bubble { max-width: 72%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.6; }
+.msg-bubble p { margin: 0; white-space: pre-wrap; word-break: break-word; }
+.msg-bubble small { display: block; margin-top: 4px; opacity: .7; font-size: 12px; }
+.msg-bubble.mine { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.msg-bubble.theirs { align-self: flex-start; background: var(--soft); color: var(--ink); border-bottom-left-radius: 4px; }
+.msg-composer { display: flex; gap: 10px; padding: 14px; border-top: 1px solid var(--line); align-items: flex-end; }
+.msg-composer textarea { flex: 1; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font: inherit; resize: vertical; min-height: 52px; }
+
+/* 企业黄页 */
+.company-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.company-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.company-card-head { display: flex; align-items: center; gap: 12px; }
+.company-card-head img { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; }
+.company-logo-ph { width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), #c9985f); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; }
+.company-card h3 { margin: 0; color: var(--deep); font-size: 17px; }
+.company-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+.company-intro { margin: 0; color: #555; font-size: 14px; line-height: 1.6; flex: 1; }
+.company-foot { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 13px; }
+.company-foot a { color: var(--accent); text-decoration: none; }
+
+@media (max-width: 900px) {
+  .msg-app { grid-template-columns: 1fr; }
+  .company-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .company-grid { grid-template-columns: 1fr; }
+}

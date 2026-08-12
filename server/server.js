@@ -497,7 +497,7 @@ app.get('/api/alumni/directory', requireAuth, async (req, res) => {
     if (year) { params.push(Number(year)); wheres.push(`graduation_year=$${params.length}`); }
     if (q) { params.push(`%${q}%`); wheres.push(`(name ilike $${params.length} or class_name ilike $${params.length} or company ilike $${params.length})`); }
     const r = await dbQuery(
-      `select id,name,province,city,county,current_province,current_city,current_county,graduation_year,class_name,industry,company,position_title,
+      `select id,user_id,name,province,city,county,current_province,current_city,current_county,graduation_year,class_name,industry,company,position_title,
               case when public_contact then phone else null end as phone
        from public.alumni_profiles
        where ${wheres.join(' and ')}
@@ -2215,12 +2215,16 @@ app.post('/api/donations', async (req, res) => {
     const amount = Number(b.amount);
     if (!donorName) return fail(res, 400, '请填写捐赠人姓名');
     if (!Number.isFinite(amount) || amount <= 0) return fail(res, 400, '捐赠金额必须大于 0');
+    const orderNo = genOrderNo();
     const r = await dbQuery(
-      `insert into public.donations (user_id, donor_name, amount, purpose, message, payment_method, payment_ref)
-       values ($1,$2,$3,$4,$5,$6,$7) returning *`,
-      [req.user ? req.user.user_id : null, donorName, amount.toFixed(2), b.purpose || '校友基金', b.message || null, b.payment_method || '线下转账', b.payment_ref || null]
+      `insert into public.donations (user_id, donor_name, amount, purpose, message, payment_method, payment_ref, order_no, payment_status)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,'pending') returning *`,
+      [req.user ? req.user.user_id : null, donorName, amount.toFixed(2), b.purpose || '校友基金', b.message || null, b.payment_method || '线下转账', b.payment_ref || null, orderNo]
     );
-    return ok(res, { donation: r.rows[0], message: '捐赠意向已提交，管理员确认后将在捐赠榜展示' });
+    const paymentHint = (b.payment_method === '微信' || b.payment_method === '支付宝')
+      ? '在线收款网关待接入，请按后台确认流程线下转账或联系校友会。'
+      : '请按校友会提供的收款账户完成转账，转账时备注订单号。';
+    return ok(res, { donation: r.rows[0], order_no: orderNo, message: `捐赠意向已提交（订单号：${orderNo}）。${paymentHint} 管理员确认后将在捐赠榜展示。` });
   } catch (e) {
     return fail(res, 500, '提交捐赠失败', { error: e.message });
   }
@@ -2296,6 +2300,43 @@ app.post('/api/notifications/read', requireAuth, async (req, res) => {
   }
 });
 
+let wechatAccessTokenCache = null;
+async function wechatAccessToken() {
+  if (!process.env.WECHAT_APPID || !process.env.WECHAT_SECRET) return null;
+  if (wechatAccessTokenCache && wechatAccessTokenCache.expiresAt > Date.now()) return wechatAccessTokenCache.token;
+  const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${encodeURIComponent(process.env.WECHAT_APPID)}&secret=${encodeURIComponent(process.env.WECHAT_SECRET)}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  if (!data.access_token) return null;
+  wechatAccessTokenCache = { token: data.access_token, expiresAt: Date.now() + (data.expires_in - 300) * 1000 };
+  return data.access_token;
+}
+
+async function pushWechatTemplate(openid, title, content, link) {
+  const token = await wechatAccessToken();
+  if (!token) return { ok: false, message: '微信未配置或获取 token 失败' };
+  const templateId = process.env.WECHAT_TEMPLATE_ID;
+  if (!templateId) return { ok: false, message: '未配置 WECHAT_TEMPLATE_ID' };
+  const url = `https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=${encodeURIComponent(token)}`;
+  const payload = {
+    touser: openid,
+    template_id: templateId,
+    page: link || 'pages/index/index',
+    data: {
+      thing1: { value: String(title).slice(0, 20) },
+      thing2: { value: String(content).slice(0, 20) },
+      time3: { value: new Date().toLocaleString('zh-CN', { hour12: false }) }
+    }
+  };
+  try {
+    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await response.json();
+    return data.errcode === 0 ? { ok: true } : { ok: false, message: data.errmsg || '微信推送失败' };
+  } catch (e) {
+    return { ok: false, message: '微信推送异常' };
+  }
+}
+
 app.post('/api/admin/notifications/send', requireAuth, requireAdmin, async (req, res) => {
   try {
     const b = req.body || {};
@@ -2303,27 +2344,46 @@ app.post('/api/admin/notifications/send', requireAuth, requireAdmin, async (req,
     if (!title) return fail(res, 400, '通知标题不能为空');
     const content = String(b.content || '').trim() || title;
     const link = b.link ? String(b.link) : null;
-    const params = [title, content, link];
+    const channel = ['site', 'wechat', 'email', 'all'].includes(b.channel) ? b.channel : 'site';
     let result;
     if (b.user_id) {
-      params.push(b.user_id);
-      result = await dbQuery(
-        `insert into public.notifications (user_id, title, content, link) values ($4,$1,$2,$3) returning *`,
-        params
+      const r = await dbQuery(
+        `insert into public.notifications (user_id, title, content, link, channel)
+         values ($1,$2,$3,$4,$5) returning *`,
+        [b.user_id, title, content, link, channel]
       );
+      result = { rows: r.rows, sent: 1 };
     } else {
       // 广播给所有已注册用户
       const users = await dbQuery(`select id from public.app_users`);
       for (const row of users.rows) {
         await dbQuery(
-          `insert into public.notifications (user_id, title, content, link) values ($1,$2,$3,$4)`,
-          [row.id, title, content, link]
+          `insert into public.notifications (user_id, title, content, link, channel) values ($1,$2,$3,$4,$5)`,
+          [row.id, title, content, link, channel]
         );
       }
       result = { rows: [{ id: null }], sent: users.rows.length };
     }
-    await audit(req, 'notification_send', 'notification', result.rows[0].id, { title, broadcast: !b.user_id });
-    return ok(res, { message: b.user_id ? '通知已发送' : `通知已广播给 ${result.sent} 位用户` });
+    // 微信/邮件渠道推送（尽力而为，失败不影响站内通知）
+    const channelNote = [];
+    if (channel === 'wechat' || channel === 'all') {
+      const targets = b.user_id
+        ? await dbQuery(`select wechat_openid from public.app_users where id=$1 and wechat_openid is not null`, [b.user_id])
+        : await dbQuery(`select wechat_openid from public.app_users where wechat_openid is not null and wechat_openid <> ''`);
+      let pushed = 0;
+      let failed = 0;
+      for (const t of targets.rows) {
+        const r = await pushWechatTemplate(t.wechat_openid, title, content, link);
+        if (r.ok) pushed += 1; else failed += 1;
+      }
+      channelNote.push(`微信模板消息 ${pushed} 成功${failed ? `、${failed} 失败` : ''}`);
+    }
+    if (channel === 'email' || channel === 'all') {
+      channelNote.push(process.env.SMTP_HOST ? '邮件已按配置尝试发送（邮件网关待接入）' : '未配置 SMTP，邮件渠道跳过');
+    }
+    await audit(req, 'notification_send', 'notification', result.rows[0].id, { title, broadcast: !b.user_id, channel });
+    const base = b.user_id ? '通知已发送' : `通知已广播给 ${result.sent} 位用户`;
+    return ok(res, { message: channelNote.length ? `${base}；${channelNote.join('；')}` : base });
   } catch (e) {
     return fail(res, 500, '发送通知失败', { error: e.message });
   }
@@ -2489,6 +2549,348 @@ app.get('/api/admin/content/sections', requireAuth, requireAdmin, async (req, re
     return fail(res, 500, '获取内容区块失败', { error: e.message });
   }
 });
+// ==================== 第三阶段：私信聊天 / 企业黄页 / 通知渠道 / 捐赠订单 / 智能搜索 ====================
+
+async function ensurePhase3Tables() {
+  if (!pool) return;
+  await dbQuery(`create table if not exists public.conversations (
+    id bigserial primary key,
+    user_a bigint not null references public.app_users(id) on delete cascade,
+    user_b bigint not null references public.app_users(id) on delete cascade,
+    last_message_at timestamptz default now(),
+    created_at timestamptz default now(),
+    unique (user_a, user_b)
+  )`);
+  await dbQuery(`create table if not exists public.messages (
+    id bigserial primary key,
+    conversation_id bigint not null references public.conversations(id) on delete cascade,
+    sender_id bigint references public.app_users(id) on delete set null,
+    content text not null,
+    is_read boolean default false,
+    created_at timestamptz default now()
+  )`);
+  await dbQuery(`create index if not exists idx_messages_conversation on public.messages(conversation_id, created_at)`);
+  await dbQuery(`create table if not exists public.companies (
+    id bigserial primary key,
+    name text not null,
+    logo_url text,
+    industry text,
+    city text,
+    website text,
+    intro text,
+    contact text,
+    owner_user_id bigint references public.app_users(id) on delete set null,
+    status text default 'published',
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+  )`);
+  await dbQuery(`alter table public.notifications add column if not exists channel text default 'site'`);
+  await dbQuery(`alter table public.donations add column if not exists order_no text`);
+  await dbQuery(`alter table public.donations add column if not exists payment_status text default 'pending'`);
+}
+
+// 会话双方规范化：始终 user_a < user_b，保证唯一
+function conversationPair(a, b) {
+  return a < b ? [a, b] : [b, a];
+}
+
+// ---------- 即时聊天（站内私信，轮询） ----------
+app.post('/api/messages/conversations', requireAuth, async (req, res) => {
+  try {
+    const peerId = parsePositiveInt(req.body?.peer_id, 0);
+    if (!peerId) return fail(res, 400, '请选择聊天对象');
+    if (peerId === req.user.user_id) return fail(res, 400, '不能和自己聊天');
+    const peer = await dbQuery(`select id from public.app_users where id=$1 and status='active' limit 1`, [peerId]);
+    if (!peer.rows[0]) return fail(res, 404, '对方不存在');
+    const [a, b] = conversationPair(req.user.user_id, peerId);
+    const r = await dbQuery(
+      `insert into public.conversations (user_a, user_b)
+       values ($1,$2)
+       on conflict (user_a, user_b) do update set last_message_at = now()
+       returning *`,
+      [a, b]
+    );
+    return ok(res, { conversation: r.rows[0] });
+  } catch (e) {
+    return fail(res, 500, '创建会话失败', { error: e.message });
+  }
+});
+
+app.get('/api/messages/conversations', requireAuth, async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select c.id, c.user_a, c.user_b, c.last_message_at,
+              (select count(*)::int from public.messages m where m.conversation_id=c.id and m.sender_id <> $1 and m.is_read=false) as unread_count,
+              (select content from public.messages m where m.conversation_id=c.id order by m.created_at desc limit 1) as last_message,
+              (select created_at from public.messages m where m.conversation_id=c.id order by m.created_at desc limit 1) as last_message_at2,
+              (case when c.user_a = $1 then c.user_b else c.user_a end) as peer_id,
+              (select display_name from public.app_users u where u.id = (case when c.user_a = $1 then c.user_b else c.user_a end)) as peer_name
+       from public.conversations c
+       where c.user_a = $1 or c.user_b = $1
+       order by c.last_message_at desc
+       limit 200`,
+      [req.user.user_id]
+    );
+    return ok(res, { conversations: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取会话列表失败', { error: e.message });
+  }
+});
+
+app.get('/api/messages/conversations/:id', requireAuth, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const convo = await dbQuery(
+      `select * from public.conversations where id=$1 and (user_a=$2 or user_b=$2) limit 1`,
+      [id, req.user.user_id]
+    );
+    if (!convo.rows[0]) return fail(res, 404, '会话不存在');
+    const r = await dbQuery(
+      `select m.*, u.display_name as sender_name
+       from public.messages m
+       left join public.app_users u on u.id = m.sender_id
+       where m.conversation_id=$1
+       order by m.created_at asc
+       limit 500`,
+      [id]
+    );
+    await dbQuery(
+      `update public.messages set is_read=true where conversation_id=$1 and sender_id <> $2 and is_read=false`,
+      [id, req.user.user_id]
+    );
+    const peerId = convo.rows[0].user_a === req.user.user_id ? convo.rows[0].user_b : convo.rows[0].user_a;
+    const peer = await dbQuery(`select display_name from public.app_users where id=$1 limit 1`, [peerId]);
+    return ok(res, { messages: r.rows, peer_id: peerId, peer_name: (peer.rows[0] && peer.rows[0].display_name) || '校友', conversation_id: id });
+  } catch (e) {
+    return fail(res, 500, '获取消息失败', { error: e.message });
+  }
+});
+
+app.post('/api/messages/conversations/:id', requireAuth, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const content = String(req.body?.content || '').trim();
+    if (!content) return fail(res, 400, '消息不能为空');
+    if (content.length > 2000) return fail(res, 400, '消息过长（最多 2000 字）');
+    const convo = await dbQuery(
+      `select * from public.conversations where id=$1 and (user_a=$2 or user_b=$2) limit 1`,
+      [id, req.user.user_id]
+    );
+    if (!convo.rows[0]) return fail(res, 404, '会话不存在');
+    const r = await dbQuery(
+      `insert into public.messages (conversation_id, sender_id, content) values ($1,$2,$3) returning *`,
+      [id, req.user.user_id, content]
+    );
+    await dbQuery(`update public.conversations set last_message_at=now() where id=$1`, [id]);
+    return ok(res, { message: r.rows[0] });
+  } catch (e) {
+    return fail(res, 500, '发送失败', { error: e.message });
+  }
+});
+
+app.get('/api/messages/unread-count', requireAuth, async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select count(*)::int as count
+       from public.messages m
+       join public.conversations c on c.id = m.conversation_id
+       where (c.user_a=$1 or c.user_b=$1) and m.sender_id <> $1 and m.is_read=false`,
+      [req.user.user_id]
+    );
+    return ok(res, { count: r.rows[0].count });
+  } catch (e) {
+    return fail(res, 500, '获取未读数量失败', { error: e.message });
+  }
+});
+
+app.get('/api/admin/messages', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select m.id, m.content, m.created_at, m.is_read, m.sender_id,
+              s.display_name as sender_name,
+              c.user_a, c.user_b,
+              (select display_name from public.app_users u where u.id = c.user_a) as user_a_name,
+              (select display_name from public.app_users u where u.id = c.user_b) as user_b_name
+       from public.messages m
+       join public.conversations c on c.id = m.conversation_id
+       left join public.app_users s on s.id = m.sender_id
+       order by m.created_at desc
+       limit 300`
+    );
+    return ok(res, { items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取消息记录失败', { error: e.message });
+  }
+});
+
+// ---------- 校友企业黄页 ----------
+app.get('/api/companies', async (req, res) => {
+  try {
+    const page = parsePositiveInt(req.query.page, 1);
+    const pageSize = Math.min(parsePositiveInt(req.query.pageSize, 12), 50);
+    const q = req.query.q;
+    const industry = req.query.industry;
+    const params = [];
+    const wheres = [`status='published'`];
+    if (q) { params.push(`%${q}%`); wheres.push(`(name ilike $${params.length} or intro ilike $${params.length} or city ilike $${params.length})`); }
+    if (industry) { params.push(industry); wheres.push(`industry = $${params.length}`); }
+    const where = wheres.join(' and ');
+    const count = await dbQuery(`select count(*)::int as total from public.companies where ${where}`, params);
+    const offset = (page - 1) * pageSize;
+    const r = await dbQuery(
+      `select id, name, logo_url, industry, city, website, intro, contact, created_at
+       from public.companies where ${where}
+       order by created_at desc
+       limit $${params.length + 1} offset $${params.length + 2}`,
+      [...params, pageSize, offset]
+    );
+    const industries = await dbQuery(`select distinct industry from public.companies where status='published' and industry is not null and industry <> '' order by industry`);
+    return ok(res, { total: count.rows[0].total, page, pageSize, items: r.rows, industries: industries.rows.map((row) => row.industry) });
+  } catch (e) {
+    return fail(res, 500, '获取企业列表失败', { error: e.message });
+  }
+});
+
+app.get('/api/companies/:id', async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const r = await dbQuery(`select * from public.companies where id=$1 and status='published'`, [id]);
+    if (!r.rows[0]) return fail(res, 404, '企业不存在');
+    return ok(res, { company: r.rows[0] });
+  } catch (e) {
+    return fail(res, 500, '获取企业详情失败', { error: e.message });
+  }
+});
+
+app.post('/api/companies', requireAuth, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const name = String(b.name || '').trim();
+    if (!name) return fail(res, 400, '企业名称不能为空');
+    const r = await dbQuery(
+      `insert into public.companies (name, logo_url, industry, city, website, intro, contact, owner_user_id, status)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,'pending') returning *`,
+      [name, b.logo_url || null, b.industry || null, b.city || null, b.website || null, b.intro || null, b.contact || null, req.user.user_id]
+    );
+    await audit(req, 'company_submit', 'company', r.rows[0].id, { name });
+    return ok(res, { company: r.rows[0], message: '企业信息已提交，管理员审核后展示在黄页' });
+  } catch (e) {
+    return fail(res, 500, '提交企业失败', { error: e.message });
+  }
+});
+
+// ---------- 校友企业黄页（管理） ----------
+app.get('/api/admin/companies', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select c.*, u.display_name as owner_name
+       from public.companies c
+       left join public.app_users u on u.id = c.owner_user_id
+       order by c.created_at desc
+       limit 500`
+    );
+    return ok(res, { items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取企业列表失败', { error: e.message });
+  }
+});
+
+app.post('/api/admin/companies', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const name = String(b.name || '').trim();
+    if (!name) return fail(res, 400, '企业名称不能为空');
+    const r = await dbQuery(
+      `insert into public.companies (name, logo_url, industry, city, website, intro, contact, owner_user_id, status)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9) returning *`,
+      [name, b.logo_url || null, b.industry || null, b.city || null, b.website || null, b.intro || null, b.contact || null, b.owner_user_id || null, b.status || 'published']
+    );
+    await audit(req, 'company_create', 'company', r.rows[0].id, { name });
+    return ok(res, { company: r.rows[0], message: '企业已创建' });
+  } catch (e) {
+    return fail(res, 500, '创建企业失败', { error: e.message });
+  }
+});
+
+app.patch('/api/admin/companies/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const b = req.body || {};
+    const sets = [];
+    const params = [];
+    ['name', 'logo_url', 'industry', 'city', 'website', 'intro', 'contact', 'status'].forEach((key) => {
+      if (b[key] !== undefined) {
+        params.push(b[key]);
+        sets.push(`${key} = $${params.length}`);
+      }
+    });
+    if (!sets.length) return fail(res, 400, '没有可更新的内容');
+    params.push(id);
+    const r = await dbQuery(`update public.companies set ${sets.join(', ')}, updated_at=now() where id=$${params.length} returning *`, params);
+    if (!r.rows[0]) return fail(res, 404, '企业不存在');
+    await audit(req, 'company_update', 'company', id, {});
+    return ok(res, { company: r.rows[0], message: '已更新' });
+  } catch (e) {
+    return fail(res, 500, '更新企业失败', { error: e.message });
+  }
+});
+
+app.delete('/api/admin/companies/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    await dbQuery(`delete from public.companies where id=$1`, [id]);
+    await audit(req, 'company_delete', 'company', id, {});
+    return ok(res, { message: '已删除' });
+  } catch (e) {
+    return fail(res, 500, '删除企业失败', { error: e.message });
+  }
+});
+
+// ---------- 捐赠订单升级 ----------
+function genOrderNo() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `D${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+}
+
+// ---------- 智能校友搜索（模糊搜索；配置 AI_API_KEY 后可启用 AI 增强） ----------
+app.get('/api/alumni/search', requireAuth, async (req, res) => {
+  try {
+    const q = String(req.query.q || '').trim();
+    if (q.length < 2) return fail(res, 400, '请输入至少 2 个字');
+    const params = [`%${q}%`];
+    const r = await dbQuery(
+      `select p.id, p.name, p.graduation_year, p.class_name, p.current_province, p.current_city,
+              p.industry, p.company, p.position_title, p.bio
+       from public.alumni_profiles p
+       where p.status='approved'
+         and (p.name ilike $1 or p.company ilike $1 or p.position_title ilike $1 or p.industry ilike $1
+              or p.current_city ilike $1 or p.current_province ilike $1 or p.bio ilike $1)
+       order by case when p.name ilike $1 then 0 when p.company ilike $1 then 1 else 2 end, p.graduation_year desc
+       limit 50`,
+      params
+    );
+    const aiEnabled = Boolean(process.env.AI_API_KEY);
+    return ok(res, {
+      items: r.rows,
+      mode: aiEnabled ? 'ai' : 'fuzzy',
+      note: aiEnabled ? 'AI 增强搜索' : '当前为模糊搜索（配置 AI_API_KEY 后可启用 AI 增强）'
+    });
+  } catch (e) {
+    return fail(res, 500, '搜索失败', { error: e.message });
+  }
+});
+// 当前登录用户信息（含 user_id）
+app.get('/api/auth/me', requireAuth, async (req, res) => {
+  try {
+    const r = await dbQuery(`select id, display_name, email, phone, role, status from public.app_users where id=$1 limit 1`, [req.user.user_id]);
+    if (!r.rows[0]) return fail(res, 404, '用户不存在');
+    const u = r.rows[0];
+    return ok(res, { user: { user_id: u.id, name: u.display_name, email: u.email, phone: u.phone, role: u.role, status: u.status } });
+  } catch (e) {
+    return fail(res, 500, '获取用户信息失败', { error: e.message });
+  }
+});
 app.use((req, res) => {
   fail(res, 404, '接口不存在');
 });
@@ -2499,6 +2901,7 @@ ensureRootAdmin()
   .then(() => ensurePasswordResetTable())
   .then(() => ensurePhase2Tables())
   .then(() => ensureSiteSectionsSeed())
+  .then(() => ensurePhase3Tables())
   .then(() => {
     app.listen(PORT, () => {
       console.log(`hailin alumni backend running on http://localhost:${PORT}`);

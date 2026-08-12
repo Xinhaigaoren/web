@@ -127,6 +127,8 @@ function setActiveTab(tabName) {
   if (tabName === 'jobs') loadJobsAdmin();
   if (tabName === 'donations') loadDonationsAdmin();
   if (tabName === 'notifications') loadNotificationsAdmin();
+  if (tabName === 'companies') loadCompaniesAdmin();
+  if (tabName === 'chat') loadChatAdmin();
 }
 
 tabs.forEach(tab => tab.addEventListener('click', () => setActiveTab(tab.dataset.tab)));
@@ -1659,6 +1661,7 @@ if (document.querySelector('#notificationRows')) {
       title: fd.get('title'),
       content: fd.get('content'),
       link: fd.get('link'),
+      channel: fd.get('channel') || 'site',
       ...(target === 'user' ? { user_id: Number(fd.get('user_id')) || undefined } : {})
     };
     try {
@@ -1672,4 +1675,121 @@ if (document.querySelector('#notificationRows')) {
     }
   });
   document.querySelector('#loadNotificationsBtn').addEventListener('click', () => { loadNotificationsAdmin(); });
+}
+// ==================== 第三阶段：企业黄页 / 即时消息 ====================
+
+// ---------- 校友企业黄页（管理） ----------
+let companiesAdminCache = [];
+function openCompanyEditor(item) {
+  const editor = document.querySelector('#companyEditor');
+  if (!editor) return;
+  editor.hidden = false;
+  editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelector('#companyEditorTitle').textContent = item ? '编辑企业' : '添加企业';
+  const form = document.querySelector('#companyAdminForm');
+  form.reset();
+  form.querySelector('[name="id"]').value = item ? item.id : '';
+  if (item) {
+    ['name', 'industry', 'city', 'website', 'intro', 'contact'].forEach((key) => {
+      const input = form.querySelector(`[name="${key}"]`);
+      if (input) input.value = item[key] || '';
+    });
+    form.querySelector('[name="status"]').value = item.status || 'published';
+  }
+  document.querySelector('#companyAdminStatus').textContent = '';
+}
+async function loadCompaniesAdmin() {
+  const box = document.querySelector('#companyAdminRows');
+  if (!box) return;
+  box.innerHTML = '<tr><td colspan="6">正在加载……</td></tr>';
+  try {
+    const data = await api('/api/admin/companies');
+    companiesAdminCache = data.items || [];
+    const statusMap = { published: '已发布', pending: '待审核', hidden: '已隐藏' };
+    box.innerHTML = companiesAdminCache.length ? companiesAdminCache.map((c, i) => `
+      <tr>
+        <td><strong>${escapeHtml(c.name)}</strong></td>
+        <td>${escapeHtml(c.industry || '')}</td>
+        <td>${escapeHtml(c.city || '')}</td>
+        <td>${escapeHtml(c.owner_name || '')}</td>
+        <td><span class="badge ${c.status === 'published' ? 'approved' : c.status === 'pending' ? 'pending' : 'draft'}">${statusMap[c.status] || c.status}</span></td>
+        <td><div class="row-actions">
+          <button class="ghost" data-company-status="${c.id}" data-status="published" ${c.status === 'published' ? 'disabled' : ''}>发布</button>
+          <button class="ghost" data-company-status="${c.id}" data-status="hidden" ${c.status === 'hidden' ? 'disabled' : ''}>隐藏</button>
+          <button class="ghost" data-company-edit="${i}">编辑</button>
+          <button class="reject" data-company-delete="${c.id}">删除</button>
+        </div></td>
+      </tr>`).join('') : '<tr><td colspan="6">暂无企业</td></tr>';
+  } catch (error) {
+    box.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+if (document.querySelector('#companyAdminRows')) {
+  document.querySelector('#newCompanyBtn').addEventListener('click', () => { openCompanyEditor(null); });
+  document.querySelector('#companyAdminCancelBtn').addEventListener('click', () => { document.querySelector('#companyEditor').hidden = true; });
+  document.querySelector('#companyAdminForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const status = document.querySelector('#companyAdminStatus');
+    status.textContent = '正在保存……';
+    const fd = new FormData(event.currentTarget);
+    const id = fd.get('id');
+    const body = {
+      name: fd.get('name'),
+      industry: fd.get('industry'),
+      city: fd.get('city'),
+      website: fd.get('website'),
+      intro: fd.get('intro'),
+      contact: fd.get('contact'),
+      status: fd.get('status')
+    };
+    try {
+      const data = id
+        ? await api(`/api/admin/companies/${id}`, { method: 'PATCH', body: JSON.stringify(body) })
+        : await api('/api/admin/companies', { method: 'POST', body: JSON.stringify(body) });
+      status.textContent = data.message || '已保存';
+      status.className = 'status ok';
+      document.querySelector('#companyEditor').hidden = true;
+      loadCompaniesAdmin();
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  });
+  document.querySelector('#companyAdminRows').addEventListener('click', async (event) => {
+    const st = event.target.closest('button[data-company-status]');
+    const edit = event.target.closest('button[data-company-edit]');
+    const del = event.target.closest('button[data-company-delete]');
+    try {
+      if (st) await api(`/api/admin/companies/${st.dataset.companyStatus}`, { method: 'PATCH', body: JSON.stringify({ status: st.dataset.status }) });
+      if (edit) openCompanyEditor(companiesAdminCache[Number(edit.dataset.companyEdit)]);
+      if (del) {
+        if (!confirm('确定删除该企业吗？')) return;
+        await api(`/api/admin/companies/${del.dataset.companyDelete}`, { method: 'DELETE' });
+      }
+      loadCompaniesAdmin();
+    } catch (error) { alert(error.message); }
+  });
+}
+
+// ---------- 即时消息记录 ----------
+async function loadChatAdmin() {
+  const box = document.querySelector('#chatRows');
+  if (!box) return;
+  box.innerHTML = '<tr><td colspan="5">正在加载……</td></tr>';
+  try {
+    const data = await api('/api/admin/messages');
+    const items = data.items || [];
+    box.innerHTML = items.length ? items.map((m) => `
+      <tr>
+        <td>${escapeHtml(m.sender_name || '未知')}</td>
+        <td>${escapeHtml(m.user_a_name || '')} ↔ ${escapeHtml(m.user_b_name || '')}</td>
+        <td>${escapeHtml((m.content || '').slice(0, 60))}</td>
+        <td>${escapeHtml(String(m.created_at || '').slice(0, 16).replace('T', ' '))}</td>
+        <td>${m.is_read ? '已读' : '<span class="badge pending">未读</span>'}</td>
+      </tr>`).join('') : '<tr><td colspan="5">暂无消息记录</td></tr>';
+  } catch (error) {
+    box.innerHTML = `<tr><td colspan="5">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+if (document.querySelector('#chatRows')) {
+  document.querySelector('#loadChatBtn').addEventListener('click', () => { loadChatAdmin(); });
 }

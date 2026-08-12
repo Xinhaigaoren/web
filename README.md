@@ -9,6 +9,10 @@
   - `directory.html` 校友名录、`account.html` 登录/注册/认证/个人中心
   - `forum.html` 校友论坛、`jobs.html` 校友招聘、`donate.html` 在线捐赠
   - `map.html` 校友地图、`checkin.html` 活动扫码签到、`contact.html` 联系我们
+- **即时沟通** messages.html：站内私信（会话列表、未读数、轮询实时刷新）
+- **校友企业黄页** companies.html：校友企业展示、校友自主提交、管理员审核
+- **智能搜索**：/api/alumni/search 模糊搜索（配置 AI_API_KEY 后可启用 AI 增强）
+- **消息推送渠道**：站内 / 微信模板消息 / 邮件（可配置），捐赠支持订单号与支付状态
 - **校友系统**
   - 注册/登录：密码登录、邮箱验证码登录、微信登录（可配置）
   - 校友认证：上传学信网截图等证明材料，管理员审核
