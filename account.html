@@ -108,22 +108,26 @@
 
                         <div id="forgotView" hidden>
               <h3 class="auth-subtitle">找回密码</h3>
-              <p class="form-tip">仅限已通过认证的校友。输入邮箱获取重置二维码，手机扫码查看「邀请码」，填写邀请码与新密码即可重置登录。</p>
+              <p class="form-tip">仅限已通过认证的校友。输入邮箱获取激活码，激活后系统生成默认密码，用「邮箱 + 默认密码」登录，登录后可在个人中心修改密码。</p>
               <form id="forgotForm" class="auth-form">
                 <div class="field"><label for="forgotEmail">邮箱</label><input id="forgotEmail" name="email" type="email" autocomplete="email" required placeholder="name@example.com" /></div>
                 <div class="form-actions">
-                  <button type="button" id="forgotSendBtn" class="btn primary">获取重置二维码</button>
+                  <button type="button" id="forgotSendBtn" class="btn primary">获取激活码</button>
                 </div>
                 <div id="forgotQrBox" hidden style="text-align:center;margin:12px 0">
                   <img id="forgotQrImg" alt="重置二维码" style="max-width:220px;border:1px solid var(--line);border-radius:12px" />
                   <p class="form-tip" id="forgotCodeText" style="font-weight:700;color:var(--accent);font-size:20px;letter-spacing:2px"></p>
                   <p class="form-tip">用手机扫码查看「邀请码」，30 分钟内有效。</p>
                 </div>
-                <div class="field"><label for="forgotToken">邀请码</label><input id="forgotToken" name="token" required placeholder="扫码后显示的邀请码" /></div>
-                <div class="field"><label for="forgotPassword">新密码（至少 8 位）</label><input id="forgotPassword" name="password" type="password" autocomplete="new-password" minlength="8" required /></div>
+                                <div class="field"><label for="forgotToken">激活码</label><input id="forgotToken" name="token" required placeholder="上方显示的激活码" /></div>
                 <div class="form-actions">
-                  <button class="btn primary" type="submit">重置密码</button>
+                  <button class="btn primary" type="submit">激活并获取默认密码</button>
                   <button type="button" id="backToLoginBtn" class="btn ghost">返回登录</button>
+                </div>
+                <div id="forgotPwdBox" hidden style="text-align:center;margin:10px 0;padding:16px;border:1px dashed var(--accent);border-radius:12px;background:rgba(59,130,246,.06)">
+                  <p class="form-tip">激活成功！请用「邮箱 + 默认密码」登录</p>
+                  <p id="forgotPwdText" style="font-size:22px;font-weight:700;color:var(--accent);letter-spacing:2px;word-break:break-all"></p>
+                  <p class="form-tip">登录后到「个人中心 → 修改密码」改成自己的密码。</p>
                 </div>
                 <p class="form-status" id="forgotStatus" role="status" aria-live="polite"></p>
               </form>
@@ -619,7 +623,7 @@
             forgotStatus.className = 'form-status error';
           } finally {
             forgotSendBtn.disabled = false;
-            forgotSendBtn.textContent = '获取重置二维码';
+            forgotSendBtn.textContent = '获取激活码';
           }
         });
       }
@@ -631,7 +635,13 @@
           const body = Object.fromEntries(new FormData(forgotForm).entries());
           try {
             const data = await XH.api('/api/auth/reset-password', { method: 'POST', body: JSON.stringify(body) });
-            forgotStatus.textContent = data.message || '密码已重置';
+            forgotStatus.textContent = data.message || '激活成功';
+            const pwdBox = document.getElementById('forgotPwdBox');
+            const pwdText = document.getElementById('forgotPwdText');
+            if (pwdText && data.default_password) pwdText.textContent = data.default_password;
+            if (pwdBox) pwdBox.hidden = false;
+            forgotForm.querySelector('button[type="submit"]').disabled = true;
+            document.getElementById('forgotToken').disabled = true;
             forgotStatus.className = 'form-status success';
             forgotForm.reset();
             setTimeout(() => backToLoginBtn.click(), 1500);

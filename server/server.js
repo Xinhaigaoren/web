@@ -69,6 +69,13 @@ function makeInviteLink(code) {
   return `${PUBLIC_SITE_URL}/admin/?invite=${encodeURIComponent(code)}`;
 }
 
+function makeRandomPassword(len = 10) {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let out = '';
+  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+
 function requireStrongPassword(password) {
   const value = String(password || '');
   if (value.length < 8) throw new Error('密码至少 8 位');
@@ -1695,8 +1702,8 @@ app.post('/api/auth/reset-password', async (req, res) => {
   try {
     const email = normalizeEmail(req.body?.email);
     const token = String(req.body?.token || '').trim();
-    const password = requireStrongPassword(req.body?.password);
-    if (!email || !token) return fail(res, 400, '邮箱与重置码不能为空');
+    const customPassword = String(req.body?.password || '').trim();
+    if (!email || !token) return fail(res, 400, '邮箱与激活码不能为空');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const r = await dbQuery(
       `select pr.id, pr.expires_at, u.id as user_id
@@ -1708,14 +1715,15 @@ app.post('/api/auth/reset-password', async (req, res) => {
       [email, tokenHash]
     );
     const row = r.rows[0];
-    if (!row) return fail(res, 400, '重置码无效或已使用');
-    if (new Date(row.expires_at) < new Date()) return fail(res, 400, '重置码已过期，请重新获取');
-    const hash = await bcrypt.hash(password, 10);
+    if (!row) return fail(res, 400, '激活码无效或已使用');
+    if (new Date(row.expires_at) < new Date()) return fail(res, 400, '激活码已过期，请重新获取');
+    const finalPassword = customPassword.length >= 8 ? customPassword : makeRandomPassword();
+    const hash = await bcrypt.hash(finalPassword, 10);
     await dbQuery(`update public.app_users set password_hash=$1, updated_at=now() where id=$2`, [hash, row.user_id]);
     await dbQuery(`update public.password_resets set used=true, updated_at=now() where id=$1`, [row.id]);
-    return ok(res, { message: '密码已重置，请使用新密码登录' });
+    return ok(res, { default_password: finalPassword, message: '激活成功！请用「邮箱 + 默认密码」登录，登录后可在个人中心修改密码。' });
   } catch (e) {
-    return fail(res, 500, '重置密码失败', { error: e.message });
+    return fail(res, 500, '激活失败', { error: e.message });
   }
 });
 
