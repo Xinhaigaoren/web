@@ -187,7 +187,7 @@ async function audit(req, action, targetType, targetId, detail = {}) {
 app.get('/api/health', async (req, res) => {
   try {
     if (pool) await dbQuery('select 1');
-    return ok(res, { service: 'hailin-alumni-backend', message: '海林市高级中学校友会后端接口运行中', database: pool ? 'connected' : 'not_configured' });
+    return ok(res, { service: 'hailin-alumni-backend', message: '海林市高级中学校友（新海高人）后端接口运行中', database: pool ? 'connected' : 'not_configured' });
   } catch (e) {
     return fail(res, 500, '后端运行中，但数据库连接失败', { error: e.message });
   }
@@ -2610,8 +2610,8 @@ app.post('/api/events/checkin', async (req, res) => {
 async function ensureSitePagesSeed() {
   if (!pool) return;
   const pages = [
-    { slug: 'home', title: '首页', description: '海林市高级中学校友会官方网站首页' },
-    { slug: 'about', title: '校友会介绍', description: '海林市高级中学校友会简介' },
+    { slug: 'home', title: '首页', description: '海林市高级中学校友（新海高人）官方网站首页' },
+    { slug: 'about', title: '校友会介绍', description: '海林市高级中学校友（新海高人）简介' },
     { slug: 'news', title: '新闻公告', description: '校友会新闻与公告' },
     { slug: 'events', title: '活动中心', description: '校友会活动' },
     { slug: 'contact', title: '联系我们', description: '联系我们' },
