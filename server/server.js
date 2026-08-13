@@ -181,11 +181,12 @@ function clearUserAuthCache(userIds) {
 const adminAuthCache = new Map();
 const ADMIN_AUTH_TTL = 5000;
 async function requireAdmin(req, res, next) {
-  if (!req.user || !['admin', 'super_admin'].includes(req.user.role)) return fail(res, 403, '需要管理员权限');
+  if (!req.user) return fail(res, 401, '未登录');
   let adminId = req.user.admin_id;
   let status = null;
   if (!adminId) {
-    // 平台验证码登录签发的 token 不带 admin_id，这里按 user_id 反查管理员账户
+    // 无 admin_id：要求角色为管理员，并按 user_id 反查管理员账户
+    if (!['admin', 'super_admin'].includes(req.user.role)) return fail(res, 403, '需要管理员权限');
     try {
       const r = await dbQuery(`select id, status from public.admin_accounts where user_id=$1 limit 1`, [req.user.user_id]);
       if (!r.rows[0]) return fail(res, 403, '需要管理员权限');
@@ -300,6 +301,8 @@ app.post(['/api/admin/login', '/api/login'], async (req, res) => {
       if (await bcrypt.compare(password, row.password_hash)) { user = row; break; }
     }
     if (!user) return fail(res, 401, '账号或密码错误');
+    // 普通管理员（可能是认证校友升级而来）签发后台令牌时统一使用管理员角色
+    user.role = user.admin_level === 'super_admin' ? 'super_admin' : 'admin';
     const token = signToken(user);
     await audit({ ...req, user }, 'admin_login', 'admin_account', user.admin_id, { loginName });
     return ok(res, { token, user: { name: user.display_name, role: user.role, admin_level: user.admin_level } });
@@ -334,13 +337,14 @@ app.post('/api/admin/code-login', async (req, res) => {
     if (row.admin_id && row.admin_status === 'disabled') return fail(res, 403, '管理员权限已被主管理员停止，无法登录后台');
     if (!row.admin_id || row.admin_status !== 'approved') return fail(res, 403, '该账号尚未被批准为管理员，无法登录后台');
     await dbQuery(`update public.login_codes set used=true where id=$1`, [row.id]);
+    const adminRole = row.admin_level === 'super_admin' ? 'super_admin' : 'admin';
     const token = jwt.sign(
-      { user_id: row.user_id, role: row.role, admin_id: row.admin_id, admin_level: row.admin_level },
+      { user_id: row.user_id, role: adminRole, admin_id: row.admin_id, admin_level: row.admin_level },
       TOKEN_SECRET,
       { expiresIn: '7d' }
     );
     await audit({ ...req, user: { user_id: row.user_id, role: row.role } }, 'admin_code_login', 'admin_account', row.admin_id, { identifier });
-    return ok(res, { token, user: { name: row.display_name, role: row.role, admin_level: row.admin_level } });
+    return ok(res, { token, user: { name: row.display_name, role: adminRole, admin_level: row.admin_level } });
   } catch (e) {
     return fail(res, 500, '验证码登录失败', { error: e.message });
   }

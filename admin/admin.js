@@ -197,7 +197,7 @@ async function loadApplications() {
     `).join('');
   } catch (error) {
     rows.innerHTML = `<tr><td colspan="7">${escapeHtml(error.message)}</td></tr>`;
-    if (String(error.message).includes('登录') || String(error.message).includes('过期') || String(error.message).includes('权限')) {
+    if (/登录已过期|账号已被停用|权限已被停止|未启用/.test(String(error.message))) {
       clearToken();
       showLogin();
     }
