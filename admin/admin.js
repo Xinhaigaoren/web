@@ -129,7 +129,6 @@ function setActiveTab(tabName) {
   if (tabName === 'content') loadContentSections();
   if (tabName === 'forum') loadForum();
   if (tabName === 'jobs') loadJobsAdmin();
-  if (tabName === 'donations') loadDonationsAdmin();
   if (tabName === 'notifications') loadNotificationsAdmin();
   if (tabName === 'companies') loadCompaniesAdmin();
   if (tabName === 'chat') loadChatAdmin();
@@ -218,7 +217,6 @@ async function loadHomeContent() {
     const figures = sections.home_figures || {};
     const services = sections.home_services || {};
     const join = sections.home_join || {};
-    const donate = sections.home_donate || {};
     homeForm.about_title.value = about.title || '';
     homeForm.about_intro.value = about.content || '';
     homeForm.figures_title.value = figures.title || '';
@@ -226,8 +224,6 @@ async function loadHomeContent() {
     homeForm.services_title.value = services.title || '';
     homeForm.services_subtitle.value = services.subtitle || '';
     homeForm.join_title.value = join.title || '';
-    homeForm.donate_title.value = donate.title || '';
-    homeForm.donate_intro.value = donate.intro || '';
     const heroImg = hero.image || '';
     homeForm.hero_image.value = heroImg;
     renderCoverPreview('heroImgPreview', heroImg);
@@ -309,7 +305,7 @@ homeForm.addEventListener('submit', async (event) => {
     results.push(await saveSection({
       page_slug: 'home',
       section_key: 'home_figures',
-      section_name: '校友风采',
+      section_name: '校友论坛',
       display_order: 5,
       content: { title: form.figures_title || '', subtitle: form.figures_subtitle || '' }
     }));
@@ -323,23 +319,16 @@ homeForm.addEventListener('submit', async (event) => {
     results.push(await saveSection({
       page_slug: 'home',
       section_key: 'home_join',
-      section_name: '加入我们',
+      section_name: '加入新海高人',
       display_order: 7,
       content: { title: form.join_title || '' }
-    }));
-    results.push(await saveSection({
-      page_slug: 'home',
-      section_key: 'home_donate',
-      section_name: '支持母校',
-      display_order: 8,
-      content: { title: form.donate_title || '', intro: form.donate_intro || '' }
     }));
     results.push(await saveSection({
       page_slug: 'home', section_key: 'home_about_body', section_name: '校友会特色', display_order: 9,
       content: { html: form.about_body_html || '' }
     }));
     results.push(await saveSection({
-      page_slug: 'home', section_key: 'home_figures_body', section_name: '校友风采卡片', display_order: 10,
+      page_slug: 'home', section_key: 'home_figures_body', section_name: '校友论坛卡片', display_order: 10,
       content: { html: form.figures_body_html || '' }
     }));
     results.push(await saveSection({
@@ -779,6 +768,14 @@ function fromDatetimeLocal(value) {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
+function fmtDateTime(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 // ---------- 新闻管理 ----------
 let newsPage = 1;
 async function loadNews(page = 1) {
@@ -905,7 +902,7 @@ async function loadEvents(page = 1) {
     eventRows.innerHTML = items.map(item => `
       <tr>
         <td><strong>${escapeHtml(item.title)}</strong></td>
-        <td>${escapeHtml(item.start_time ? String(item.start_time).slice(0, 16).replace('T', ' ') : '待定')}</td>
+        <td>${escapeHtml(fmtDateTime(item.start_time) || '待定')}</td>
         <td>${escapeHtml(item.location || '')}</td>
         <td>${item.registrations_count || 0}${item.capacity ? ` / ${item.capacity}` : ''}</td>
         <td>${item.is_published ? '<span class="badge approved">已发布</span>' : '<span class="badge draft">草稿</span>'}</td>
@@ -1901,47 +1898,6 @@ if (document.querySelector('#jobRows')) {
     }
   });
   document.querySelector('#closeJobApplicationsBtn').addEventListener('click', () => { document.querySelector('#jobApplicationsCard').hidden = true; });
-}
-
-// ---------- 捐赠管理 ----------
-async function loadDonationsAdmin() {
-  const box = document.querySelector('#donationRows');
-  if (!box) return;
-  box.innerHTML = '<tr><td colspan="8">正在加载……</td></tr>';
-  try {
-    const data = await api('/api/admin/donations');
-    document.querySelector('#donationTotal').textContent = Number(data.total || 0).toLocaleString('zh-CN');
-    document.querySelector('#donationCount').textContent = data.count || 0;
-    const items = data.items || [];
-    const statusMap = { pending: '待确认', confirmed: '已确认', rejected: '已拒绝' };
-    box.innerHTML = items.length ? items.map((d) => `
-      <tr>
-        <td>${escapeHtml(d.donor_name)}</td>
-        <td><strong>¥${Number(d.amount).toLocaleString('zh-CN')}</strong></td>
-        <td>${escapeHtml(d.purpose || '校友基金')}</td>
-        <td>${escapeHtml(d.payment_method || '')}</td>
-        <td>${escapeHtml(d.message || '')}</td>
-        <td>${escapeHtml(String(d.created_at || '').slice(0, 16).replace('T', ' '))}</td>
-        <td><span class="badge ${d.status === 'confirmed' ? 'approved' : d.status === 'rejected' ? 'cancelled' : 'pending'}">${statusMap[d.status] || d.status}</span></td>
-        <td><div class="row-actions">
-          <button class="approve" data-donation-status="${d.id}" data-status="confirmed" ${d.status === 'confirmed' ? 'disabled' : ''}>确认</button>
-          <button class="reject" data-donation-status="${d.id}" data-status="rejected" ${d.status === 'rejected' ? 'disabled' : ''}>拒绝</button>
-        </div></td>
-      </tr>`).join('') : '<tr><td colspan="8">暂无捐赠记录</td></tr>';
-  } catch (error) {
-    box.innerHTML = `<tr><td colspan="8">${escapeHtml(error.message)}</td></tr>`;
-  }
-}
-if (document.querySelector('#donationRows')) {
-  document.querySelector('#donationRows').addEventListener('click', async (event) => {
-    const btn = event.target.closest('button[data-donation-status]');
-    if (!btn) return;
-    try {
-      await api(`/api/admin/donations/${btn.dataset.donationStatus}`, { method: 'PATCH', body: JSON.stringify({ status: btn.dataset.status }) });
-      loadDonationsAdmin();
-    } catch (error) { alert(error.message); }
-  });
-  document.querySelector('#loadDonationsBtn').addEventListener('click', () => { loadDonationsAdmin(); });
 }
 
 // ---------- 消息推送 ----------

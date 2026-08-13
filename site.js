@@ -127,7 +127,7 @@
       'events.html': 'events', 'directory.html': 'directory', 'account.html': 'account',
       'forum.html': 'forum', 'jobs.html': 'jobs', 'companies.html': 'companies',
       'map.html': 'map', 'messages.html': 'messages', 'contact.html': 'contact',
-      'donate.html': 'donate', 'checkin.html': 'checkin'
+      'checkin.html': 'checkin'
     };
     return map[name] || null;
   }

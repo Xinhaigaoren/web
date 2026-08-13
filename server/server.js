@@ -2711,11 +2711,10 @@ async function ensureSitePagesSeed() {
     { slug: 'alumni', title: '校友风采', description: '杰出校友风采展示' },
     { slug: 'directory', title: '校友名录', description: '已认证校友名录查询' },
     { slug: 'forum', title: '校友论坛', description: '校友交流互助' },
-    { slug: 'jobs', title: '校友招聘', description: '校友企业招聘' },
+    { slug: 'jobs', title: '新海高人招聘', description: '新海高人招聘' },
     { slug: 'companies', title: '校友企业', description: '校友企业黄页' },
     { slug: 'map', title: '校友地图', description: '校友分布与地标' },
     { slug: 'messages', title: '校友私信', description: '校友站内沟通' },
-    { slug: 'donate', title: '在线捐赠', description: '支持母校发展' },
     { slug: 'checkin', title: '活动签到', description: '活动扫码签到' },
     { slug: 'news-detail', title: '新闻详情', description: '新闻详情页' }
   ];
@@ -2733,7 +2732,7 @@ async function ensureSiteSectionsSeed() {
     { page_slug: 'home', section_key: 'home_hero', section_name: '首页横幅', content: { hero_title: '共忆青春海高路，同筑未来校友情', hero_subtitle: '海林市高级中学校友（新海高人）欢迎你', hero_bg_url: '', btn_text: '加入我们', btn_link: 'account.html' } },
     { page_slug: 'home', section_key: 'home_notice', section_name: '首页公告', content: { notice_text: '欢迎校友回家！请登录后完成校友认证。' } },
     { page_slug: 'home', section_key: 'home_stats', section_name: '数据概览', content: { stats: [{ label: '校友会员', value: '0' }, { label: '活动组织', value: '0' }, { label: '服务母校', value: '0' }] } },
-    { page_slug: 'home', section_key: 'home_figures', section_name: '校友风采', content: { title: '校友风采', subtitle: '杰出的海高人在各行各业发光发热', items: [] } },
+    { page_slug: 'home', section_key: 'home_figures', section_name: '校友论坛', content: { title: '校友论坛', subtitle: '校友交流互助，分享工作生活，重逢海高情谊。', items: [] } },
     { page_slug: 'home', section_key: 'home_services', section_name: '校友服务', content: { title: '校友服务', subtitle: '为校友提供更贴心的服务', items: [] } },
     { page_slug: 'about', section_key: 'about_intro', section_name: '校友会介绍', content: { title: '校友会介绍', content: '' } },
     { page_slug: 'about', section_key: 'about_contact', section_name: '联系方式', content: { email: 'alumni@example.com', address: '黑龙江省牡丹江市海林市', phone: '' } },
@@ -2743,11 +2742,10 @@ async function ensureSiteSectionsSeed() {
     { page_slug: 'events', section_key: 'events_hero', section_name: '活动页横幅', content: { eyebrow: 'Events', title: '活动中心', subtitle: '返校日、主题论坛、班级聚会、志愿服务……期待与你重逢。' } },
     { page_slug: 'directory', section_key: 'directory_hero', section_name: '名录页横幅', content: { eyebrow: 'Directory', title: '校友名录', subtitle: '已认证校友专属：查询同窗、找到同行。' } },
     { page_slug: 'forum', section_key: 'forum_hero', section_name: '论坛页横幅', content: { eyebrow: 'Forum', title: '校友论坛', subtitle: '校友交流互助，分享工作生活，重逢海高情谊。' } },
-    { page_slug: 'jobs', section_key: 'jobs_hero', section_name: '招聘页横幅', content: { eyebrow: 'Jobs', title: '校友招聘', subtitle: '校友企业发布职位，校友人才精准对接。' } },
+    { page_slug: 'jobs', section_key: 'jobs_hero', section_name: '招聘页横幅', content: { eyebrow: 'Jobs', title: '新海高人招聘', subtitle: '新海高人企业发布职位，校友人才精准对接。' } },
     { page_slug: 'companies', section_key: 'companies_hero', section_name: '企业页横幅', content: { eyebrow: 'Companies', title: '校友企业', subtitle: '凝聚校友企业力量，促进合作共赢。' } },
     { page_slug: 'map', section_key: 'map_hero', section_name: '地图页横幅', content: { eyebrow: 'Map', title: '校友地图', subtitle: '天涯海角，海高人同在。看看校友们都分布在哪里。' } },
     { page_slug: 'messages', section_key: 'messages_hero', section_name: '私信页横幅', content: { eyebrow: 'Messages', title: '校友私信', subtitle: '站内即时沟通，聊聊近况、约场球、叙叙旧。' } },
-    { page_slug: 'donate', section_key: 'donate_hero', section_name: '捐赠页横幅', content: { eyebrow: 'Donate', title: '在线捐赠', subtitle: '情系海高，回馈母校，让每一份心意都有回响。' } },
     { page_slug: 'checkin', section_key: 'checkin_hero', section_name: '签到页横幅', content: { eyebrow: 'Check-in', title: '活动签到', subtitle: '扫码签到，记录你的每一次到场。' } },
     { page_slug: 'contact', section_key: 'contact_hero', section_name: '联系页横幅', content: { eyebrow: 'Contact', title: '联系我们', subtitle: '校友会秘书处欢迎校友来信来访。' } }
   ];
@@ -2805,6 +2803,48 @@ async function ensureAlumniRoleSync() {
        and exists (select 1 from public.alumni_verifications v
                    where v.phone = u.phone and v.status='approved')`
   ).catch(() => {});
+}
+
+// 官网栏目改名 / 删除捐赠板块：把数据库里已存的内容同步到新版
+async function ensureHomeRename() {
+  if (!pool) return;
+  const patchSection = async (sectionKey, mutate) => {
+    const rows = await dbQuery(
+      `select id, content from public.site_sections where section_key=$1 limit 1`,
+      [sectionKey]
+    ).catch(() => ({ rows: [] }));
+    for (const row of rows.rows || []) {
+      let c = row.content;
+      if (typeof c === 'string') { try { c = JSON.parse(c); } catch (_) { c = {}; } }
+      if (!c || typeof c !== 'object') continue;
+      mutate(c);
+      await dbQuery(
+        `update public.site_sections set content=$1, updated_at=now() where id=$2`,
+        [JSON.stringify(c), row.id]
+      ).catch(() => {});
+    }
+  };
+  await patchSection('home_figures', (c) => {
+    if (c.title === '校友风采') c.title = '校友论坛';
+    if (typeof c.subtitle === 'string' && c.subtitle.includes('杰出')) c.subtitle = '校友交流互助，分享工作生活，重逢海高情谊。';
+  });
+  await patchSection('home_join', (c) => {
+    if (c.title === '加入海高校友会') c.title = '加入新海高人';
+  });
+  await patchSection('jobs_hero', (c) => {
+    if (c.title === '校友招聘') c.title = '新海高人招聘';
+  });
+  await patchSection('home_services_body', (c) => {
+    if (typeof c.html === 'string' && c.html) {
+      c.html = c.html
+        .replace(/<a href="donate\.html"[^>]*><span>03<\/span>[^<]*<\/a>/, '<a href="forum.html"><span>03</span>校友论坛</a>')
+        .replace(/地区联络站与班级联络人/g, '地区联络站和地区联络人')
+        .replace(/奖助学金与公益项目/g, '校友论坛');
+    }
+  });
+  // 删除已不存在的捐赠板块
+  await dbQuery(`delete from public.site_sections where section_key in ('home_donate','donate_hero')`).catch(() => {});
+  await dbQuery(`delete from public.site_pages where slug='donate'`).catch(() => {});
 }
 
 app.get('/api/admin/forum/categories', requireAuth, requireAdmin, async (req, res) => {
@@ -3222,6 +3262,7 @@ bootstrapSchema()
   .then(() => ensureSiteSectionsSeed())
   .then(() => ensureBrandRename())
   .then(() => ensureAlumniRoleSync())
+  .then(() => ensureHomeRename())
   .then(() => ensurePhase3Tables())
   .then(() => {
     app.listen(PORT, () => {

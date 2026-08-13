@@ -77,8 +77,7 @@
         <button class="tab" data-tab="users" type="button">用户管理</button>
         <button class="tab" data-tab="content" type="button">内容区块</button>
         <button class="tab" data-tab="forum" type="button">论坛管理</button>
-        <button class="tab" data-tab="jobs" type="button">招聘管理</button>
-        <button class="tab" data-tab="donations" type="button">捐赠管理</button>
+        <button class="tab" data-tab="jobs" type="button">新海高人招聘</button>
         <button class="tab" data-tab="notifications" type="button">消息推送</button>
         <button class="tab" data-tab="companies" type="button">企业黄页</button>
         <button class="tab" data-tab="chat" type="button">即时消息</button>
@@ -165,9 +164,9 @@
               <label>简介<textarea name="about_intro" rows="2" placeholder="海林市高级中学校友（新海高人）以“联络校友、服务校友、回馈母校、助力家乡”为宗旨……"></textarea></label>
             </fieldset>
             <fieldset>
-              <legend>校友风采</legend>
-              <label>标题<input name="figures_title" placeholder="校友风采" /></label>
-              <label>副标题<input name="figures_subtitle" placeholder="记录海高校友在科研、教育、医疗、企业与公共服务中的成长故事。" /></label>
+              <legend>校友论坛</legend>
+              <label>标题<input name="figures_title" placeholder="校友论坛" /></label>
+              <label>副标题<input name="figures_subtitle" placeholder="校友交流互助，分享工作生活，重逢海高情谊。" /></label>
             </fieldset>
             <fieldset>
               <legend>校友服务</legend>
@@ -175,13 +174,8 @@
               <label>说明<input name="services_subtitle" placeholder="为校友提供认证、联络、活动、合作、公益与母校信息服务。" /></label>
             </fieldset>
             <fieldset>
-              <legend>加入我们</legend>
-              <label>标题<input name="join_title" placeholder="加入海高校友会" /></label>
-            </fieldset>
-            <fieldset>
-              <legend>支持母校</legend>
-              <label>标题<input name="donate_title" placeholder="支持母校发展" /></label>
-              <label>说明<input name="donate_intro" placeholder="可围绕奖助学金、图书阅读、科技创新、体育美育、校园改善等方向发起校友公益项目。" /></label>
+              <legend>加入新海高人</legend>
+              <label>标题<input name="join_title" placeholder="加入新海高人" /></label>
             </fieldset>
 
             
@@ -192,9 +186,9 @@
               </label>
             </fieldset>
             <fieldset>
-              <legend>校友风采卡片（支持 HTML）</legend>
+              <legend>校友论坛卡片（支持 HTML）</legend>
               <label>内容
-                <textarea name="figures_body_html" rows="4" placeholder="可粘贴校友风采卡片的自定义 HTML"></textarea>
+                <textarea name="figures_body_html" rows="4" placeholder="可粘贴校友论坛卡片的自定义 HTML"></textarea>
               </label>
             </fieldset>
             <fieldset>
@@ -232,11 +226,10 @@
             <option value="events">活动中心</option>
             <option value="directory">校友名录</option>
             <option value="forum">校友论坛</option>
-            <option value="jobs">校友招聘</option>
+            <option value="jobs">新海高人招聘</option>
             <option value="companies">校友企业</option>
             <option value="map">校友地图</option>
             <option value="messages">校友私信</option>
-            <option value="donate">在线捐赠</option>
             <option value="checkin">活动签到</option>
             <option value="contact">联系我们</option>
           </select>
@@ -634,7 +627,7 @@
         <div class="section-title">
           <div>
             <h2>网站内容区块管理</h2>
-            <p>官网各页面模块（首页横幅、公告、数据、校友风采、校友服务、联系方式等）均可在此直接编辑。主管理员保存后立即发布到官网。</p>
+            <p>官网各页面模块（首页横幅、公告、数据、校友论坛、校友服务、联系方式等）均可在此直接编辑。主管理员保存后立即发布到官网。</p>
           </div>
           <div class="form-actions">
             <select id="contentPageFilter">
@@ -714,7 +707,7 @@
         <div class="section-title">
           <div>
             <h2>招聘管理</h2>
-            <p>管理校友招聘职位与简历投递记录。</p>
+            <p>管理新海高人招聘职位与简历投递记录。</p>
           </div>
           <button id="newJobBtn" type="button" class="ghost">发布职位</button>
         </div>
@@ -762,26 +755,6 @@
               <tbody id="jobApplicationRows"><tr><td colspan="8">暂无投递</td></tr></tbody>
             </table>
           </div>
-        </div>
-      </section>
-
-      <section class="panel" id="donationsPanel">
-        <div class="section-title">
-          <div>
-            <h2>捐赠管理</h2>
-            <p>核对确认捐赠记录，确认后展示在官网「在线捐赠」页捐赠榜。</p>
-          </div>
-          <button id="loadDonationsBtn" type="button" class="ghost">刷新</button>
-        </div>
-        <div class="summary-grid" style="margin-bottom:18px">
-          <article><span id="donationTotal">0</span><small>已确认金额（元）</small></article>
-          <article><span id="donationCount">0</span><small>已确认笔数</small></article>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>捐赠人</th><th>金额</th><th>用途</th><th>方式</th><th>寄语</th><th>时间</th><th>状态</th><th>操作</th></tr></thead>
-            <tbody id="donationRows"><tr><td colspan="8">正在加载……</td></tr></tbody>
-          </table>
         </div>
       </section>
 

@@ -138,6 +138,8 @@ time { color: var(--accent); font-weight: 700; font-size: 14px; }
 .service-list span { display: block; color: var(--accent-2); margin-bottom: 8px; }
 
 .join-card { background: #fff; border: 1px solid var(--line); border-radius: 28px; box-shadow: var(--shadow); padding: 46px; display: grid; grid-template-columns: .78fr 1.22fr; gap: 42px; align-items: center; }
+.join-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.join-actions .btn.ghost { color: var(--deep); border-color: var(--line); background: #fff; }
 .join-form { display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 14px; align-items: end; }
 .join-form label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .join-form input { height: 46px; border: 1px solid var(--line); border-radius: 12px; padding: 0 14px; font: inherit; color: var(--ink); }
