@@ -361,7 +361,9 @@ app.post(['/api/auth/register', '/api/alumni/register'], async (req, res) => {
        returning id, email, phone, display_name, role, status`,
       [email, phone, name, passwordHash]
     );
-    return ok(res, { user: r.rows[0], message: '账号已创建，请继续提交校友认证资料，审核通过后可查看校友通讯录。' });
+    // 注册即登录：直接签发令牌，前端进入「校友认证」界面提交资料
+    const token = jwt.sign({ user_id: r.rows[0].id, role: r.rows[0].role, type: 'alumni' }, TOKEN_SECRET, { expiresIn: '7d' });
+    return ok(res, { user: r.rows[0], token, message: '注册成功！请继续提交校友认证资料，审核通过后可查看校友通讯录。' });
   } catch (e) {
     return fail(res, 500, '注册失败', { error: e.message });
   }
@@ -488,14 +490,16 @@ app.post(['/api/alumni/verify', '/api/applications'], async (req, res) => {
       consent_material_review: Boolean(b.consent_material_review ?? b.consentMaterialReview ?? true),
     };
 
+    const submitUser = getOptionalUser(req);
     const r = await dbQuery(
       `insert into public.alumni_verifications
-       (applicant_type,name,phone,gender,id_tail,province,city,county,current_province,current_city,current_county,
+       (user_id,applicant_type,name,phone,gender,id_tail,province,city,county,current_province,current_city,current_county,
         graduation_year,class_name,homeroom_teacher,school_year,current_school,university_graduated,
         chsi_proof_url,student_card_url,admission_notice_url,extra_materials,consent_personal_info,consent_material_review,enrollment_year)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
        returning *`,
       [
+        submitUser?.user_id || null,
         row.applicant_type,row.name,row.phone,row.gender,row.id_tail,row.province,row.city,row.county,row.current_province,row.current_city,row.current_county,
         row.graduation_year,row.class_name,row.homeroom_teacher,row.school_year,row.current_school,row.university_graduated,
         row.chsi_proof_url,row.student_card_url,row.admission_notice_url,row.extra_materials,row.consent_personal_info,row.consent_material_review,row.enrollment_year
@@ -556,11 +560,19 @@ app.patch(['/api/applications/:id/status', '/api/admin/applications/:id/status',
         [v.phone, v.name]
       );
       const userId = u.rows[0].id;
+      // 按提交认证的账号精准升级（即使认证手机号与注册手机号不一致也能正确解锁）
+      if (v.user_id) {
+        await dbQuery(
+          `update public.app_users set role='alumni', status='active', updated_at=now() where id=$1`,
+          [v.user_id]
+        ).catch(() => {});
+      }
       // 同步把同手机号的邮箱注册行也提升为已认证校友：保证「邮箱+密码」可登录、可自助重置密码
       await dbQuery(
         `update public.app_users set role='alumni', status='active', updated_at=now() where phone=$1`,
         [v.phone]
       ).catch(() => {});
+      const profileUserId = v.user_id || userId;
       await dbQuery(
         `insert into public.alumni_profiles
          (user_id, verification_id, name, phone, province, city, county, current_province, current_city, current_county,
@@ -571,11 +583,17 @@ app.patch(['/api/applications/:id/status', '/api/admin/applications/:id/status',
           current_province=excluded.current_province, current_city=excluded.current_city, current_county=excluded.current_county,
           graduation_year=excluded.graduation_year, class_name=excluded.class_name, homeroom_teacher=excluded.homeroom_teacher, enrollment_year=excluded.enrollment_year,
           status='active', updated_at=now()`,
-        [userId, v.id, v.name, v.phone, v.province, v.city, v.county, v.current_province, v.current_city, v.current_county, v.graduation_year, v.class_name, v.homeroom_teacher, v.enrollment_year]
+        [profileUserId, v.id, v.name, v.phone, v.province, v.city, v.county, v.current_province, v.current_city, v.current_county, v.graduation_year, v.class_name, v.homeroom_teacher, v.enrollment_year]
       );
     } else if (status === 'rejected') {
       // 拒绝认证：停止校友权限并删除个人信息（档案），账号保留可登录查看认证状态
       const v = updated.rows[0];
+      if (v.user_id) {
+        await dbQuery(
+          `update public.app_users set role='pending_alumni', status='active', updated_at=now() where id=$1`,
+          [v.user_id]
+        ).catch(() => {});
+      }
       await dbQuery(
         `update public.app_users set role='pending_alumni', status='active', updated_at=now() where phone=$1`,
         [v.phone]
@@ -585,7 +603,9 @@ app.patch(['/api/applications/:id/status', '/api/admin/applications/:id/status',
 
     // 让受影响用户的实时状态缓存立即失效
     const uids = await dbQuery(`select id from public.app_users where phone=$1`, [updated.rows[0].phone]).catch(() => ({ rows: [] }));
-    clearUserAuthCache((uids.rows || []).map((r) => r.id));
+    const affectedIds = (uids.rows || []).map((r) => r.id);
+    if (updated.rows[0].user_id) affectedIds.push(updated.rows[0].user_id);
+    clearUserAuthCache(affectedIds);
 
     await audit(req, `alumni_verification_${status}`, 'alumni_verification', id, { rejectReason });
     return ok(res, { application: updated.rows[0], verification: updated.rows[0] });
@@ -982,6 +1002,9 @@ async function ensureAlumniProfileExtras() {
   if (!pool) return;
   await dbQuery(`alter table public.alumni_profiles add column if not exists enrollment_year text`).catch(() => {});
   await dbQuery(`alter table public.alumni_verifications add column if not exists enrollment_year text`).catch(() => {});
+  // 认证申请关联提交人账号：审核通过时按 user_id 精准升级，避免手机号不一致导致漏升
+  await dbQuery(`alter table public.alumni_verifications add column if not exists user_id bigint`).catch(() => {});
+  await dbQuery(`create index if not exists idx_verifications_user on public.alumni_verifications(user_id)`).catch(() => {});
 }
 
 async function ensureContentTables() {

@@ -365,10 +365,21 @@
         const body = Object.fromEntries(new FormData(registerForm).entries());
         try {
           const data = await XH.api('/api/auth/register', { method: 'POST', body: JSON.stringify(body) });
-          registerStatus.textContent = data.message || '注册成功，请登录';
+          registerStatus.textContent = data.message || '注册成功';
           registerStatus.className = 'form-status success';
           registerForm.reset();
-          switchAuthTab('login');
+          if (data.token) {
+            // 注册即登录：直接进入个人中心「我的认证」提交认证资料
+            XH.store.setToken(data.token);
+            XH.store.setUser(data.user || {});
+            setTimeout(() => {
+              authView.hidden = true;
+              centerView.hidden = false;
+              loadCenter();
+            }, 600);
+          } else {
+            switchAuthTab('login');
+          }
         } catch (error) {
           registerStatus.textContent = error.message;
           registerStatus.className = 'form-status error';
