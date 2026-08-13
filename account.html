@@ -106,12 +106,19 @@
               <p class="form-status" id="registerStatus" role="status" aria-live="polite"></p>
             </form>
 
-            <div id="forgotView" hidden>
+                        <div id="forgotView" hidden>
               <h3 class="auth-subtitle">找回密码</h3>
-              <p class="form-tip">输入注册邮箱获取重置码（当前未接邮件服务，重置码将直接显示），30 分钟内有效。</p>
+              <p class="form-tip">仅限已通过认证的校友。输入邮箱获取重置二维码，手机扫码查看「邀请码」，填写邀请码与新密码即可重置登录。</p>
               <form id="forgotForm" class="auth-form">
                 <div class="field"><label for="forgotEmail">邮箱</label><input id="forgotEmail" name="email" type="email" autocomplete="email" required placeholder="name@example.com" /></div>
-                <div class="field"><label for="forgotToken">重置码</label><input id="forgotToken" name="token" required placeholder="发送到邮箱的重置码" /></div>
+                <div class="form-actions">
+                  <button type="button" id="forgotSendBtn" class="btn primary">获取重置二维码</button>
+                </div>
+                <div id="forgotQrBox" hidden style="text-align:center;margin:12px 0">
+                  <img id="forgotQrImg" alt="重置二维码" style="max-width:220px;border:1px solid var(--line);border-radius:12px" />
+                  <p class="form-tip">用手机扫码查看「邀请码」，30 分钟内有效。</p>
+                </div>
+                <div class="field"><label for="forgotToken">邀请码</label><input id="forgotToken" name="token" required placeholder="扫码后显示的邀请码" /></div>
                 <div class="field"><label for="forgotPassword">新密码（至少 8 位）</label><input id="forgotPassword" name="password" type="password" autocomplete="new-password" minlength="8" required /></div>
                 <div class="form-actions">
                   <button class="btn primary" type="submit">重置密码</button>
@@ -578,6 +585,32 @@
         backToLoginBtn.addEventListener('click', () => {
           forgotView.hidden = true;
           loginForm.hidden = false;
+        });
+      }
+      const forgotSendBtn = document.getElementById('forgotSendBtn');
+      const forgotQrBox = document.getElementById('forgotQrBox');
+      const forgotQrImg = document.getElementById('forgotQrImg');
+      if (forgotSendBtn) {
+        forgotSendBtn.addEventListener('click', async () => {
+          const email = String(document.getElementById('forgotEmail').value || '').trim();
+          if (!email || !email.includes('@')) { XH.toast('请输入有效邮箱', 'error'); return; }
+          forgotSendBtn.disabled = true;
+          forgotSendBtn.textContent = '生成中……';
+          forgotStatus.textContent = '';
+          forgotStatus.className = 'form-status';
+          try {
+            const data = await XH.api('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+            if (forgotQrImg) forgotQrImg.src = data.qr_image_url || '';
+            if (forgotQrBox) forgotQrBox.hidden = false;
+            forgotStatus.textContent = data.message || '二维码已生成，请扫码获取邀请码';
+            forgotStatus.className = 'form-status success';
+          } catch (error) {
+            forgotStatus.textContent = error.message;
+            forgotStatus.className = 'form-status error';
+          } finally {
+            forgotSendBtn.disabled = false;
+            forgotSendBtn.textContent = '获取重置二维码';
+          }
         });
       }
       if (forgotForm) {

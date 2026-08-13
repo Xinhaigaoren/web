@@ -1648,16 +1648,22 @@ async function ensurePasswordResetTable() {
   )`);
 }
 
-// 忘记密码：生成重置码（免费版未接邮件服务，直接返回重置码）
+// 忘记密码：仅限已通过认证的校友。生成重置二维码（邀请码），扫码获取邀请码后填写并设置新密码
 app.post('/api/auth/forgot-password', async (req, res) => {
   try {
     const email = normalizeEmail(req.body?.email);
     if (!email || !email.includes('@')) return fail(res, 400, '请输入有效邮箱');
-    const r = await dbQuery(`select id from public.app_users where email=$1 limit 1`, [email]);
+    const r = await dbQuery(`select id, role, status from public.app_users where email=$1 limit 1`, [email]);
     const user = r.rows[0];
     if (!user) return fail(res, 404, '该邮箱未注册，请先注册账号');
+    if (!['alumni', 'admin', 'super_admin'].includes(user.role) || user.status !== 'active') {
+      return fail(res, 403, '该账号尚未完成校友认证，无法自助重置密码，请联系管理员处理');
+    }
     await dbQuery(`delete from public.password_resets where user_id=$1 and used=false and expires_at < now()`, [user.id]).catch(() => {});
-    const token = crypto.randomBytes(24).toString('hex');
+    const codeChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) code += codeChars[Math.floor(Math.random() * codeChars.length)];
+    const token = code;
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     await dbQuery(
       `insert into public.password_resets (user_id, token_hash, expires_at)
@@ -1665,8 +1671,9 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       [user.id, tokenHash]
     );
     return ok(res, {
-      reset_token: token,
-      message: '已生成重置码（当前未接入邮件通知，请使用下方重置码，30 分钟内有效）'
+      reset_code: code,
+      qr_image_url: `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(code)}`,
+      message: '已生成重置二维码：请用手机扫码查看「邀请码」，填写邀请码与新密码即可重置（30 分钟内有效）'
     });
   } catch (e) {
     return fail(res, 500, '生成重置码失败', { error: e.message });
