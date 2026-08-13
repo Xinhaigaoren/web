@@ -97,8 +97,21 @@ function safeJson(value) {
   try { return JSON.parse(value); } catch { return {}; }
 }
 
+async function fetchJson(url, options = {}) {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), 25000) : null;
+  try {
+    return await fetch(url, controller ? { ...options, signal: controller.signal } : options);
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw new Error('请求超时：网络较慢或服务正在重启，请稍后重试');
+    throw new Error('网络异常：无法连接服务器，请稍后重试');
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 async function api(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetchJson(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -581,7 +594,7 @@ loginForm.addEventListener('submit', async (event) => {
     const body = method === 'code'
       ? { email: document.getElementById('adminLoginAccount').value, code: document.getElementById('adminLoginCode').value }
       : Object.fromEntries(new FormData(loginForm).entries());
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetchJson(`${API_BASE_URL}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
