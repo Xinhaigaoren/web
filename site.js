@@ -147,12 +147,45 @@
           }
         });
       });
+      const heroSec = (data.sections || []).find((s) => s.section_key === 'home_hero');
+      if (heroSec) {
+        let hc = heroSec.content;
+        if (typeof hc === 'string') { try { hc = JSON.parse(hc); } catch (_) { hc = {}; } }
+        if (hc && hc.image) {
+          const media = document.getElementById('heroMedia');
+          if (media) media.style.backgroundImage = `linear-gradient(135deg, rgba(24,48,89,.55), rgba(39,68,114,.45)), url('${hc.image}')`;
+        }
+      }
     } catch (error) {
       // keep static content if the API is unavailable
       console.warn('[site] content load skipped:', error.message);
     }
   }
   loadSiteContent();
+
+  // 网站页脚：所有页面统一从接口加载，管理员可后台修改
+  async function loadFooter() {
+    try {
+      const data = await api('/api/site/sections?page=footer&t=' + Date.now());
+      const sec = (data.sections || []).find((s) => s.section_key === 'footer_info');
+      if (!sec) return;
+      let c = sec.content;
+      if (typeof c === 'string') { try { c = JSON.parse(c); } catch (_) { c = {}; } }
+      if (!c || typeof c !== 'object') return;
+      const footer = document.querySelector('footer.site-footer');
+      if (!footer) return;
+      const set = (sel, val) => {
+        if (val === undefined || val === null || val === '') return;
+        const el = footer.querySelector(sel);
+        if (el) el.innerHTML = String(val);
+      };
+      set('.footer-grid > div:first-child h2', c.name);
+      set('.footer-grid > div:first-child p', c.about);
+      set('.footer-grid > div:nth-child(2) p:nth-of-type(1)', c.email);
+      set('.footer-grid > div:nth-child(2) p:nth-of-type(2)', c.address);
+    } catch (error) { /* 保留静态页脚 */ }
+  }
+  loadFooter();
 
   // 首页动态内容：新闻与活动从接口加载，点击可进入详情页
   async function loadHomeDynamic() {
@@ -169,7 +202,8 @@
         const feature = document.getElementById('homeNewsFeature');
         if (feature) {
           const first = newsItems[0];
-          feature.innerHTML = `<div class="feature-img"></div><div class="feature-body"><time>${formatDate(first.published_at)}</time><h3><a href="news-detail.html?slug=${encodeURIComponent(first.slug)}">${escapeHtml(first.title)}</a></h3><p>${escapeHtml(first.summary || '')}</p></div>`;
+          const cover = first.cover_url ? ` style="background-image:linear-gradient(135deg, rgba(24,48,89,.12), rgba(39,68,114,.12)), url('${assetUrl(first.cover_url)}')"` : '';
+          feature.innerHTML = `<div class="feature-img"${cover}></div><div class="feature-body"><time>${formatDate(first.published_at)}</time><h3><a href="news-detail.html?slug=${encodeURIComponent(first.slug)}">${escapeHtml(first.title)}</a></h3><p>${escapeHtml(first.summary || '')}</p></div>`;
         }
       }
     } catch (error) { /* 接口不可用时保留静态内容 */ }

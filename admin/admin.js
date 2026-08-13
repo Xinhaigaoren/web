@@ -225,6 +225,24 @@ async function loadHomeContent() {
     homeForm.join_title.value = join.title || '';
     homeForm.donate_title.value = donate.title || '';
     homeForm.donate_intro.value = donate.intro || '';
+    const heroImg = hero.image || '';
+    homeForm.hero_image.value = heroImg;
+    renderCoverPreview('heroImgPreview', heroImg);
+    const aboutBody = sections.home_about_body || {};
+    const figuresBody = sections.home_figures_body || {};
+    const servicesBody = sections.home_services_body || {};
+    homeForm.about_body_html.value = typeof aboutBody.html === 'string' ? aboutBody.html : '';
+    homeForm.figures_body_html.value = typeof figuresBody.html === 'string' ? figuresBody.html : '';
+    homeForm.services_body_html.value = typeof servicesBody.html === 'string' ? servicesBody.html : '';
+    try {
+      const fd = await api('/api/site/sections?page=footer&t=' + Date.now());
+      const footerSec = (fd.sections || []).find((s) => s.section_key === 'footer_info');
+      const fc = footerSec ? safeJson(footerSec.content) : {};
+      homeForm.footer_name.value = fc.name || '';
+      homeForm.footer_about.value = fc.about || '';
+      homeForm.footer_email.value = fc.email || '';
+      homeForm.footer_address.value = fc.address || '';
+    } catch (_) {}
     homeStatus.textContent = '首页内容已读取。';
     homeStatus.className = 'status ok';
   } catch (error) {
@@ -254,7 +272,8 @@ homeForm.addEventListener('submit', async (event) => {
       display_order: 1,
       content: {
         title: form.hero_title || '',
-        subtitle: form.hero_subtitle || ''
+        subtitle: form.hero_subtitle || '',
+        image: form.hero_image || ''
       }
     }));
     results.push(await saveSection({
@@ -311,6 +330,22 @@ homeForm.addEventListener('submit', async (event) => {
       section_name: '支持母校',
       display_order: 8,
       content: { title: form.donate_title || '', intro: form.donate_intro || '' }
+    }));
+    results.push(await saveSection({
+      page_slug: 'home', section_key: 'home_about_body', section_name: '校友会特色', display_order: 9,
+      content: { html: form.about_body_html || '' }
+    }));
+    results.push(await saveSection({
+      page_slug: 'home', section_key: 'home_figures_body', section_name: '校友风采卡片', display_order: 10,
+      content: { html: form.figures_body_html || '' }
+    }));
+    results.push(await saveSection({
+      page_slug: 'home', section_key: 'home_services_body', section_name: '校友服务入口', display_order: 11,
+      content: { html: form.services_body_html || '' }
+    }));
+    results.push(await saveSection({
+      page_slug: 'footer', section_key: 'footer_info', section_name: '网站页脚', display_order: 0,
+      content: { name: form.footer_name || '', about: form.footer_about || '', email: form.footer_email || '', address: form.footer_address || '' }
     }));
     homeStatus.textContent = results.map(item => item.message || '保存成功').join('\n');
     homeStatus.className = 'status ok';
@@ -788,6 +823,7 @@ function openNewsEditor(item) {
     newsForm.author.value = item.author || '';
     newsForm.summary.value = item.summary || '';
     newsForm.cover_url.value = item.cover_url || '';
+    renderCoverPreview('newsCoverPreview', newsForm.cover_url.value);
     newsForm.content.value = item.content || '';
     newsForm.is_published.checked = item.is_published !== false;
   }
@@ -899,6 +935,7 @@ function openEventEditor(item) {
     eventForm.signup_deadline.value = toDatetimeLocal(item.signup_deadline);
     eventForm.capacity.value = item.capacity || '';
     eventForm.cover_url.value = item.cover_url || '';
+    renderCoverPreview('eventCoverPreview', eventForm.cover_url.value);
     eventForm.summary.value = item.summary || '';
     eventForm.content.value = item.content || '';
     eventForm.is_published.checked = item.is_published !== false;
@@ -1872,4 +1909,82 @@ async function loadChatAdmin() {
 }
 if (document.querySelector('#chatRows')) {
   document.querySelector('#loadChatBtn').addEventListener('click', () => { loadChatAdmin(); });
+}
+
+
+// ---------- 图片上传与校友选择（管理员便捷功能） ----------
+function renderCoverPreview(previewId, value) {
+  const box = document.getElementById(previewId);
+  if (!box) return;
+  box.innerHTML = value ? `<img src="${assetUrl(value)}" alt="预览" style="max-width:100%;max-height:140px;border-radius:10px;margin-top:8px" />` : '';
+}
+function assetUrl(u) { return /^https?:/i.test(u || '') ? u : (API_BASE_URL || '') + u; }
+function bindCoverUpload(btnId, inputName, previewId, form) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/jpeg,image/png,image/webp';
+    fileInput.onchange = async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) { alert('请选择图片文件'); return; }
+      if (file.size > 5 * 1024 * 1024) { alert('图片不能超过 5MB'); return; }
+      const oldText = btn.textContent;
+      btn.textContent = '上传中……';
+      btn.disabled = true;
+      try {
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const data = await api('/api/uploads', { method: 'POST', body: JSON.stringify({ data: base64, filename: file.name, mime_type: file.type, purpose: 'cover' }) });
+        const url = data.upload && data.upload.url;
+        const input = form.querySelector(`input[name="${inputName}"]`);
+        if (input) input.value = url || '';
+        renderCoverPreview(previewId, url || '');
+        alert('图片上传成功');
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        btn.textContent = oldText;
+        btn.disabled = false;
+      }
+    };
+    fileInput.click();
+  });
+}
+bindCoverUpload('newsCoverBtn', 'cover_url', 'newsCoverPreview', newsForm);
+bindCoverUpload('eventCoverBtn', 'cover_url', 'eventCoverPreview', eventForm);
+bindCoverUpload('heroImgBtn', 'hero_image', 'heroImgPreview', homeForm);
+
+function escapeAttr(value) { return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+const alumniPickSelect = document.getElementById('alumniPickSelect');
+if (alumniPickSelect) {
+  (async () => {
+    try {
+      const data = await api('/api/admin/alumni?page=1&pageSize=100');
+      const items = (data.items || []).filter((a) => a.name && a.email);
+      alumniPickSelect.innerHTML = '<option value="">— 从已认证校友选择（自动填充）—</option>' +
+        items.map((a) => `<option value="${escapeAttr(a.user_id)}" data-name="${escapeAttr(a.name)}" data-email="${escapeAttr(a.email)}" data-phone="${escapeAttr(a.phone || '')}">${escapeHtml(a.name)}（${escapeHtml(a.email)}）</option>`).join('');
+    } catch (error) { /* 接口不可用时保持空列表 */ }
+  })();
+  alumniPickSelect.addEventListener('change', () => {
+    const opt = alumniPickSelect.options[alumniPickSelect.selectedIndex];
+    if (!opt || !opt.value) return;
+    const name = opt.dataset.name || '';
+    const email = opt.dataset.email || '';
+    const phone = opt.dataset.phone || '';
+    if (directAdminForm) {
+      const set = (n, v) => { const el = directAdminForm.querySelector(`[name="${n}"]`); if (el) el.value = v; };
+      set('name', name); set('email', email); set('phone', phone);
+    }
+    if (inviteAdminForm) {
+      const set = (n, v) => { const el = inviteAdminForm.querySelector(`[name="${n}"]`); if (el) el.value = v; };
+      set('invitee_name', name); set('invitee_email', email); set('invitee_phone', phone);
+    }
+  });
 }

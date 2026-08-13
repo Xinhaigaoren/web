@@ -111,6 +111,10 @@ time { color: var(--accent); font-weight: 700; font-size: 14px; }
 .event-cards a.event-link h3 { margin: 0 0 10px; color: var(--deep); font-size: 21px; }
 .event-cards a.event-link p { margin: 0; color: var(--muted); }
 .section-sub { margin: 10px 0 0; color: var(--muted); }
+.story-grid a.story-link { display: block; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; box-shadow: 0 14px 36px rgba(23,32,51,.06); color: inherit; text-decoration: none; transition: transform .2s ease, box-shadow .2s ease; }
+.story-grid a.story-link:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(23,32,51,.08); }
+.story-grid a.story-link h3 { margin: 10px 0 10px; color: var(--deep); font-size: 21px; }
+.story-grid a.story-link p { margin: 0; color: var(--muted); }
 .avatar { width: 62px; height: 62px; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(135deg, var(--deep), var(--accent)); color: #fff; font-size: 24px; font-weight: 800; margin-bottom: 24px; }
 
 .services { background: linear-gradient(135deg, #142849, #203a63); color: #fff; }

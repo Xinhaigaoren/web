@@ -54,7 +54,7 @@
 
   <main id="main">
     <section class="hero" aria-label="网站主视觉">
-      <div class="hero-media" role="img" aria-label="海林校园与雪林意象的抽象背景"></div>
+      <div class="hero-media" id="heroMedia" role="img" aria-label="海林校园与雪林意象的抽象背景"></div>
       <div class="hero-overlay"></div>
       <div class="container hero-content">
         <p class="eyebrow">连接母校 · 凝聚校友 · 服务社会</p>
@@ -88,7 +88,7 @@
           <p data-section="home_about" data-field="content">海林市高级中学校友会以“联络校友、服务校友、回馈母校、助力家乡”为宗旨，持续建设跨届别、跨行业、跨地域的校友共同体。</p>
           <p>网站采用原创高校门户设计语言，突出新闻发布、活动组织、校友服务与母校支持四项核心功能。</p>
         </div>
-        <div class="about-grid">
+        <div class="about-grid" data-section="home_about_body">
           <article>
             <h3>组织联络</h3>
             <p>建设年级、地区、行业联络体系，方便校友快速找到同窗与母校资源。</p>
@@ -196,22 +196,22 @@
           </div>
           <a class="more-link" href="forum.html">投稿故事 →</a>
         </div>
-        <div class="story-grid">
-          <article>
+        <div class="story-grid" data-section="home_figures_body">
+          <a class="story-link" href="forum.html">
             <div class="avatar">A</div>
             <h3>从雪乡走向世界</h3>
             <p>记录海高校友在科研、教育、医疗、企业与公共服务中的成长故事。</p>
-          </article>
-          <article>
+          </a>
+          <a class="story-link" href="forum.html">
             <div class="avatar">B</div>
             <h3>同窗互助计划</h3>
             <p>链接不同城市、行业与届别的校友，建立可信赖的合作网络。</p>
-          </article>
-          <article>
+          </a>
+          <a class="story-link" href="forum.html">
             <div class="avatar">C</div>
             <h3>回到母校课堂</h3>
             <p>邀请优秀校友参与讲座、社团指导与生涯启蒙活动。</p>
-          </article>
+          </a>
         </div>
       </div>
     </section>
@@ -223,11 +223,11 @@
           <h2 data-section="home_services" data-field="title">校友服务</h2>
           <p data-section="home_services" data-field="subtitle">为校友提供认证、联络、活动、合作、公益与母校信息服务。</p>
         </div>
-        <div class="service-list">
-          <a href="#join"><span>01</span>校友认证与信息登记</a>
-          <a href="#events"><span>02</span>活动报名与志愿者招募</a>
-          <a href="#donate"><span>03</span>奖助学金与公益项目</a>
-          <a href="#contact"><span>04</span>地区联络站与班级联络人</a>
+        <div class="service-list" data-section="home_services_body">
+          <a href="account.html"><span>01</span>校友认证与信息登记</a>
+          <a href="events.html"><span>02</span>活动报名与志愿者招募</a>
+          <a href="donate.html"><span>03</span>奖助学金与公益项目</a>
+          <a href="contact.html"><span>04</span>地区联络站与班级联络人</a>
         </div>
       </div>
     </section>

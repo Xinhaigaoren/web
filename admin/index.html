@@ -130,6 +130,14 @@
                 <textarea name="hero_subtitle" rows="3" placeholder="这里是海林市高级中学校友共同的精神家园……"></textarea>
               </label>
             </fieldset>
+            <fieldset>
+              <legend>首页横幅图片</legend>
+              <label>横幅背景图（选填，上传后前台首页顶部生效）
+                <input type="hidden" name="hero_image" />
+                <button type="button" id="heroImgBtn" class="ghost">上传图片</button>
+              </label>
+              <div id="heroImgPreview"></div>
+            </fieldset>
 
             <fieldset>
               <legend>公告</legend>
@@ -172,7 +180,34 @@
               <label>说明<input name="donate_intro" placeholder="可围绕奖助学金、图书阅读、科技创新、体育美育、校园改善等方向发起校友公益项目。" /></label>
             </fieldset>
 
-            <button type="submit">保存首页内容</button>
+            
+            <fieldset>
+              <legend>校友会特色（首页四宫格，支持 HTML）</legend>
+              <label>内容
+                <textarea name="about_body_html" rows="4" placeholder="可粘贴包含 组织联络/活动平台/校友互助/支持母校 四个卡片的自定义 HTML"></textarea>
+              </label>
+            </fieldset>
+            <fieldset>
+              <legend>校友风采卡片（支持 HTML）</legend>
+              <label>内容
+                <textarea name="figures_body_html" rows="4" placeholder="可粘贴校友风采卡片的自定义 HTML"></textarea>
+              </label>
+            </fieldset>
+            <fieldset>
+              <legend>校友服务入口（支持 HTML）</legend>
+              <label>内容
+                <textarea name="services_body_html" rows="4" placeholder="可粘贴校友服务入口的自定义 HTML"></textarea>
+              </label>
+            </fieldset>
+            <fieldset>
+              <legend>网站页脚</legend>
+              <label>名称<input name="footer_name" placeholder="海林市高级中学校友会" /></label>
+              <label>简介<input name="footer_about" placeholder="以校友情谊为纽带，以服务母校为使命。" /></label>
+              <label>邮箱<input name="footer_email" placeholder="邮箱：alumni@example.com" /></label>
+              <label>地址<input name="footer_address" placeholder="地址：黑龙江省牡丹江市海林市" /></label>
+            </fieldset>
+
+<button type="submit">保存首页内容</button>
             <p class="status" id="homeStatus"></p>
           </form>
         </div>
@@ -217,6 +252,9 @@
         <div class="editor-card compact-card">
           <h3>直接创建管理员（无需邀请）</h3>
           <form id="directAdminForm" class="editor-form">
+            <label>从已认证校友选择（自动填充下方信息）
+              <select id="alumniPickSelect"><option value="">— 请选择 —</option></select>
+            </label>
             <div class="three-fields">
               <label>邮箱<input name="email" type="email" placeholder="name@example.com" required /></label>
               <label>姓名<input name="name" required /></label>
@@ -319,6 +357,8 @@
             </div>
             <label>摘要<textarea name="summary" rows="2"></textarea></label>
             <label>封面图地址（选填，支持 /api/uploads/xxx）<input name="cover_url" placeholder="https:// 或 /api/uploads/xxx" /></label>
+            <label>上传封面图<button type="button" id="newsCoverBtn" class="ghost">选择图片上传</button></label>
+            <div id="newsCoverPreview"></div>
             <label>正文（支持简单 HTML）<textarea name="content" rows="10" placeholder="第一段用 <p> 包裹，可粘贴富文本"></textarea></label>
             <label class="inline-check"><input type="checkbox" name="is_published" checked /> 立即发布</label>
             <div class="form-actions">
@@ -363,6 +403,8 @@
             <div class="three-fields">
               <label>人数上限（选填）<input name="capacity" type="number" min="1" /></label>
               <label>封面图地址（选填）<input name="cover_url" /></label>
+            <label>上传封面图<button type="button" id="eventCoverBtn" class="ghost">选择图片上传</button></label>
+            <div id="eventCoverPreview"></div>
             </div>
             <label>简介<textarea name="summary" rows="2"></textarea></label>
             <label>详情（支持简单 HTML）<textarea name="content" rows="8"></textarea></label>
