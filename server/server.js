@@ -115,6 +115,39 @@ async function ensureRootAdmin() {
   }
 }
 
+// 指定主管理员（张文轩）：邮箱/手机号账号升级为主管理员，支持验证码登录后台
+async function ensureZhangSuperAdmin() {
+  if (!pool) return;
+  const email = 'zwxzwx861@qq.com';
+  const phone = '18545372006';
+  let ids = await dbQuery(
+    `select id from public.app_users where lower(email)=lower($1) or phone=$2`,
+    [email, phone]
+  ).catch(() => ({ rows: [] }));
+  if (!ids.rows || !ids.rows.length) {
+    const ins = await dbQuery(
+      `insert into public.app_users (email, phone, display_name, role, status, is_email_verified)
+       values ($1,$2,'张文轩','super_admin','active',true)
+       on conflict (email) do update set role='super_admin', status='active', phone=coalesce(excluded.phone, public.app_users.phone), updated_at=now()
+       returning id`,
+      [email, phone]
+    ).catch(() => ({ rows: [] }));
+    ids = ins.rows && ins.rows.length ? { rows: [{ id: ins.rows[0].id }] } : { rows: [] };
+  }
+  for (const row of ids.rows || []) {
+    await dbQuery(
+      `update public.app_users set role='super_admin', status='active', display_name=coalesce(display_name,'张文轩'), updated_at=now() where id=$1`,
+      [row.id]
+    ).catch(() => {});
+    await dbQuery(
+      `insert into public.admin_accounts (user_id, admin_level, status, approved_at, note)
+       values ($1,'super_admin','approved',now(),'主管理员（张文轩）')
+       on conflict (user_id) do update set admin_level='super_admin', status='approved', updated_at=now()`,
+      [row.id]
+    ).catch(() => {});
+  }
+}
+
 function signToken(user) {
   return jwt.sign(
     {
@@ -262,63 +295,9 @@ app.get('/', (req, res) => {
   res.json({ message: '接口不存在，请访问 /api/health' });
 });
 
-// 管理员登录：兼容旧后台：admin + ADMIN_PASSWORD
+// 管理员密码登录已停用：统一使用「邮箱/手机号 + 验证码」登录
 app.post(['/api/admin/login', '/api/login'], async (req, res) => {
-  try {
-    const { username, phone, password } = req.body || {};
-    const loginName = (username || phone || '').trim();
-    if (!loginName || !password) return fail(res, 400, '请输入账号和密码');
-
-    await ensureRootAdmin();
-
-    // 环境变量主管理员登录
-    if (loginName === ADMIN_USER && password === ADMIN_PASSWORD) {
-      const ru = await dbQuery(
-        `select id as user_id, display_name, role from public.app_users where phone='ROOT_ADMIN' limit 1`
-      ).catch(() => ({ rows: [] }));
-      const base = ru.rows[0] || { user_id: null, display_name: '主管理员', role: 'super_admin' };
-      const ra = await dbQuery(
-        `select id as admin_id, admin_level from public.admin_accounts where user_id=$1 limit 1`,
-        [base.user_id]
-      ).catch(() => ({ rows: [] }));
-      const user = {
-        user_id: base.user_id,
-        display_name: base.display_name,
-        role: 'super_admin',
-        admin_id: ra.rows[0] ? ra.rows[0].admin_id : null,
-        admin_level: 'super_admin'
-      };
-      const token = signToken(user);
-      await audit({ ...req, user }, 'admin_login', 'admin_account', user.admin_id, { loginName });
-      return ok(res, { token, user: { name: user.display_name, role: user.role, admin_level: user.admin_level } });
-    }
-
-    // 数据库管理员登录：后面可给每个管理员设置 password_hash
-    const r = await dbQuery(
-      `select u.id as user_id, u.display_name, u.phone, u.role, u.status, u.password_hash,
-              a.id as admin_id, a.admin_level, a.status as admin_status
-       from public.app_users u
-       join public.admin_accounts a on a.user_id=u.id
-       where u.phone=$1 or u.email=$1
-       order by (u.email is not null) desc, (u.password_hash is not null) desc, u.id asc`,
-      [loginName]
-    );
-    let user = null;
-    for (const row of r.rows) {
-      if (!row.password_hash) continue;
-      if (row.status !== 'active' || row.admin_status !== 'approved') continue;
-      if (await bcrypt.compare(password, row.password_hash)) { user = row; break; }
-    }
-    if (!user) return fail(res, 401, '账号或密码错误');
-    // 普通管理员（可能是认证校友升级而来）签发后台令牌时统一使用管理员角色
-    user.role = user.admin_level === 'super_admin' ? 'super_admin' : 'admin';
-    const token = signToken(user);
-    await audit({ ...req, user }, 'admin_login', 'admin_account', user.admin_id, { loginName });
-    return ok(res, { token, user: { name: user.display_name, role: user.role, admin_level: user.admin_level } });
-  } catch (e) {
-    console.error(e);
-    return fail(res, 500, '登录失败', { error: e.message });
-  }
+  return fail(res, 400, '密码登录已停用，请使用「邮箱/手机号 + 验证码」登录');
 });
 
 // 管理员验证码登录：仅「已批准」且未被停用的管理员可用验证码登录后台
@@ -3437,6 +3416,7 @@ bootstrapSchema()
       console.log(`hailin alumni backend running on http://localhost:${PORT}`);
       // 内容改名/邮箱等迁移放后台执行，不阻塞启动，加快冷启动响应
       Promise.allSettled([
+        ensureZhangSuperAdmin(),
         ensureBrandRename(),
         ensureAlumniRoleSync(),
         ensureHomeRename()

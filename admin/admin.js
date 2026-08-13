@@ -531,18 +531,6 @@ async function setupInviteFromUrl() {
   }
 }
 
-function adminLoginMethod() {
-  const active = document.querySelector('[data-admin-login].active');
-  return active ? active.dataset.adminLogin : 'password';
-}
-document.querySelectorAll('[data-admin-login]').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-admin-login]').forEach((b) => b.classList.toggle('active', b === btn));
-    document.querySelectorAll('[data-admin-pane]').forEach((pane) => { pane.hidden = pane.dataset.adminPane !== btn.dataset.adminLogin; });
-    loginStatus.textContent = '';
-  });
-});
-
 const adminSendCodeBtn = document.getElementById('adminSendCodeBtn');
 const adminCodeBox = document.getElementById('adminCodeBox');
 const adminCodeText = document.getElementById('adminCodeText');
@@ -588,16 +576,11 @@ if (adminSendCodeBtn) {
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   loginStatus.textContent = '';
-  const method = adminLoginMethod();
   try {
-    const path = method === 'code' ? '/api/admin/code-login' : '/api/admin/login';
-    const body = method === 'code'
-      ? { email: document.getElementById('adminLoginAccount').value, code: document.getElementById('adminLoginCode').value }
-      : Object.fromEntries(new FormData(loginForm).entries());
-    const response = await fetchJson(`${API_BASE_URL}${path}`, {
+    const response = await fetchJson(`${API_BASE_URL}/api/admin/code-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify({ email: document.getElementById('adminLoginAccount').value, code: document.getElementById('adminLoginCode').value })
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) throw new Error(data.message || '登录失败');
