@@ -1513,7 +1513,14 @@ app.post('/api/admin/users/:id/reset-password', requireAuth, requireAdmin, async
     const newPassword = String(req.body?.password || '').trim() || crypto.randomBytes(6).toString('base64url');
     if (newPassword.length < 8) return fail(res, 400, '新密码至少 8 位');
     const hash = await bcrypt.hash(newPassword, 10);
-    await dbQuery(`update public.app_users set password_hash=$1, updated_at=now() where id=$2`, [hash, id]);
+    const uInfo = current.rows[0];
+    await dbQuery(
+      `update public.app_users set password_hash=$1, updated_at=now()
+       where id=$2
+          or (email is not null and lower(email)=lower($3))
+          or (phone is not null and phone=$4)`,
+      [hash, id, uInfo.email || '', uInfo.phone || null]
+    );
     await audit(req, 'user_reset_password', 'app_user', id, {});
     return ok(res, { message: '密码已重置', temp_password: newPassword });
   } catch (e) {
