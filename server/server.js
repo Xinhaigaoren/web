@@ -1505,15 +1505,16 @@ app.get('/api/admin/alumni', requireAuth, requireAdmin, async (req, res) => {
     const pageSize = Math.min(parsePositiveInt(req.query.pageSize, 20), 100);
     const q = req.query.q;
     const params = [];
-    const wheres = [];
+    const wheres = [`p.status = 'active'`];
     if (q) { params.push(`%${q}%`); wheres.push(`(p.name ilike $${params.length} or p.company ilike $${params.length} or p.phone ilike $${params.length})`); }
     const where = wheres.length ? 'where ' + wheres.join(' and ') : '';
     const count = await dbQuery(`select count(*)::int as total from public.alumni_profiles p ${where}`, params);
     const offset = (page - 1) * pageSize;
     const r = await dbQuery(
-      `select p.*, u.email, u.status as user_status, u.created_at as user_created_at
+      `select p.*, coalesce(u1.email, u2.email) as email, u1.status as user_status, u1.created_at as user_created_at
        from public.alumni_profiles p
-       left join public.app_users u on u.id = p.user_id
+       left join public.app_users u1 on u1.id = p.user_id
+       left join public.app_users u2 on u2.phone = p.phone and u2.email is not null
        ${where}
        order by p.id desc
        limit $${params.length + 1} offset $${params.length + 2}`,

@@ -2381,14 +2381,17 @@ initRichEditor('eventContentEditor', 'content', 'eventContentImgBtn');
 function escapeAttr(value) { return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 const alumniPickSelect = document.getElementById('alumniPickSelect');
 if (alumniPickSelect) {
-  (async () => {
+  async function loadAlumniPick() {
     try {
       const data = await api('/api/admin/alumni?page=1&pageSize=100');
-      const items = (data.items || []).filter((a) => a.name && a.email);
+      const items = (data.items || []).filter((a) => a.name);
       alumniPickSelect.innerHTML = '<option value="">— 从已认证校友选择（自动填充）—</option>' +
-        items.map((a) => `<option value="${escapeAttr(a.user_id)}" data-name="${escapeAttr(a.name)}" data-email="${escapeAttr(a.email)}" data-phone="${escapeAttr(a.phone || '')}">${escapeHtml(a.name)}（${escapeHtml(a.email)}）</option>`).join('');
+        items.map((a) => `<option value="${escapeAttr(a.user_id)}" data-name="${escapeAttr(a.name)}" data-email="${escapeAttr(a.email || '')}" data-phone="${escapeAttr(a.phone || '')}">${escapeHtml(a.name)}${a.email ? '（' + escapeHtml(a.email) + '）' : '（无邮箱，需手动填写）'}</option>`).join('');
     } catch (error) { /* 接口不可用时保持空列表 */ }
-  })();
+  }
+  loadAlumniPick();
+  // 打开管理员管理时重新加载，保证新认证校友可选
+  document.querySelector('#loadAdminsBtn')?.addEventListener('click', loadAlumniPick);
   alumniPickSelect.addEventListener('change', () => {
     const opt = alumniPickSelect.options[alumniPickSelect.selectedIndex];
     if (!opt || !opt.value) return;
