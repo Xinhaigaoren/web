@@ -140,12 +140,6 @@
                     <div class="upload-preview" data-preview="chsi"></div>
                     <input type="hidden" name="chsi_proof_url" />
                   </div>
-                  <div class="field">
-                    <label>学生证 / 毕业证 / 录取通知书（选填）</label>
-                    <div class="upload-box" data-upload="student" tabindex="0">点击上传补充证明（选填）</div>
-                    <div class="upload-preview" data-preview="student"></div>
-                    <input type="hidden" name="student_card_url" />
-                  </div>
                   <label class="consent-line"><input type="checkbox" name="consent_personal_info" checked /> 我同意校友会为认证目的收集并审核上述个人信息，仅用于校友身份核验。</label>
                   <label class="consent-line"><input type="checkbox" name="consent_material_review" checked /> 我同意管理员查看证明材料进行审核。</label>
                   <div class="form-actions">
@@ -584,7 +578,6 @@
         }
       }
       bindUpload('[data-upload="chsi"]', 'chsi_proof_url');
-      bindUpload('[data-upload="student"]', 'student_card_url');
       handleWechatCallback();
       // 支持首页「加入新海高人」直达注册 / 登录
       if (location.hash === '#register') switchAuthTab('register');
