@@ -178,8 +178,38 @@ function clearUserAuthCache(userIds) {
   (userIds || []).forEach((id) => userAuthCache.delete(id));
 }
 
-function requireAdmin(req, res, next) {
+const adminAuthCache = new Map();
+const ADMIN_AUTH_TTL = 5000;
+async function requireAdmin(req, res, next) {
   if (!req.user || !['admin', 'super_admin'].includes(req.user.role)) return fail(res, 403, '需要管理员权限');
+  let adminId = req.user.admin_id;
+  let status = null;
+  if (!adminId) {
+    // 平台验证码登录签发的 token 不带 admin_id，这里按 user_id 反查管理员账户
+    try {
+      const r = await dbQuery(`select id, status from public.admin_accounts where user_id=$1 limit 1`, [req.user.user_id]);
+      if (!r.rows[0]) return fail(res, 403, '需要管理员权限');
+      adminId = r.rows[0].id;
+      status = r.rows[0].status;
+    } catch (e) {
+      return fail(res, 403, '需要管理员权限');
+    }
+  }
+  if (adminId) {
+    const cached = adminAuthCache.get(adminId);
+    if (status === null && cached && Date.now() - cached.ts < ADMIN_AUTH_TTL) status = cached.status;
+    if (status === null || status === undefined) {
+      try {
+        const r = await dbQuery(`select status from public.admin_accounts where id=$1 limit 1`, [adminId]);
+        status = r.rows[0] ? r.rows[0].status : 'disabled';
+        adminAuthCache.set(adminId, { status, ts: Date.now() });
+        if (adminAuthCache.size > 5000) adminAuthCache.clear();
+      } catch (e) {
+        status = 'approved';
+      }
+    }
+    if (status !== 'approved') return fail(res, 403, '管理员权限已被停止或未启用');
+  }
   return next();
 }
 
@@ -276,6 +306,43 @@ app.post(['/api/admin/login', '/api/login'], async (req, res) => {
   } catch (e) {
     console.error(e);
     return fail(res, 500, '登录失败', { error: e.message });
+  }
+});
+
+// 管理员验证码登录：仅「已批准」且未被停用的管理员可用验证码登录后台
+app.post('/api/admin/code-login', async (req, res) => {
+  try {
+    const identifier = normalizeEmail(req.body?.email || req.body?.account || req.body?.username || '');
+    const code = String(req.body?.code || '').trim();
+    if (!identifier || !/^\d{6}$/.test(code)) return fail(res, 400, '请输入邮箱/手机号和 6 位验证码');
+    const codeHash = crypto.createHash('sha256').update(code).digest('hex');
+    const r = await dbQuery(
+      `select lc.id, lc.expires_at, u.id as user_id, u.display_name, u.phone, u.role, u.status,
+              a.id as admin_id, a.admin_level, a.status as admin_status
+       from public.login_codes lc
+       join public.app_users u on (lower(u.email) = lower($1) or u.phone = $1)
+       left join public.admin_accounts a on a.user_id = u.id
+       where lc.email = $1 and lc.code_hash = $2 and lc.used = false and lc.purpose = 'login'
+       order by lc.created_at desc
+       limit 1`,
+      [identifier, codeHash]
+    );
+    const row = r.rows[0];
+    if (!row) return fail(res, 400, '验证码无效或已使用');
+    if (new Date(row.expires_at) < new Date()) return fail(res, 400, '验证码已过期，请重新获取');
+    if (row.status === 'disabled') return fail(res, 403, '该账号已被停用，请联系主管理员');
+    if (row.admin_id && row.admin_status === 'disabled') return fail(res, 403, '管理员权限已被主管理员停止，无法登录后台');
+    if (!row.admin_id || row.admin_status !== 'approved') return fail(res, 403, '该账号尚未被批准为管理员，无法登录后台');
+    await dbQuery(`update public.login_codes set used=true where id=$1`, [row.id]);
+    const token = jwt.sign(
+      { user_id: row.user_id, role: row.role, admin_id: row.admin_id, admin_level: row.admin_level },
+      TOKEN_SECRET,
+      { expiresIn: '7d' }
+    );
+    await audit({ ...req, user: { user_id: row.user_id, role: row.role } }, 'admin_code_login', 'admin_account', row.admin_id, { identifier });
+    return ok(res, { token, user: { name: row.display_name, role: row.role, admin_level: row.admin_level } });
+  } catch (e) {
+    return fail(res, 500, '验证码登录失败', { error: e.message });
   }
 });
 
@@ -385,6 +452,7 @@ app.patch('/api/admin/accounts/:id', requireAuth, requireSuperAdmin, async (req,
       [b.admin_level || null, b.status || null, b.permissions ? JSON.stringify(b.permissions) : null, b.note || null, id]
     );
     if (!r.rows[0]) return fail(res, 404, '管理员不存在');
+    adminAuthCache.delete(Number(id));
     await audit(req, 'admin_account_update', 'admin_account', id, b);
     return ok(res, { admin: r.rows[0], message: '管理员权限已更新' });
   } catch (e) {

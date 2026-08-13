@@ -107,7 +107,15 @@ async function api(path, options = {}) {
     }
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.ok === false) throw new Error(data.message || data.error || '接口请求失败');
+  if (!response.ok || data.ok === false) {
+    const message = data.message || data.error || '接口请求失败';
+    // 管理员权限被停止 / 登录失效时，强制退出后台回到登录页
+    if (response.status === 401 || /已被停止|未启用/.test(message)) {
+      clearToken();
+      setTimeout(() => { if (dashboard && !dashboard.hidden) showLogin(); }, 0);
+    }
+    throw new Error(message);
+  }
   return data;
 }
 
@@ -510,15 +518,73 @@ async function setupInviteFromUrl() {
   }
 }
 
+function adminLoginMethod() {
+  const active = document.querySelector('[data-admin-login].active');
+  return active ? active.dataset.adminLogin : 'password';
+}
+document.querySelectorAll('[data-admin-login]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-admin-login]').forEach((b) => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('[data-admin-pane]').forEach((pane) => { pane.hidden = pane.dataset.adminPane !== btn.dataset.adminLogin; });
+    loginStatus.textContent = '';
+  });
+});
+
+const adminSendCodeBtn = document.getElementById('adminSendCodeBtn');
+const adminCodeBox = document.getElementById('adminCodeBox');
+const adminCodeText = document.getElementById('adminCodeText');
+let adminSendTimer = null;
+if (adminSendCodeBtn) {
+  adminSendCodeBtn.addEventListener('click', async () => {
+    const account = String(document.getElementById('adminLoginAccount').value || '').trim();
+    if (!account) { loginStatus.textContent = '请先输入管理员账号（邮箱或手机号）'; return; }
+    if (!/^\d{6,}$/.test(account) && !account.includes('@')) { loginStatus.textContent = '请输入有效的邮箱或手机号'; return; }
+    adminSendCodeBtn.disabled = true;
+    adminSendCodeBtn.textContent = '发送中…';
+    try {
+      const data = await api('/api/auth/send-login-code', { method: 'POST', body: JSON.stringify({ email: account }) });
+      if (data.login_code) {
+        if (adminCodeText) adminCodeText.textContent = data.login_code;
+        if (adminCodeBox) adminCodeBox.hidden = false;
+        const codeInput = document.getElementById('adminLoginCode');
+        if (codeInput) codeInput.value = data.login_code;
+        loginStatus.textContent = '验证码已发送并自动填入，点击「登录后台」即可';
+      } else {
+        loginStatus.textContent = data.message || '验证码已发送';
+      }
+      let seconds = 60;
+      clearInterval(adminSendTimer);
+      adminSendTimer = setInterval(() => {
+        seconds -= 1;
+        if (seconds <= 0) {
+          clearInterval(adminSendTimer);
+          adminSendCodeBtn.disabled = false;
+          adminSendCodeBtn.textContent = '重新获取';
+        } else {
+          adminSendCodeBtn.textContent = `${seconds} 秒后重发`;
+        }
+      }, 1000);
+    } catch (error) {
+      loginStatus.textContent = error.message;
+      adminSendCodeBtn.disabled = false;
+      adminSendCodeBtn.textContent = '获取验证码';
+    }
+  });
+}
+
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   loginStatus.textContent = '';
-  const formData = new FormData(loginForm);
+  const method = adminLoginMethod();
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
+    const path = method === 'code' ? '/api/admin/code-login' : '/api/admin/login';
+    const body = method === 'code'
+      ? { email: document.getElementById('adminLoginAccount').value, code: document.getElementById('adminLoginCode').value }
+      : Object.fromEntries(new FormData(loginForm).entries());
+    const response = await fetch(`${API_BASE_URL}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.fromEntries(formData.entries()))
+      body: JSON.stringify(body)
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) throw new Error(data.message || '登录失败');
