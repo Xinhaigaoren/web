@@ -1286,6 +1286,30 @@ app.get('/api/uploads/:id', async (req, res) => {
   }
 });
 
+// 素材库：列出全部上传的图片（管理员）
+app.get('/api/admin/uploads', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select id, filename, mime_type, size_bytes, purpose, created_at
+       from public.uploads order by created_at desc limit 300`
+    );
+    return ok(res, { items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取素材列表失败', { error: e.message });
+  }
+});
+
+// 删除素材（管理员）
+app.delete('/api/uploads/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbQuery(`delete from public.uploads where id=$1 returning id`, [req.params.id]);
+    if (!r.rows[0]) return fail(res, 404, '素材不存在');
+    return ok(res, { message: '素材已删除' });
+  } catch (e) {
+    return fail(res, 500, '删除素材失败', { error: e.message });
+  }
+});
+
 // ---------- 校友中心 ----------
 app.get('/api/alumni/me', requireAuth, async (req, res) => {
   try {

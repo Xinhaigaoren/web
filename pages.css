@@ -43,7 +43,7 @@
 .article-body { line-height: 1.95; color: #2b3648; font-size: 16px; }
 .article-body p { margin: 0 0 18px; }
 .article-body h2, .article-body h3 { color: var(--deep); margin: 28px 0 12px; }
-.article-body img { border-radius: 12px; margin: 18px 0; }
+.article-body img { border-radius: 12px; margin: 18px 0; max-width: 100%; height: auto; }
 .article-body ul, .article-body ol { padding-left: 22px; margin: 0 0 18px; }
 .article-back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 26px; color: var(--accent); font-weight: 700; }
 

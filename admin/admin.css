@@ -145,6 +145,15 @@ select {
 .badge.checked_in { background: #dbeafe; color: #1d40af; }
 .badge.draft { background: #f1f5f9; color: #64748b; }
 .editor-form .three-fields input[type="datetime-local"] { min-width: 0; }
+
+/* 富文本正文编辑器 */
+.rich-toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: #f4f6fa; border: 1px solid var(--line); border-bottom: 0; border-radius: 12px 12px 0 0; }
+.rich-toolbar button { padding: 6px 10px; font-size: 13px; background: #fff; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; color: var(--deep); line-height: 1.2; }
+.rich-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+.rich-editor { min-height: 220px; padding: 14px 16px; background: #fff; border: 1px solid var(--line); border-radius: 0 0 12px 12px; font-size: 15px; line-height: 1.8; color: #2b3648; outline: none; }
+.rich-editor:focus { border-color: var(--accent); }
+.rich-editor img { max-width: 100%; border-radius: 10px; margin: 8px 0; }
+.rich-editor:empty::before { content: attr(data-placeholder); color: #9aa3b2; pointer-events: none; }
 /* 弹窗（签到二维码等） */
 .modal-overlay[hidden] { display: none; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(10,16,28,.55); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }

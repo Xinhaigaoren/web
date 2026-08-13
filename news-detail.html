@@ -95,8 +95,11 @@
       function renderBody(content) {
         const text = String(content || '').trim();
         if (!text) return '<p>（暂无正文）</p>';
-        if (text.includes('<')) return text;
-        return text.split(/\n{2,}/).map((p) => `<p>${XH.escapeHtml(p).replace(/\n/g, '<br />')}</p>`).join('');
+        const html = text.includes('<')
+          ? text
+          : text.split(/\n{2,}/).map((p) => `<p>${XH.escapeHtml(p).replace(/\n/g, '<br />')}</p>`).join('');
+        // 把 /api/uploads/xxx 等相对图片地址补全为完整地址，正文图片才能显示
+        return html.replace(/(\bsrc|\bposter|\bhref)=(["'])(\/[^"']*)\2/g, (match, attr, quote, url) => `${attr}=${quote}${XH.assetUrl(url)}${quote}`);
       }
 
       async function load() {

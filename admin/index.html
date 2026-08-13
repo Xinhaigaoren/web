@@ -80,6 +80,7 @@
         <button class="tab" data-tab="notifications" type="button">消息推送</button>
         <button class="tab" data-tab="companies" type="button">企业黄页</button>
         <button class="tab" data-tab="chat" type="button">即时消息</button>
+        <button class="tab" data-tab="media" type="button">素材库</button>
       </nav>
 
       <section class="panel active" id="applicationsPanel">
@@ -132,9 +133,16 @@
             </fieldset>
             <fieldset>
               <legend>首页横幅图片</legend>
-              <label>横幅背景图（选填，上传后前台首页顶部生效）
+              <label>背景模式
+                <select name="hero_mode">
+                  <option value="default">默认背景</option>
+                  <option value="image">自定义图片</option>
+                </select>
+              </label>
+              <label>横幅背景图（选择「自定义图片」模式后生效）
                 <input type="hidden" name="hero_image" />
                 <button type="button" id="heroImgBtn" class="ghost">上传图片</button>
+                <button type="button" id="heroImgRemoveBtn" class="ghost">移除图片</button>
               </label>
               <div id="heroImgPreview"></div>
             </fieldset>
@@ -357,9 +365,29 @@
             </div>
             <label>摘要<textarea name="summary" rows="2"></textarea></label>
             <label>封面图地址（选填，支持 /api/uploads/xxx）<input name="cover_url" placeholder="https:// 或 /api/uploads/xxx" /></label>
-            <label>上传封面图<button type="button" id="newsCoverBtn" class="ghost">选择图片上传</button></label>
+            <label>上传封面图
+              <button type="button" id="newsCoverBtn" class="ghost">选择图片上传</button>
+              <button type="button" id="newsCoverRemoveBtn" class="ghost">移除封面</button>
+            </label>
             <div id="newsCoverPreview"></div>
-            <label>正文（支持简单 HTML）<textarea name="content" rows="10" placeholder="第一段用 <p> 包裹，可粘贴富文本"></textarea></label>
+            <label>正文（可插入图片、自由排版）
+              <textarea name="content" hidden></textarea>
+              <div class="rich-toolbar">
+                <button type="button" data-rich-cmd="bold" title="加粗"><strong>B</strong></button>
+                <button type="button" data-rich-cmd="italic" title="斜体"><em>I</em></button>
+                <button type="button" data-rich-cmd="underline" title="下划线"><u>U</u></button>
+                <button type="button" data-rich-cmd="formatBlock" data-rich-value="h3" title="小标题">H</button>
+                <button type="button" data-rich-cmd="formatBlock" data-rich-value="p" title="正文">¶</button>
+                <button type="button" data-rich-cmd="insertUnorderedList" title="项目符号">• 列表</button>
+                <button type="button" data-rich-cmd="insertOrderedList" title="编号列表">1. 列表</button>
+                <button type="button" data-rich-cmd="formatBlock" data-rich-value="blockquote" title="引用">引用</button>
+                <button type="button" data-rich-cmd="createLink" title="插入链接">链接</button>
+                <button type="button" data-rich-cmd="removeFormat" title="清除格式">清除</button>
+                <button type="button" id="newsContentImgBtn" title="插入图片">🖼 插入图片</button>
+              </div>
+              <div class="rich-editor" id="newsContentEditor" contenteditable="true" data-placeholder="在这里编辑正文，可上传插入图片、加粗标题列表排版……"></div>
+              <p class="form-tip">提示：先上传图片再排版；复制网页内容时会保留文字与排版。</p>
+            </label>
             <label class="inline-check"><input type="checkbox" name="is_published" checked /> 立即发布</label>
             <div class="form-actions">
               <button type="submit">保存新闻</button>
@@ -403,11 +431,30 @@
             <div class="three-fields">
               <label>人数上限（选填）<input name="capacity" type="number" min="1" /></label>
               <label>封面图地址（选填）<input name="cover_url" /></label>
-            <label>上传封面图<button type="button" id="eventCoverBtn" class="ghost">选择图片上传</button></label>
+            <label>上传封面图
+              <button type="button" id="eventCoverBtn" class="ghost">选择图片上传</button>
+              <button type="button" id="eventCoverRemoveBtn" class="ghost">移除封面</button>
+            </label>
             <div id="eventCoverPreview"></div>
             </div>
             <label>简介<textarea name="summary" rows="2"></textarea></label>
-            <label>详情（支持简单 HTML）<textarea name="content" rows="8"></textarea></label>
+            <label>详情（可插入图片、自由排版）
+              <textarea name="content" hidden></textarea>
+              <div class="rich-toolbar">
+                <button type="button" data-rich-cmd="bold" title="加粗"><strong>B</strong></button>
+                <button type="button" data-rich-cmd="italic" title="斜体"><em>I</em></button>
+                <button type="button" data-rich-cmd="underline" title="下划线"><u>U</u></button>
+                <button type="button" data-rich-cmd="formatBlock" data-rich-value="h3" title="小标题">H</button>
+                <button type="button" data-rich-cmd="formatBlock" data-rich-value="p" title="正文">¶</button>
+                <button type="button" data-rich-cmd="insertUnorderedList" title="项目符号">• 列表</button>
+                <button type="button" data-rich-cmd="insertOrderedList" title="编号列表">1. 列表</button>
+                <button type="button" data-rich-cmd="formatBlock" data-rich-value="blockquote" title="引用">引用</button>
+                <button type="button" data-rich-cmd="createLink" title="插入链接">链接</button>
+                <button type="button" data-rich-cmd="removeFormat" title="清除格式">清除</button>
+                <button type="button" id="eventContentImgBtn" title="插入图片">🖼 插入图片</button>
+              </div>
+              <div class="rich-editor" id="eventContentEditor" contenteditable="true" data-placeholder="在这里编辑活动详情……"></div>
+            </label>
             <label class="inline-check"><input type="checkbox" name="is_published" checked /> 立即发布</label>
             <div class="form-actions">
               <button type="submit">保存活动</button>
@@ -789,6 +836,22 @@
             <button type="submit">修改密码</button>
             <p class="status" id="passwordStatus"></p>
           </form>
+        </div>
+      </section>
+
+      <section class="panel" id="mediaPanel">
+        <div class="section-title">
+          <div>
+            <h2>素材库</h2>
+            <p>管理所有上传的图片（新闻封面、首页横幅、正文插图等），可预览和删除。</p>
+          </div>
+          <button id="mediaRefreshBtn" type="button" class="ghost">刷新</button>
+        </div>
+        <div class="table-wrap spaced-table">
+          <table>
+            <thead><tr><th>预览</th><th>文件名</th><th>用途</th><th>大小</th><th>上传时间</th><th>操作</th></tr></thead>
+            <tbody id="mediaRows"><tr><td colspan="6">正在加载……</td></tr></tbody>
+          </table>
         </div>
       </section>
 

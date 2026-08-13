@@ -131,6 +131,7 @@ function setActiveTab(tabName) {
   if (tabName === 'notifications') loadNotificationsAdmin();
   if (tabName === 'companies') loadCompaniesAdmin();
   if (tabName === 'chat') loadChatAdmin();
+  if (tabName === 'media') loadMedia();
 }
 
 tabs.forEach(tab => tab.addEventListener('click', () => setActiveTab(tab.dataset.tab)));
@@ -227,6 +228,7 @@ async function loadHomeContent() {
     homeForm.donate_intro.value = donate.intro || '';
     const heroImg = hero.image || '';
     homeForm.hero_image.value = heroImg;
+    homeForm.hero_mode.value = hero.mode === 'default' ? 'default' : (heroImg ? 'image' : 'default');
     renderCoverPreview('heroImgPreview', heroImg);
     const aboutBody = sections.home_about_body || {};
     const figuresBody = sections.home_figures_body || {};
@@ -273,7 +275,8 @@ homeForm.addEventListener('submit', async (event) => {
       content: {
         title: form.hero_title || '',
         subtitle: form.hero_subtitle || '',
-        image: form.hero_image || ''
+        image: form.hero_image || '',
+        mode: form.hero_mode || 'default'
       }
     }));
     results.push(await saveSection({
@@ -816,6 +819,8 @@ function openNewsEditor(item) {
   document.querySelector('#newsEditorTitle').textContent = item ? '编辑新闻' : '新建新闻';
   newsForm.reset();
   newsStatus.textContent = '';
+  const newsContentEditor = document.getElementById('newsContentEditor');
+  if (newsContentEditor) newsContentEditor.innerHTML = '';
   if (item) {
     newsForm.id.value = item.id;
     newsForm.title.value = item.title || '';
@@ -825,6 +830,7 @@ function openNewsEditor(item) {
     newsForm.cover_url.value = item.cover_url || '';
     renderCoverPreview('newsCoverPreview', newsForm.cover_url.value);
     newsForm.content.value = item.content || '';
+    if (newsContentEditor) newsContentEditor.innerHTML = item.content || '';
     newsForm.is_published.checked = item.is_published !== false;
   }
 }
@@ -925,6 +931,8 @@ function openEventEditor(item) {
   document.querySelector('#eventEditorTitle').textContent = item ? '编辑活动' : '新建活动';
   eventForm.reset();
   eventStatus.textContent = '';
+  const eventContentEditor = document.getElementById('eventContentEditor');
+  if (eventContentEditor) eventContentEditor.innerHTML = '';
   if (item) {
     eventForm.id.value = item.id;
     eventForm.title.value = item.title || '';
@@ -938,6 +946,7 @@ function openEventEditor(item) {
     renderCoverPreview('eventCoverPreview', eventForm.cover_url.value);
     eventForm.summary.value = item.summary || '';
     eventForm.content.value = item.content || '';
+    if (eventContentEditor) eventContentEditor.innerHTML = item.content || '';
     eventForm.is_published.checked = item.is_published !== false;
   }
 }
@@ -1960,6 +1969,136 @@ function bindCoverUpload(btnId, inputName, previewId, form) {
 bindCoverUpload('newsCoverBtn', 'cover_url', 'newsCoverPreview', newsForm);
 bindCoverUpload('eventCoverBtn', 'cover_url', 'eventCoverPreview', eventForm);
 bindCoverUpload('heroImgBtn', 'hero_image', 'heroImgPreview', homeForm);
+
+// 移除已上传的封面/横幅图片（仅清空表单字段，文件可在「素材库」里删除）
+function bindImageRemove(btnId, inputName, previewId, form) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const input = form.querySelector(`input[name="${inputName}"]`);
+    if (input) input.value = '';
+    renderCoverPreview(previewId, '');
+  });
+}
+bindImageRemove('newsCoverRemoveBtn', 'cover_url', 'newsCoverPreview', newsForm);
+bindImageRemove('eventCoverRemoveBtn', 'cover_url', 'eventCoverPreview', eventForm);
+bindImageRemove('heroImgRemoveBtn', 'hero_image', 'heroImgPreview', homeForm);
+
+// ---------- 素材库 ----------
+async function loadMedia() {
+  const rows = document.getElementById('mediaRows');
+  if (!rows) return;
+  rows.innerHTML = '<tr><td colspan="6">正在加载……</td></tr>';
+  try {
+    const data = await api('/api/admin/uploads');
+    const items = data.items || [];
+    if (!items.length) {
+      rows.innerHTML = '<tr><td colspan="6">暂无素材，上传图片后会显示在这里。</td></tr>';
+      return;
+    }
+    rows.innerHTML = items.map((item) => `
+      <tr>
+        <td><img src="${assetUrl('/api/uploads/' + item.id)}" alt="" style="max-width:90px;max-height:60px;border-radius:6px;object-fit:cover" /></td>
+        <td>${escapeHtml(item.filename || item.id)}</td>
+        <td>${escapeHtml(item.purpose || '')}</td>
+        <td>${Math.round((item.size_bytes || 0) / 1024)} KB</td>
+        <td>${escapeHtml(String(item.created_at || '').slice(0, 16).replace('T', ' '))}</td>
+        <td><button class="reject" data-media-delete="${escapeAttr(item.id)}">删除</button></td>
+      </tr>`).join('');
+  } catch (error) {
+    rows.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+const mediaRefreshBtn = document.getElementById('mediaRefreshBtn');
+if (mediaRefreshBtn) mediaRefreshBtn.addEventListener('click', loadMedia);
+const mediaRows = document.getElementById('mediaRows');
+if (mediaRows) {
+  mediaRows.addEventListener('click', async (event) => {
+    const del = event.target.closest('button[data-media-delete]');
+    if (!del) return;
+    if (!confirm('确定删除这个图片吗？引用它的新闻/页面将无法再显示这张图。')) return;
+    del.disabled = true;
+    try {
+      await api(`/api/uploads/${del.dataset.mediaDelete}`, { method: 'DELETE' });
+      await loadMedia();
+    } catch (error) {
+      alert(error.message);
+      del.disabled = false;
+    }
+  });
+}
+
+// ---------- 富文本正文编辑器（新闻/活动详情） ----------
+function initRichEditor(editorId, textareaName, imgBtnId) {
+  const editor = document.getElementById(editorId);
+  if (!editor) return;
+  const form = editor.closest('form');
+  const textarea = form ? form.querySelector(`textarea[name="${textareaName}"]`) : null;
+  const toolbar = editor.parentElement ? editor.parentElement.querySelector('.rich-toolbar') : null;
+  function sync() {
+    if (textarea) textarea.value = editor.innerHTML;
+  }
+  if (toolbar) {
+    toolbar.querySelectorAll('button[data-rich-cmd]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        editor.focus();
+        const cmd = btn.dataset.richCmd;
+        if (cmd === 'createLink') {
+          const url = prompt('请输入链接地址（https://…）：');
+          if (url) document.execCommand('createLink', false, url);
+        } else if (cmd === 'formatBlock') {
+          document.execCommand('formatBlock', false, btn.dataset.richValue || 'p');
+        } else {
+          document.execCommand(cmd, false, null);
+        }
+        sync();
+      });
+    });
+  }
+  const imgBtn = imgBtnId ? document.getElementById(imgBtnId) : null;
+  if (imgBtn) {
+    imgBtn.addEventListener('click', () => {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/jpeg,image/png,image/webp,image/gif';
+      fileInput.onchange = async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) { alert('请选择图片文件'); return; }
+        if (file.size > 5 * 1024 * 1024) { alert('图片不能超过 5MB'); return; }
+        const oldText = imgBtn.textContent;
+        imgBtn.textContent = '上传中……';
+        imgBtn.disabled = true;
+        try {
+          const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result));
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          const data = await api('/api/uploads', { method: 'POST', body: JSON.stringify({ data: base64, filename: file.name, mime_type: file.type, purpose: 'content' }) });
+          const url = data.upload && data.upload.url;
+          if (!url) throw new Error('上传失败');
+          editor.focus();
+          document.execCommand('insertImage', false, assetUrl(url));
+          document.execCommand('insertHTML', false, '<br />');
+          sync();
+        } catch (error) {
+          alert(error.message);
+        } finally {
+          imgBtn.textContent = oldText;
+          imgBtn.disabled = false;
+        }
+      };
+      fileInput.click();
+    });
+  }
+  editor.addEventListener('input', sync);
+  editor.addEventListener('blur', sync);
+  if (form) form.addEventListener('submit', sync, true);
+}
+initRichEditor('newsContentEditor', 'content', 'newsContentImgBtn');
+initRichEditor('eventContentEditor', 'content', 'eventContentImgBtn');
 
 function escapeAttr(value) { return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 const alumniPickSelect = document.getElementById('alumniPickSelect');
