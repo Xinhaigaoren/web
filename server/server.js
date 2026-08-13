@@ -395,6 +395,7 @@ app.post(['/api/alumni/verify', '/api/applications'], async (req, res) => {
       current_city: b.current_city || b.currentCity || null,
       current_county: b.current_county || b.currentCounty || null,
       graduation_year: b.graduation_year || b.graduationYear || null,
+      enrollment_year: b.enrollment_year || b.enrollmentYear || null,
       class_name: b.class_name || b.className || b.class || null,
       homeroom_teacher: b.homeroom_teacher || b.teacher || b.classTeacher || null,
       school_year: b.school_year || b.schoolYear || null,
@@ -412,13 +413,13 @@ app.post(['/api/alumni/verify', '/api/applications'], async (req, res) => {
       `insert into public.alumni_verifications
        (applicant_type,name,phone,gender,id_tail,province,city,county,current_province,current_city,current_county,
         graduation_year,class_name,homeroom_teacher,school_year,current_school,university_graduated,
-        chsi_proof_url,student_card_url,admission_notice_url,extra_materials,consent_personal_info,consent_material_review)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+        chsi_proof_url,student_card_url,admission_notice_url,extra_materials,consent_personal_info,consent_material_review,enrollment_year)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
        returning *`,
       [
         row.applicant_type,row.name,row.phone,row.gender,row.id_tail,row.province,row.city,row.county,row.current_province,row.current_city,row.current_county,
         row.graduation_year,row.class_name,row.homeroom_teacher,row.school_year,row.current_school,row.university_graduated,
-        row.chsi_proof_url,row.student_card_url,row.admission_notice_url,row.extra_materials,row.consent_personal_info,row.consent_material_review
+        row.chsi_proof_url,row.student_card_url,row.admission_notice_url,row.extra_materials,row.consent_personal_info,row.consent_material_review,row.enrollment_year
       ]
     );
     return ok(res, { application: r.rows[0], verification: r.rows[0], message: '校友认证资料已提交，等待审核' });
@@ -474,14 +475,14 @@ app.patch(['/api/applications/:id/status', '/api/admin/applications/:id/status',
       await dbQuery(
         `insert into public.alumni_profiles
          (user_id, verification_id, name, phone, province, city, county, current_province, current_city, current_county,
-          graduation_year, class_name, homeroom_teacher)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+          graduation_year, class_name, homeroom_teacher, enrollment_year)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
          on conflict (user_id) do update set
           verification_id=excluded.verification_id, name=excluded.name, province=excluded.province, city=excluded.city, county=excluded.county,
           current_province=excluded.current_province, current_city=excluded.current_city, current_county=excluded.current_county,
-          graduation_year=excluded.graduation_year, class_name=excluded.class_name, homeroom_teacher=excluded.homeroom_teacher,
+          graduation_year=excluded.graduation_year, class_name=excluded.class_name, homeroom_teacher=excluded.homeroom_teacher, enrollment_year=excluded.enrollment_year,
           status='active', updated_at=now()`,
-        [userId, v.id, v.name, v.phone, v.province, v.city, v.county, v.current_province, v.current_city, v.current_county, v.graduation_year, v.class_name, v.homeroom_teacher]
+        [userId, v.id, v.name, v.phone, v.province, v.city, v.county, v.current_province, v.current_city, v.current_county, v.graduation_year, v.class_name, v.homeroom_teacher, v.enrollment_year]
       );
     }
 
@@ -511,16 +512,18 @@ app.get('/api/alumni/directory', requireAuth, async (req, res) => {
     if (!['alumni', 'admin', 'super_admin'].includes(role)) return fail(res, 403, '完成校友认证后才可查看通讯录');
     const { province, city, county, year, q } = req.query;
     const params = [];
-    const wheres = [`status='active'`];
-    if (province) { params.push(province); wheres.push(`province=$${params.length}`); }
-    if (city) { params.push(city); wheres.push(`city=$${params.length}`); }
-    if (county) { params.push(county); wheres.push(`county=$${params.length}`); }
-    if (year) { params.push(Number(year)); wheres.push(`graduation_year=$${params.length}`); }
-    if (q) { params.push(`%${q}%`); wheres.push(`(name ilike $${params.length} or class_name ilike $${params.length} or company ilike $${params.length})`); }
+    const wheres = [`p.status='active'`];
+    if (province) { params.push(province); wheres.push(`p.province=$${params.length}`); }
+    if (city) { params.push(city); wheres.push(`p.city=$${params.length}`); }
+    if (county) { params.push(county); wheres.push(`p.county=$${params.length}`); }
+    if (year) { params.push(Number(year)); wheres.push(`p.graduation_year=$${params.length}`); }
+    if (q) { params.push(`%${q}%`); wheres.push(`(p.name ilike $${params.length} or p.class_name ilike $${params.length} or p.company ilike $${params.length})`); }
     const r = await dbQuery(
-      `select id,user_id,name,province,city,county,current_province,current_city,current_county,graduation_year,class_name,industry,company,position_title,
-              case when public_contact then phone else null end as phone
-       from public.alumni_profiles
+      `select p.id,p.user_id,p.name,p.province,p.city,p.county,p.current_province,p.current_city,p.current_county,p.graduation_year,p.enrollment_year,p.class_name,p.homeroom_teacher,p.industry,p.company,p.position_title,p.bio,
+              case when p.public_contact then p.phone else null end as phone,
+              case when p.public_contact then u.email else null end as email
+       from public.alumni_profiles p
+       left join public.app_users u on u.id = p.user_id
        where ${wheres.join(' and ')}
        order by graduation_year desc nulls last, name asc
        limit 500`,
@@ -868,6 +871,12 @@ function getOptionalUser(req) {
   const token = getBearer(req);
   if (!token) return null;
   try { return jwt.verify(token, TOKEN_SECRET); } catch { return null; }
+}
+
+async function ensureAlumniProfileExtras() {
+  if (!pool) return;
+  await dbQuery(`alter table public.alumni_profiles add column if not exists enrollment_year text`).catch(() => {});
+  await dbQuery(`alter table public.alumni_verifications add column if not exists enrollment_year text`).catch(() => {});
 }
 
 async function ensureContentTables() {
@@ -1295,9 +1304,10 @@ app.put('/api/alumni/me', requireAuth, async (req, res) => {
         industry=$1, company=$2, position_title=$3, wechat=$4, bio=$5,
         avatar_url=$6, public_contact=$7,
         current_province=coalesce($8, current_province), current_city=coalesce($9, current_city),
+        enrollment_year=coalesce($11, enrollment_year), graduation_year=coalesce($12, graduation_year),
         updated_at=now()
        where user_id=$10 returning *`,
-      [b.industry || null, b.company || null, b.position_title || null, b.wechat || null, b.bio || null, b.avatar_url || null, b.public_contact === true, b.current_province || null, b.current_city || null, req.user.user_id]
+      [b.industry || null, b.company || null, b.position_title || null, b.wechat || null, b.bio || null, b.avatar_url || null, b.public_contact === true, b.current_province || null, b.current_city || null, req.user.user_id, b.enrollment_year || null, b.graduation_year || null]
     );
     return ok(res, { profile: r.rows[0], message: '资料已更新' });
   } catch (e) {
@@ -2979,6 +2989,7 @@ bootstrapSchema()
   .then(() => ensureContentTables())
   .then(() => ensureUserTableExtras())
   .then(() => ensurePasswordResetTable())
+  .then(() => ensureAlumniProfileExtras())
   .then(() => ensurePhase2Tables())
   .then(() => ensureSitePagesSeed())
   .then(() => ensureSiteSectionsSeed())

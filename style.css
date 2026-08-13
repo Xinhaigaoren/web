@@ -115,6 +115,16 @@ time { color: var(--accent); font-weight: 700; font-size: 14px; }
 .story-grid a.story-link:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(23,32,51,.08); }
 .story-grid a.story-link h3 { margin: 10px 0 10px; color: var(--deep); font-size: 21px; }
 .story-grid a.story-link p { margin: 0; color: var(--muted); }
+.alumni-card-more { margin-top: 12px; color: var(--accent); font-size: 13px; font-weight: 700; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.55); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 20px; }
+.modal-card { background: #fff; border-radius: 16px; max-width: 540px; width: 100%; max-height: 86vh; overflow: auto; padding: 28px; position: relative; box-shadow: 0 24px 60px rgba(23,32,51,.25); }
+.modal-close { position: absolute; top: 12px; right: 16px; border: 0; background: none; font-size: 28px; line-height: 1; cursor: pointer; color: var(--muted); }
+.modal-detail-head { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.modal-detail-head .alumni-avatar { width: 56px; height: 56px; font-size: 24px; }
+.modal-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+.modal-detail-grid .item small { color: var(--muted); display: block; margin-bottom: 2px; }
+.modal-detail-grid .item strong { color: var(--deep); word-break: break-all; }
+@media (max-width: 640px) { .modal-detail-grid { grid-template-columns: 1fr; } }
 .avatar { width: 62px; height: 62px; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(135deg, var(--deep), var(--accent)); color: #fff; font-size: 24px; font-weight: 800; margin-bottom: 24px; }
 
 .services { background: linear-gradient(135deg, #142849, #203a63); color: #fff; }
