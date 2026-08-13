@@ -137,8 +137,12 @@
 /* 关于 / 联系页面 */
 .rich-text { max-width: 860px; margin: 0 auto; color: #2b3648; line-height: 1.9; }
 .rich-text h2 { color: var(--deep); margin: 34px 0 14px; }
+.rich-text h3 { color: var(--deep); margin: 26px 0 12px; }
 .rich-text p { margin: 0 0 16px; }
 .rich-text ul { padding-left: 22px; margin: 0 0 16px; }
+.rich-text blockquote { border-left: 4px solid var(--accent); background: var(--soft); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 0 0 16px; color: var(--muted); }
+.rich-text img { max-width: 100%; border-radius: 12px; margin: 8px 0; }
+.rich-text a { color: var(--accent); }
 .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .contact-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 26px; text-align: center; }
 .contact-card h3 { margin: 0 0 8px; color: var(--deep); }

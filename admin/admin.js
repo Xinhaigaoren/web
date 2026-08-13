@@ -1531,6 +1531,10 @@ async function loadPageEditor() {
     }
     pageEditorSectionsBox.innerHTML = sections.map((s) => renderPageEditorSection(s)).join('');
     pageEditorSectionsBox.querySelectorAll('form').forEach((form) => form.addEventListener('submit', savePageSection));
+    // 整页正文区块初始化富文本编辑器（支持排版、插入图片）
+    pageEditorSectionsBox.querySelectorAll('.rich-editor').forEach((editor) => {
+      initRichEditor(editor.id, 'html', `${editor.id}_img`);
+    });
   } catch (error) {
     pageEditorSectionsBox.innerHTML = `<p class="status">${escapeHtml(error.message)}</p>`;
   }
@@ -1538,6 +1542,38 @@ async function loadPageEditor() {
 
 function renderPageEditorSection(section) {
   const content = safeJson(section.content);
+  const keys = Object.keys(content);
+  // 整页正文区块（如介绍页正文）用富文本编辑器排版
+  if (keys.length === 1 && keys[0] === 'html') {
+    const editorId = `pageRich_${section.section_key}`;
+    const imgBtnId = `${editorId}_img`;
+    return `
+      <form class="editor-form" data-section-key="${escapeHtml(section.section_key)}" data-section-name="${escapeHtml(section.section_name || section.section_key)}">
+        <fieldset>
+          <legend>${escapeHtml(section.section_name || section.section_key)} <code>${escapeHtml(section.section_key)}</code></legend>
+          <p style="margin:0 0 10px;color:var(--muted);font-size:13px">支持标题、加粗、列表、引用排版，可上传插入图片。</p>
+          <div class="rich-toolbar">
+            <button type="button" data-rich-cmd="bold" title="加粗"><strong>B</strong></button>
+            <button type="button" data-rich-cmd="italic" title="斜体"><em>I</em></button>
+            <button type="button" data-rich-cmd="underline" title="下划线"><u>U</u></button>
+            <button type="button" data-rich-cmd="formatBlock" data-rich-value="h3" title="小标题">H</button>
+            <button type="button" data-rich-cmd="formatBlock" data-rich-value="p" title="正文">¶</button>
+            <button type="button" data-rich-cmd="insertUnorderedList" title="项目符号">• 列表</button>
+            <button type="button" data-rich-cmd="insertOrderedList" title="编号列表">1. 列表</button>
+            <button type="button" data-rich-cmd="formatBlock" data-rich-value="blockquote" title="引用">引用</button>
+            <button type="button" data-rich-cmd="createLink" title="插入链接">链接</button>
+            <button type="button" data-rich-cmd="removeFormat" title="清除格式">清除</button>
+            <button type="button" id="${imgBtnId}" title="插入图片">图片</button>
+          </div>
+          <div class="rich-editor" id="${editorId}" contenteditable="true" data-placeholder="在这里编辑正文，支持标题、加粗、列表、引用和插入图片……">${content.html || ''}</div>
+          <textarea name="html" hidden></textarea>
+          <div class="form-actions" style="margin-top:12px">
+            <button type="submit">保存</button>
+          </div>
+          <p class="status"></p>
+        </fieldset>
+      </form>`;
+  }
   const fields = Object.keys(content)
     .map((k) => pageFieldInput(k, content[k]))
     .filter(Boolean)
@@ -1548,7 +1584,7 @@ function renderPageEditorSection(section) {
         <legend>${escapeHtml(section.section_name || section.section_key)} <code>${escapeHtml(section.section_key)}</code></legend>
         <div class="field-stack">${fields}</div>
         <div class="form-actions" style="margin-top:12px">
-          <button type="submit">保存（立即发布）</button>
+          <button type="submit">保存</button>
         </div>
         <p class="status"></p>
       </fieldset>
