@@ -176,7 +176,7 @@ function materialLinks(item) {
       if (url) links.push([`补充材料${index + 1}`, url]);
     });
   }
-  if (!links.length) return '未上传';
+  if (!links.length) return '—';
   return `<div class="material-list">${links.map(([label, url]) => `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>`).join('')}</div>`;
 }
 

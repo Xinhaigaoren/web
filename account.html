@@ -133,15 +133,7 @@
                     <div class="field"><label>班主任</label><input name="homeroom_teacher" placeholder="选填" /></div>
                     <div class="field"><label>大学（选填）</label><input name="university_graduated" placeholder="最高学历院校" /></div>
                   </div>
-                  <h3 style="color:var(--deep);margin:10px 0 12px">证明材料（隐私保护：仅管理员可见）</h3>
-                  <div class="field">
-                    <label>学信网截图 *</label>
-                    <div class="upload-box" data-upload="chsi" tabindex="0">点击选择「学信网」学历/学籍截图（JPG/PNG，≤5MB）</div>
-                    <div class="upload-preview" data-preview="chsi"></div>
-                    <input type="hidden" name="chsi_proof_url" />
-                  </div>
                   <label class="consent-line"><input type="checkbox" name="consent_personal_info" checked /> 我同意校友会为认证目的收集并审核上述个人信息，仅用于校友身份核验。</label>
-                  <label class="consent-line"><input type="checkbox" name="consent_material_review" checked /> 我同意管理员查看证明材料进行审核。</label>
                   <div class="form-actions">
                     <button class="btn primary" type="submit">提交认证</button>
                     <span class="form-tip">提交后由管理员审核，通过后开放校友名录。</span>
@@ -470,11 +462,6 @@
         verifyStatus.className = 'form-status';
         const formData = new FormData(verifyForm);
         const body = Object.fromEntries(formData.entries());
-        if (!body.chsi_proof_url) {
-          verifyStatus.textContent = '请先上传学信网截图';
-          verifyStatus.className = 'form-status error';
-          return;
-        }
         try {
           const data = await XH.api('/api/alumni/verify', { method: 'POST', body: JSON.stringify(body) });
           verifyStatus.textContent = data.message || '认证资料已提交，等待审核';
@@ -577,7 +564,6 @@
           document.getElementById('notifyList').innerHTML = `<div class="empty-state">${XH.escapeHtml(error.message)}</div>`;
         }
       }
-      bindUpload('[data-upload="chsi"]', 'chsi_proof_url');
       handleWechatCallback();
       // 支持首页「加入新海高人」直达注册 / 登录
       if (location.hash === '#register') switchAuthTab('register');
