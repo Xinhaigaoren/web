@@ -1149,16 +1149,27 @@ app.post('/api/events/:id/register', async (req, res) => {
       if (cnt.rows[0].c >= event.capacity) return fail(res, 400, '活动名额已满');
     }
     const me = getOptionalUser(req);
-    const r = await dbQuery(
-      `insert into public.event_registrations (event_id, user_id, name, phone, email, remark, status)
-       values ($1,$2,$3,$4,$5,$6,'registered')
-       on conflict (event_id, phone) do update set name=excluded.name, email=excluded.email, remark=excluded.remark, updated_at=now()
-       returning *`,
-      [event.id, me?.user_id || null, name, phone, b.email || null, b.remark || null]
+    const email = b.email || null;
+    const remark = b.remark || null;
+    const duplicate = await dbQuery(
+      `select id from public.event_registrations where event_id=$1 and phone=$2 limit 1`,
+      [event.id, phone]
     );
+    const r = duplicate.rows[0]
+      ? await dbQuery(
+          `update public.event_registrations set name=$2, email=$3, remark=$4, updated_at=now()
+           where id=$1 returning *`,
+          [duplicate.rows[0].id, name, email, remark]
+        )
+      : await dbQuery(
+          `insert into public.event_registrations (event_id, user_id, name, phone, email, remark, status)
+           values ($1,$2,$3,$4,$5,$6,'registered')
+           returning *`,
+          [event.id, me?.user_id || null, name, phone, email, remark]
+        );
     return ok(res, { registration: r.rows[0], message: '报名成功，期待与你在活动中相见' });
   } catch (e) {
-    return fail(res, 500, '报名失败', { error: e.message });
+    return fail(res, 500, `报名失败：${e.message}`, { error: e.message });
   }
 });
 
