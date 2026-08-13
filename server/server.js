@@ -228,15 +228,16 @@ app.post(['/api/admin/login', '/api/login'], async (req, res) => {
        from public.app_users u
        join public.admin_accounts a on a.user_id=u.id
        where u.phone=$1 or u.email=$1
-       limit 1`,
+       order by (u.email is not null) desc, (u.password_hash is not null) desc, u.id asc`,
       [loginName]
     );
-    const user = r.rows[0];
+    let user = null;
+    for (const row of r.rows) {
+      if (!row.password_hash) continue;
+      if (row.status !== 'active' || row.admin_status !== 'approved') continue;
+      if (await bcrypt.compare(password, row.password_hash)) { user = row; break; }
+    }
     if (!user) return fail(res, 401, '账号或密码错误');
-    if (user.status !== 'active' || user.admin_status !== 'approved') return fail(res, 403, '管理员账号未审批或已禁用');
-    if (!user.password_hash) return fail(res, 401, '该管理员暂未设置密码');
-    const matched = await bcrypt.compare(password, user.password_hash);
-    if (!matched) return fail(res, 401, '账号或密码错误');
     const token = signToken(user);
     await audit({ ...req, user }, 'admin_login', 'admin_account', user.admin_id, { loginName });
     return ok(res, { token, user: { name: user.display_name, role: user.role, admin_level: user.admin_level } });
@@ -278,19 +279,22 @@ app.post(['/api/auth/register', '/api/alumni/register'], async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const loginName = normalizeEmail(req.body?.email || req.body?.username || req.body?.phone);
-    const password = String(req.body?.password || '');
+    const password = String(req.body?.password || '').trim();
     if (!loginName || !password) return fail(res, 400, '请输入邮箱/账号和密码');
     const r = await dbQuery(
       `select id as user_id, display_name, email, phone, role, status, password_hash
        from public.app_users
        where lower(email)=lower($1) or phone=$1
-       limit 1`,
+       order by (email is not null) desc, (password_hash is not null) desc, id asc`,
       [loginName]
     );
-    const user = r.rows[0];
-    if (!user || !user.password_hash) return fail(res, 401, '账号或密码错误');
-    const matched = await bcrypt.compare(password, user.password_hash);
-    if (!matched) return fail(res, 401, '账号或密码错误');
+    // 同一人可能因认证流程拆成多个账号行（邮箱行 + 手机号行），逐个尝试密码，任一匹配即登录
+    let user = null;
+    for (const row of r.rows) {
+      if (!row.password_hash) continue;
+      if (await bcrypt.compare(password, row.password_hash)) { user = row; break; }
+    }
+    if (!user) return fail(res, 401, '账号或密码错误');
     if (!['active', 'pending'].includes(user.status)) return fail(res, 403, '账号已禁用或审核未通过');
     const token = signToken({ ...user, admin_id: null, admin_level: null });
     await dbQuery(`update public.app_users set last_login_at=now(), updated_at=now() where id=$1`, [user.user_id]).catch(() => {});
@@ -1719,7 +1723,15 @@ app.post('/api/auth/reset-password', async (req, res) => {
     if (new Date(row.expires_at) < new Date()) return fail(res, 400, '激活码已过期，请重新获取');
     const finalPassword = customPassword.length >= 8 ? customPassword : makeRandomPassword();
     const hash = await bcrypt.hash(finalPassword, 10);
-    await dbQuery(`update public.app_users set password_hash=$1, updated_at=now() where id=$2`, [hash, row.user_id]);
+    const userInfo = await dbQuery(`select email, phone from public.app_users where id=$1 limit 1`, [row.user_id]);
+    // 同步到同一人的所有账号行（邮箱行 + 手机号行），保证用邮箱或手机号都能登录
+    await dbQuery(
+      `update public.app_users set password_hash=$1, updated_at=now()
+       where id=$2
+          or (email is not null and lower(email)=lower($3))
+          or (phone is not null and phone=$4)`,
+      [hash, row.user_id, userInfo.rows[0]?.email || email, userInfo.rows[0]?.phone || null]
+    );
     await dbQuery(`update public.password_resets set used=true, updated_at=now() where id=$1`, [row.id]);
     return ok(res, { default_password: finalPassword, message: '激活成功！请用「邮箱 + 默认密码」登录，登录后可在个人中心修改密码。' });
   } catch (e) {
@@ -1740,7 +1752,15 @@ app.post('/api/auth/change-password', requireAuth, async (req, res) => {
       if (!matched) return fail(res, 401, '原密码不正确');
     }
     const hash = await bcrypt.hash(password, 10);
-    await dbQuery(`update public.app_users set password_hash=$1, updated_at=now() where id=$2`, [hash, req.user.user_id]);
+    const userInfo = await dbQuery(`select email, phone from public.app_users where id=$1 limit 1`, [req.user.user_id]);
+    // 修改密码同样同步到同一人的所有账号行
+    await dbQuery(
+      `update public.app_users set password_hash=$1, updated_at=now()
+       where id=$2
+          or (email is not null and lower(email)=lower($3))
+          or (phone is not null and phone=$4)`,
+      [hash, req.user.user_id, userInfo.rows[0]?.email || '', userInfo.rows[0]?.phone || null]
+    );
     await audit(req, 'user_change_password', 'app_user', req.user.user_id, {});
     return ok(res, { message: '密码已修改，下次登录请使用新密码' });
   } catch (e) {

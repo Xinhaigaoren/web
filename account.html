@@ -127,6 +127,9 @@
                 <div id="forgotPwdBox" hidden style="text-align:center;margin:10px 0;padding:16px;border:1px dashed var(--accent);border-radius:12px;background:rgba(59,130,246,.06)">
                   <p class="form-tip">激活成功！请用「邮箱 + 默认密码」登录</p>
                   <p id="forgotPwdText" style="font-size:22px;font-weight:700;color:var(--accent);letter-spacing:2px;word-break:break-all"></p>
+                  <div class="form-actions" style="justify-content:center">
+                    <button type="button" id="copyPwdBtn" class="btn ghost">复制默认密码</button>
+                  </div>
                   <p class="form-tip">登录后到「个人中心 → 修改密码」改成自己的密码。</p>
                 </div>
                 <p class="form-status" id="forgotStatus" role="status" aria-live="polite"></p>
@@ -382,9 +385,11 @@
         loginStatus.className = 'form-status';
         try {
           const method = currentLoginMethod();
-          const data = method === 'code'
-            ? await XH.api('/api/auth/code-login', { method: 'POST', body: JSON.stringify({ email: document.getElementById('loginCodeEmail').value, code: document.getElementById('loginCode').value }) })
-            : await XH.api('/api/auth/login', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(loginForm).entries())) });
+          const body = method === 'code'
+            ? { email: document.getElementById('loginCodeEmail').value, code: document.getElementById('loginCode').value }
+            : Object.fromEntries(new FormData(loginForm).entries());
+          if (body.password) body.password = String(body.password).trim();
+          const data = await XH.api(method === 'code' ? '/api/auth/code-login' : '/api/auth/login', { method: 'POST', body: JSON.stringify(body) });
           XH.store.setToken(data.token);
           XH.store.setUser(data.user || {});
           await loadCenter();
@@ -584,6 +589,7 @@
       const forgotStatus = document.getElementById('forgotStatus');
       const forgotLink = document.getElementById('forgotLink');
       const backToLoginBtn = document.getElementById('backToLoginBtn');
+      let autoReturnTimer = null;
       if (forgotLink) {
         forgotLink.addEventListener('click', (event) => {
           event.preventDefault();
@@ -595,6 +601,7 @@
       }
       if (backToLoginBtn) {
         backToLoginBtn.addEventListener('click', () => {
+          clearTimeout(autoReturnTimer);
           forgotView.hidden = true;
           loginForm.hidden = false;
         });
@@ -627,7 +634,24 @@
           }
         });
       }
+      const copyPwdBtn = document.getElementById('copyPwdBtn');
+      if (copyPwdBtn) {
+        copyPwdBtn.addEventListener('click', async () => {
+          const pwdText = document.getElementById('forgotPwdText');
+          const value = pwdText ? pwdText.textContent : '';
+          if (!value) return;
+          try {
+            await navigator.clipboard.writeText(value);
+            copyPwdBtn.textContent = '已复制 ✓';
+            setTimeout(() => { copyPwdBtn.textContent = '复制默认密码'; }, 2000);
+          } catch (error) {
+            XH.toast('复制失败，请手动选择密码复制', 'error');
+          }
+        });
+      }
       if (forgotForm) {
+        let pendingEmail = '';
+        let pendingDefaultPassword = '';
         forgotForm.addEventListener('submit', async (event) => {
           event.preventDefault();
           forgotStatus.textContent = '正在提交……';
@@ -643,8 +667,17 @@
             forgotForm.querySelector('button[type="submit"]').disabled = true;
             document.getElementById('forgotToken').disabled = true;
             forgotStatus.className = 'form-status success';
+            pendingEmail = String(document.getElementById('forgotEmail').value || '').trim();
+            pendingDefaultPassword = data.default_password || '';
             forgotForm.reset();
-            setTimeout(() => backToLoginBtn.click(), 1500);
+            // 稍后自动返回登录页，并自动填入邮箱与默认密码，避免手输/复制出错
+            autoReturnTimer = setTimeout(() => {
+              const loginNameInput = document.getElementById('loginName');
+              const loginPasswordInput = document.getElementById('loginPassword');
+              if (loginNameInput && pendingEmail) loginNameInput.value = pendingEmail;
+              if (loginPasswordInput && pendingDefaultPassword) loginPasswordInput.value = pendingDefaultPassword;
+              backToLoginBtn.click();
+            }, 20000);
           } catch (error) {
             forgotStatus.textContent = error.message;
             forgotStatus.className = 'form-status error';
