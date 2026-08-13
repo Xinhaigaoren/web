@@ -169,14 +169,15 @@ async function loadApplications() {
       rows.innerHTML = '<tr><td colspan="7">暂无申请</td></tr>';
       return;
     }
+    const accountStatusMap = { active: '启用', pending: '待审核', disabled: '已停用' };
     rows.innerHTML = items.map(item => `
       <tr>
         <td>${escapeHtml(item.name)}</td>
         <td>${escapeHtml(applicantTypeText(item.applicant_type))}<br>${escapeHtml(item.graduation_year || item.school_year || '')} ${escapeHtml(item.class_name || '')}<br>${escapeHtml(item.homeroom_teacher || '')}</td>
         <td>${escapeHtml([item.province, item.city, item.county].filter(Boolean).join(' / '))}<br>${escapeHtml([item.current_province, item.current_city, item.current_county].filter(Boolean).join(' / '))}</td>
-        <td>${escapeHtml(item.phone || '')}<br>${escapeHtml(item.email || '')}</td>
+        <td>${escapeHtml(item.phone || '')}<br>${escapeHtml(item.account_email || item.email || '')}</td>
         <td>${materialLinks(item)}</td>
-        <td><span class="badge ${escapeHtml(item.status)}">${statusText(item.status)}</span></td>
+        <td><span class="badge ${escapeHtml(item.status)}">${statusText(item.status)}</span>${item.account_status ? `<br><small>账号：${accountStatusMap[item.account_status] || item.account_status}</small>` : ''}</td>
         <td>
           <div class="row-actions">
             <button class="approve" data-review-id="${item.id}" data-status="approved">通过</button>
@@ -1209,7 +1210,7 @@ function userRoleText(role) {
 async function loadUsers(page = 1) {
   userPage = page;
   if (!userRows) return;
-  userRows.innerHTML = '<tr><td colspan="6">正在加载……</td></tr>';
+  userRows.innerHTML = '<tr><td colspan="7">正在加载……</td></tr>';
   const q = userSearch ? userSearch.value.trim() : '';
   const params = new URLSearchParams({ page, pageSize: 20 });
   if (q) params.set('q', q);
@@ -1217,13 +1218,16 @@ async function loadUsers(page = 1) {
     const data = await api(`/api/admin/users?${params.toString()}`);
     const items = data.items || [];
     if (!items.length) {
-      userRows.innerHTML = '<tr><td colspan="6">暂无用户</td></tr>';
+      userRows.innerHTML = '<tr><td colspan="7">暂无用户</td></tr>';
       userPagination.innerHTML = '';
       return;
     }
+    const verifyMap = { approved: '已认证', rejected: '已拒绝', pending: '待审核', need_more_info: '需补充材料' };
     userRows.innerHTML = items.map(item => {
       const isRoot = item.phone === 'ROOT_ADMIN' || item.admin_level === 'super_admin';
       const statusClass = { active: 'approved', disabled: 'rejected', pending: 'pending' }[item.status] || 'draft';
+      const vStatus = item.verification_status || '';
+      const verifyClass = { approved: 'approved', rejected: 'rejected', pending: 'pending', need_more_info: 'need_more_info' }[vStatus] || 'draft';
       const source = item.wechat_openid ? '微信用户' : '';
       return `
         <tr>
@@ -1231,6 +1235,7 @@ async function loadUsers(page = 1) {
           <td>${escapeHtml(item.phone || '')}<br>${escapeHtml(item.email || '')}</td>
           <td>${userRoleText(item.role)}${item.admin_level ? `<br><small>${adminLevelText(item.admin_level)}</small>` : ''}</td>
           <td><span class="badge ${statusClass}">${statusText(item.status)}</span></td>
+          <td><span class="badge ${verifyClass}">${verifyMap[vStatus] || '未申请认证'}</span></td>
           <td>${escapeHtml(String(item.created_at || '').slice(0, 10))}</td>
           <td>
             <div class="row-actions">
@@ -1249,7 +1254,7 @@ async function loadUsers(page = 1) {
     }
     userPagination.innerHTML = html;
   } catch (error) {
-    userRows.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+    userRows.innerHTML = `<tr><td colspan="7">${escapeHtml(error.message)}</td></tr>`;
   }
 }
 

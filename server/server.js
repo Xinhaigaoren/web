@@ -455,7 +455,12 @@ app.get(['/api/applications', '/api/admin/applications', '/api/admin/alumni/veri
     let where = '';
     if (status) { params.push(status); where = `where status=$1`; }
     const r = await dbQuery(
-      `select * from public.alumni_verifications ${where} order by created_at desc limit 500`,
+      `select v.*, u.email as account_email, u.status as account_status, u.role as account_role
+       from public.alumni_verifications v
+       left join public.app_users u on u.phone = v.phone
+       ${where ? where.replace('status=', 'v.status=') : ''}
+       order by v.created_at desc
+       limit 500`,
       params
     );
     return ok(res, { applications: r.rows, verifications: r.rows, items: r.rows });
@@ -509,16 +514,13 @@ app.patch(['/api/applications/:id/status', '/api/admin/applications/:id/status',
         [userId, v.id, v.name, v.phone, v.province, v.city, v.county, v.current_province, v.current_city, v.current_county, v.graduation_year, v.class_name, v.homeroom_teacher, v.enrollment_year]
       );
     } else if (status === 'rejected') {
-      // 拒绝认证：解除该用户全部权限——账号停用、档案下线，之后无法登录和访问会员功能
+      // 拒绝认证：停止校友权限并删除个人信息（档案），账号保留可登录查看认证状态
       const v = updated.rows[0];
       await dbQuery(
-        `update public.app_users set role='pending_alumni', status='disabled', updated_at=now() where phone=$1`,
+        `update public.app_users set role='pending_alumni', status='active', updated_at=now() where phone=$1`,
         [v.phone]
       ).catch(() => {});
-      await dbQuery(
-        `update public.alumni_profiles set status='disabled', updated_at=now() where phone=$1`,
-        [v.phone]
-      ).catch(() => {});
+      await dbQuery(`delete from public.alumni_profiles where phone=$1`, [v.phone]).catch(() => {});
     }
 
     // 让受影响用户的实时状态缓存立即失效
@@ -1539,7 +1541,8 @@ app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
     const r = await dbQuery(
       `select u.id, u.display_name, u.email, u.phone, u.role, u.status, u.created_at, u.last_login_at, u.wechat_openid,
               a.admin_level, a.status as admin_status,
-              p.graduation_year, p.class_name
+              p.graduation_year, p.class_name,
+              (select v.status from public.alumni_verifications v where v.phone = u.phone order by v.created_at desc limit 1) as verification_status
        from public.app_users u
        left join public.admin_accounts a on a.user_id = u.id
        left join public.alumni_profiles p on p.user_id = u.id
@@ -1572,6 +1575,10 @@ app.patch('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) =>
        where id=$3 returning id, display_name, role, status`,
       [b.role || null, b.status || null, id]
     );
+    // 「取消认证」时同步删除校友档案，保证不再出现在名录/搜索/地图
+    if (b.role === 'pending_alumni') {
+      await dbQuery(`delete from public.alumni_profiles where user_id=$1`, [id]).catch(() => {});
+    }
     clearUserAuthCache([Number(id)]);
     await audit(req, 'user_update', 'app_user', id, { role: b.role, status: b.status });
     return ok(res, { user: r.rows[0], message: '用户信息已更新' });

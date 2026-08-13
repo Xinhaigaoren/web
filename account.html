@@ -431,16 +431,26 @@
           const data = await XH.api('/api/alumni/me');
           renderCertOverview(data);
           const profile = data.profile || {};
-          Object.keys({ industry: 1, company: 1, position_title: 1, wechat: 1, current_province: 1, current_city: 1, bio: 1 }).forEach((key) => {
-            const input = profileForm.querySelector(`[name="${key}"]`);
-            if (input) input.value = profile[key] || '';
-          });
-          const ey = profileForm.querySelector('[name="enrollment_year"]');
-          if (ey) ey.value = profile.enrollment_year || '';
-          const gy = profileForm.querySelector('[name="graduation_year"]');
-          if (gy) gy.value = profile.graduation_year || '';
-          const pub = profileForm.querySelector('[name="public_contact"]');
-          if (pub) pub.checked = Boolean(profile.public_contact);
+          const latest = (data.verifications || [])[0];
+          const rejected = latest && latest.status === 'rejected';
+          if (rejected) {
+            // 认证被拒绝：仅显示认证状态，隐藏个人信息编辑
+            profileForm.hidden = true;
+            profileStatus.textContent = '认证未通过，个人信息已隐藏。如需重新申请，请在上方重新提交认证资料，或联系管理员。';
+            profileStatus.className = 'form-status error';
+          } else {
+            profileForm.hidden = false;
+            Object.keys({ industry: 1, company: 1, position_title: 1, wechat: 1, current_province: 1, current_city: 1, bio: 1 }).forEach((key) => {
+              const input = profileForm.querySelector(`[name="${key}"]`);
+              if (input) input.value = profile[key] || '';
+            });
+            const ey = profileForm.querySelector('[name="enrollment_year"]');
+            if (ey) ey.value = profile.enrollment_year || '';
+            const gy = profileForm.querySelector('[name="graduation_year"]');
+            if (gy) gy.value = profile.graduation_year || '';
+            const pub = profileForm.querySelector('[name="public_contact"]');
+            if (pub) pub.checked = Boolean(profile.public_contact);
+          }
         } catch (error) {
           if (error.status === 401) {
             XH.store.clearAuth();
