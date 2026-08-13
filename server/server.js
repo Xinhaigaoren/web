@@ -493,10 +493,22 @@ app.patch(['/api/applications/:id/status', '/api/admin/applications/:id/status',
   }
 });
 
+// 实时读取数据库中的最新角色：认证通过后无需重新登录即可解锁会员模块
+async function currentRole(req) {
+  if (!req.user || !req.user.user_id) return req.user ? (req.user.role || null) : null;
+  try {
+    const r = await dbQuery(`select role from public.app_users where id=$1 limit 1`, [req.user.user_id]);
+    return r.rows[0] ? r.rows[0].role : (req.user.role || null);
+  } catch (e) {
+    return req.user.role || null;
+  }
+}
+
 // 校友通讯录：已认证校友和管理员可看
 app.get('/api/alumni/directory', requireAuth, async (req, res) => {
   try {
-    if (!['alumni', 'admin', 'super_admin'].includes(req.user.role)) return fail(res, 403, '完成校友认证后才可查看通讯录');
+    const role = await currentRole(req);
+    if (!['alumni', 'admin', 'super_admin'].includes(role)) return fail(res, 403, '完成校友认证后才可查看通讯录');
     const { province, city, county, year, q } = req.query;
     const params = [];
     const wheres = [`status='active'`];
