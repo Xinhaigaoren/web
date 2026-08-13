@@ -140,10 +140,42 @@ function requireAuth(req, res, next) {
   if (!token) return fail(res, 401, '未登录');
   try {
     req.user = jwt.verify(token, TOKEN_SECRET);
-    return next();
   } catch (e) {
     return fail(res, 401, '登录已过期，请重新登录');
   }
+  // 实时校验账号状态（带 5 秒缓存，既保证被停用后立即失效，又不拖慢请求）
+  return refreshUserAuth(req, res, next);
+}
+
+const userAuthCache = new Map();
+const USER_AUTH_TTL = 5000;
+async function refreshUserAuth(req, res, next) {
+  const userId = req.user && req.user.user_id;
+  if (!userId) return next();
+  const cached = userAuthCache.get(userId);
+  if (cached && Date.now() - cached.ts < USER_AUTH_TTL) {
+    req.user.role = cached.role || req.user.role;
+    req.user.status = cached.status;
+    if (cached.status === 'disabled') return fail(res, 403, '该账号已被停用，请联系管理员');
+    return next();
+  }
+  try {
+    const r = await dbQuery(`select role, status from public.app_users where id=$1 limit 1`, [userId]);
+    const row = r.rows[0];
+    if (!row) return fail(res, 401, '账号不存在或已注销，请重新登录');
+    userAuthCache.set(userId, { role: row.role, status: row.status, ts: Date.now() });
+    if (userAuthCache.size > 5000) userAuthCache.clear();
+    req.user.role = row.role || req.user.role;
+    req.user.status = row.status;
+    if (row.status === 'disabled') return fail(res, 403, '该账号已被停用，请联系管理员');
+    return next();
+  } catch (e) {
+    return next();
+  }
+}
+
+function clearUserAuthCache(userIds) {
+  (userIds || []).forEach((id) => userAuthCache.delete(id));
 }
 
 function requireAdmin(req, res, next) {
@@ -476,7 +508,22 @@ app.patch(['/api/applications/:id/status', '/api/admin/applications/:id/status',
           status='active', updated_at=now()`,
         [userId, v.id, v.name, v.phone, v.province, v.city, v.county, v.current_province, v.current_city, v.current_county, v.graduation_year, v.class_name, v.homeroom_teacher, v.enrollment_year]
       );
+    } else if (status === 'rejected') {
+      // 拒绝认证：解除该用户全部权限——账号停用、档案下线，之后无法登录和访问会员功能
+      const v = updated.rows[0];
+      await dbQuery(
+        `update public.app_users set role='pending_alumni', status='disabled', updated_at=now() where phone=$1`,
+        [v.phone]
+      ).catch(() => {});
+      await dbQuery(
+        `update public.alumni_profiles set status='disabled', updated_at=now() where phone=$1`,
+        [v.phone]
+      ).catch(() => {});
     }
+
+    // 让受影响用户的实时状态缓存立即失效
+    const uids = await dbQuery(`select id from public.app_users where phone=$1`, [updated.rows[0].phone]).catch(() => ({ rows: [] }));
+    clearUserAuthCache((uids.rows || []).map((r) => r.id));
 
     await audit(req, `alumni_verification_${status}`, 'alumni_verification', id, { rejectReason });
     return ok(res, { application: updated.rows[0], verification: updated.rows[0] });
@@ -490,8 +537,12 @@ app.patch(['/api/applications/:id/status', '/api/admin/applications/:id/status',
 async function currentRole(req) {
   if (!req.user || !req.user.user_id) return req.user ? (req.user.role || null) : null;
   try {
-    const r = await dbQuery(`select role from public.app_users where id=$1 limit 1`, [req.user.user_id]);
-    return r.rows[0] ? r.rows[0].role : (req.user.role || null);
+    const cached = userAuthCache.get(req.user.user_id);
+    if (cached && Date.now() - cached.ts < USER_AUTH_TTL) return cached.role;
+    const r = await dbQuery(`select role, status from public.app_users where id=$1 limit 1`, [req.user.user_id]);
+    const row = r.rows[0];
+    if (row) userAuthCache.set(req.user.user_id, { role: row.role, status: row.status, ts: Date.now() });
+    return row ? row.role : (req.user.role || null);
   } catch (e) {
     return req.user.role || null;
   }
@@ -1521,6 +1572,7 @@ app.patch('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) =>
        where id=$3 returning id, display_name, role, status`,
       [b.role || null, b.status || null, id]
     );
+    clearUserAuthCache([Number(id)]);
     await audit(req, 'user_update', 'app_user', id, { role: b.role, status: b.status });
     return ok(res, { user: r.rows[0], message: '用户信息已更新' });
   } catch (e) {
@@ -1962,6 +2014,7 @@ app.post('/api/auth/code-login', async (req, res) => {
     const row = r.rows[0];
     if (!row) return fail(res, 400, '验证码无效或已使用');
     if (new Date(row.expires_at) < new Date()) return fail(res, 400, '验证码已过期，请重新获取');
+    if (row.status === 'disabled') return fail(res, 403, '该账号已被停用（校友认证未通过），请联系管理员');
     await dbQuery(`update public.login_codes set used=true where id=$1`, [row.id]);
     const token = jwt.sign(
       { user_id: row.user_id, role: row.role, type: 'alumni' },
@@ -3289,13 +3342,16 @@ bootstrapSchema()
   .then(() => ensurePhase2Tables())
   .then(() => ensureSitePagesSeed())
   .then(() => ensureSiteSectionsSeed())
-  .then(() => ensureBrandRename())
-  .then(() => ensureAlumniRoleSync())
-  .then(() => ensureHomeRename())
   .then(() => ensurePhase3Tables())
   .then(() => {
     app.listen(PORT, () => {
       console.log(`hailin alumni backend running on http://localhost:${PORT}`);
+      // 内容改名/邮箱等迁移放后台执行，不阻塞启动，加快冷启动响应
+      Promise.allSettled([
+        ensureBrandRename(),
+        ensureAlumniRoleSync(),
+        ensureHomeRename()
+      ]).catch(() => {});
     });
   })
   .catch((e) => {
