@@ -257,12 +257,12 @@ app.post(['/api/auth/register', '/api/alumni/register'], async (req, res) => {
   try {
     const b = req.body || {};
     const email = normalizeEmail(b.email);
-    const password = requireStrongPassword(b.password);
+    const password = b.password ? requireStrongPassword(b.password) : null;
     const name = String(b.name || b.display_name || '').trim();
     const phone = String(b.phone || '').trim() || null;
     if (!email || !email.includes('@')) return fail(res, 400, '请输入有效邮箱');
     if (!name) return fail(res, 400, '请输入姓名');
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = password ? await bcrypt.hash(password, 10) : null;
     const r = await dbQuery(
       `insert into public.app_users (email, phone, display_name, role, status, password_hash, is_email_verified)
        values ($1,$2,$3,'pending_alumni','pending',$4,false)
@@ -270,43 +270,14 @@ app.post(['/api/auth/register', '/api/alumni/register'], async (req, res) => {
        returning id, email, phone, display_name, role, status`,
       [email, phone, name, passwordHash]
     );
-    return ok(res, { user: r.rows[0], message: '邮箱账号已创建。请继续提交校友认证资料，审核通过后可查看校友通讯录。' });
+    return ok(res, { user: r.rows[0], message: '账号已创建，请继续提交校友认证资料，审核通过后可查看校友通讯录。' });
   } catch (e) {
     return fail(res, 500, '注册失败', { error: e.message });
   }
 });
 
 app.post('/api/auth/login', async (req, res) => {
-  try {
-    const loginName = normalizeEmail(req.body?.email || req.body?.username || req.body?.phone);
-    const password = String(req.body?.password || '').trim();
-    if (!loginName || !password) return fail(res, 400, '请输入邮箱/账号和密码');
-    const r = await dbQuery(
-      `select id as user_id, display_name, email, phone, role, status, password_hash
-       from public.app_users
-       where lower(email)=lower($1) or phone=$1
-       order by (email is not null) desc, (password_hash is not null) desc, id asc`,
-      [loginName]
-    );
-    // 同一人可能因认证流程拆成多个账号行（邮箱行 + 手机号行），逐个尝试密码，任一匹配即登录
-    let user = null;
-    for (const row of r.rows) {
-      if (!row.password_hash) continue;
-      if (await bcrypt.compare(password, row.password_hash)) { user = row; break; }
-    }
-    if (!user) {
-      if (r.rows.length > 0 && !r.rows.some((row) => row.password_hash)) {
-        return fail(res, 401, '该账号尚未设置密码，请用注册邮箱登录，或通过「忘记密码」获取默认密码');
-      }
-      return fail(res, 401, '账号或密码错误');
-    }
-    if (!['active', 'pending'].includes(user.status)) return fail(res, 403, '账号已禁用或审核未通过');
-    const token = signToken({ ...user, admin_id: null, admin_level: null });
-    await dbQuery(`update public.app_users set last_login_at=now(), updated_at=now() where id=$1`, [user.user_id]).catch(() => {});
-    return ok(res, { token, user: { name: user.display_name, email: user.email, phone: user.phone, role: user.role, status: user.status } });
-  } catch (e) {
-    return fail(res, 500, '登录失败', { error: e.message });
-  }
+  return fail(res, 400, '密码登录已停用，请使用「邮箱/手机号 + 验证码」登录');
 });
 
 // 管理员本人资料和密码
@@ -1942,21 +1913,31 @@ async function ensurePhase2Tables() {
 // ---------- 邮箱验证码登录 ----------
 app.post('/api/auth/send-login-code', async (req, res) => {
   try {
-    const email = normalizeEmail(req.body?.email);
-    if (!email || !email.includes('@')) return fail(res, 400, '请输入有效邮箱');
-    const r = await dbQuery(`select id from public.app_users where email=$1 limit 1`, [email]);
-    if (!r.rows[0]) return fail(res, 404, '该邮箱未注册，请先注册账号');
+    const identifier = normalizeEmail(req.body?.email || req.body?.account || '');
+    if (!identifier) return fail(res, 400, '请输入邮箱或手机号');
+    const isPhone = /^\d{6,}$/.test(identifier);
+    if (!isPhone && !identifier.includes('@')) return fail(res, 400, '请输入有效的邮箱或手机号');
+    const r = isPhone
+      ? await dbQuery(`select id, phone from public.app_users where phone=$1 limit 1`, [identifier])
+      : await dbQuery(`select id, phone from public.app_users where lower(email)=lower($1) limit 1`, [identifier]);
+    if (!r.rows[0]) return fail(res, 404, '该账号未注册，请先在「注册」页完成注册认证');
     const code = String(crypto.randomInt(100000, 999999));
     const codeHash = crypto.createHash('sha256').update(code).digest('hex');
-    await dbQuery(`delete from public.login_codes where email=$1 and used=false and expires_at < now()`, [email]).catch(() => {});
+    const recent = await dbQuery(
+      `select id from public.login_codes where email=$1 and used=false and created_at > now() - interval '60 seconds' limit 1`,
+      [identifier]
+    ).catch(() => ({ rows: [] }));
+    if (recent.rows[0]) return fail(res, 429, '验证码刚刚已发送，请 60 秒后再试');
+    await dbQuery(`delete from public.login_codes where email=$1 and used=false and expires_at < now()`, [identifier]).catch(() => {});
     await dbQuery(
       `insert into public.login_codes (email, code_hash, purpose, expires_at)
-       values ($1,$2,'login', now() + interval '10 minutes')`,
-      [email, codeHash]
+       values ($1,$2,'login', now() + interval '10 minutes')
+       returning id`,
+      [identifier, codeHash]
     );
     return ok(res, {
       login_code: code,
-      message: '验证码已生成（当前未接入邮件服务，请使用下方验证码，10 分钟内有效）'
+      message: '验证码已生成（当前未接入邮件/短信服务，请使用页面上的验证码，10 分钟内有效）'
     });
   } catch (e) {
     return fail(res, 500, '发送验证码失败', { error: e.message });
@@ -1965,18 +1946,18 @@ app.post('/api/auth/send-login-code', async (req, res) => {
 
 app.post('/api/auth/code-login', async (req, res) => {
   try {
-    const email = normalizeEmail(req.body?.email);
+    const identifier = normalizeEmail(req.body?.email || req.body?.account || '');
     const code = String(req.body?.code || '').trim();
-    if (!email || !/^\d{6}$/.test(code)) return fail(res, 400, '请输入邮箱和 6 位验证码');
+    if (!identifier || !/^\d{6}$/.test(code)) return fail(res, 400, '请输入邮箱/手机号和 6 位验证码');
     const codeHash = crypto.createHash('sha256').update(code).digest('hex');
     const r = await dbQuery(
       `select lc.id, lc.expires_at, u.id as user_id, u.display_name, u.phone, u.role, u.status
        from public.login_codes lc
-       join public.app_users u on lower(u.email) = lower($1)
-       where lc.email = lower($1) and lc.code_hash = $2 and lc.used = false and lc.purpose = 'login'
+       join public.app_users u on (lower(u.email) = lower($1) or u.phone = $1)
+       where lc.email = $1 and lc.code_hash = $2 and lc.used = false and lc.purpose = 'login'
        order by lc.created_at desc
        limit 1`,
-      [email, codeHash]
+      [identifier, codeHash]
     );
     const row = r.rows[0];
     if (!row) return fail(res, 400, '验证码无效或已使用');
@@ -1987,10 +1968,10 @@ app.post('/api/auth/code-login', async (req, res) => {
       TOKEN_SECRET,
       { expiresIn: '7d' }
     );
-    await audit(req, 'auth_login_code', 'app_user', row.user_id, { email });
+    await audit(req, 'auth_login_code', 'app_user', row.user_id, { identifier });
     return ok(res, {
       token,
-      user: { name: row.display_name, email, phone: row.phone, role: row.role, status: row.status },
+      user: { name: row.display_name, email: identifier, phone: row.phone, role: row.role, status: row.status },
       message: '验证码登录成功'
     });
   } catch (e) {

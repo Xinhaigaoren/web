@@ -3,13 +3,18 @@
   const API_BASE_URL = (window.HAILIN_CONFIG && window.HAILIN_CONFIG.API_BASE_URL) || 'http://localhost:3000';
   const tokenKey = 'xh_alumni_token';
   const userKey = 'xh_alumni_user';
+  // 微信等内置浏览器可能禁用 localStorage，这里做内存兜底，避免登录流程中断
+  let memoryStore = {};
+  function safeStorageGet(key) { try { return localStorage.getItem(key); } catch (_) { return memoryStore[key] === undefined ? null : memoryStore[key]; } }
+  function safeStorageSet(key, value) { try { localStorage.setItem(key, value); } catch (_) { memoryStore[key] = value; } }
+  function safeStorageRemove(key) { try { localStorage.removeItem(key); } catch (_) { delete memoryStore[key]; } }
 
   const store = {
-    getToken: () => localStorage.getItem(tokenKey) || '',
-    setToken: (token) => localStorage.setItem(tokenKey, token),
-    clearAuth: () => { localStorage.removeItem(tokenKey); localStorage.removeItem(userKey); },
-    getUser: () => { try { return JSON.parse(localStorage.getItem(userKey) || '{}'); } catch { return {}; } },
-    setUser: (user) => localStorage.setItem(userKey, JSON.stringify(user || {}))
+    getToken: () => safeStorageGet(tokenKey) || '',
+    setToken: (token) => safeStorageSet(tokenKey, token),
+    clearAuth: () => { safeStorageRemove(tokenKey); safeStorageRemove(userKey); },
+    getUser: () => { try { return JSON.parse(safeStorageGet(userKey) || '{}'); } catch { return {}; } },
+    setUser: (user) => safeStorageSet(userKey, JSON.stringify(user || {}))
   };
 
   async function api(path, options = {}) {
@@ -18,9 +23,15 @@
     if (token) headers.Authorization = `Bearer ${token}`;
     let response;
     try {
-      response = await fetch(`${API_BASE_URL}${path}`, Object.assign({}, options, { headers }));
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timer = controller ? setTimeout(() => controller.abort(), 25000) : null;
+      try {
+        response = await fetch(`${API_BASE_URL}${path}`, Object.assign({}, options, { headers }, controller ? { signal: controller.signal } : {}));
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
     } catch (e) {
-      throw new Error('网络异常：服务可能正在启动，请稍后刷新重试');
+      throw new Error(e && e.name === 'AbortError' ? '请求超时：网络较慢或服务暂不可用，请稍后重试' : '网络异常：服务可能正在启动，请稍后刷新重试');
     }
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) {
