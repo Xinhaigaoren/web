@@ -182,6 +182,8 @@ const adminAuthCache = new Map();
 const ADMIN_AUTH_TTL = 5000;
 async function requireAdmin(req, res, next) {
   if (!req.user) return fail(res, 401, '未登录');
+  // 主管理员（super_admin）为最高权限，始终放行，避免被数据异常锁死
+  if (req.user.role === 'super_admin') return next();
   let adminId = req.user.admin_id;
   let status = null;
   if (!adminId) {
@@ -271,14 +273,21 @@ app.post(['/api/admin/login', '/api/login'], async (req, res) => {
 
     // 环境变量主管理员登录
     if (loginName === ADMIN_USER && password === ADMIN_PASSWORD) {
-      const r = await dbQuery(
-        `select u.id as user_id, u.display_name, u.role, a.id as admin_id, a.admin_level
-         from public.app_users u
-         join public.admin_accounts a on a.user_id=u.id
-         where u.phone='ROOT_ADMIN'
-         limit 1`
-      );
-      const user = r.rows[0] || { user_id: null, admin_id: null, display_name: '主管理员', role: 'super_admin', admin_level: 'super_admin' };
+      const ru = await dbQuery(
+        `select id as user_id, display_name, role from public.app_users where phone='ROOT_ADMIN' limit 1`
+      ).catch(() => ({ rows: [] }));
+      const base = ru.rows[0] || { user_id: null, display_name: '主管理员', role: 'super_admin' };
+      const ra = await dbQuery(
+        `select id as admin_id, admin_level from public.admin_accounts where user_id=$1 limit 1`,
+        [base.user_id]
+      ).catch(() => ({ rows: [] }));
+      const user = {
+        user_id: base.user_id,
+        display_name: base.display_name,
+        role: 'super_admin',
+        admin_id: ra.rows[0] ? ra.rows[0].admin_id : null,
+        admin_level: 'super_admin'
+      };
       const token = signToken(user);
       await audit({ ...req, user }, 'admin_login', 'admin_account', user.admin_id, { loginName });
       return ok(res, { token, user: { name: user.display_name, role: user.role, admin_level: user.admin_level } });
