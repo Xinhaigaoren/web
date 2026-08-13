@@ -108,7 +108,7 @@
           const data = await XH.api(`/api/news/${encodeURIComponent(slug)}`);
           const item = data.article || {};
           const cover = item.cover_url
-            ? `<div class="article-cover" style="background-image:url('${XH.escapeHtml(item.cover_url)}')"></div>` : '';
+            ? `<div class="article-cover" style="background-image:url('${XH.escapeHtml(XH.assetUrl(item.cover_url))}')"></div>` : '';
           box.innerHTML = `
             <a class="article-back" href="news.html">← 返回新闻列表</a>
             <div class="article-head">

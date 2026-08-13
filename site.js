@@ -36,6 +36,11 @@
     return /^https?:/i.test(path) ? path : `${API_BASE_URL}${path}`;
   }
 
+  // 把管理员在富文本里填写的相对图片/链接地址（如 /api/uploads/xxx）转换为完整地址
+  function absolutizeHtml(html) {
+    return String(html || '').replace(/(\bsrc|\bposter|\bhref)=(["'])(\/[^"']*)\2/g, (match, attr, quote, url) => `${attr}=${quote}${assetUrl(url)}${quote}`);
+  }
+
   function formatDate(value, withTime = false) {
     if (!value) return '';
     const date = new Date(value);
@@ -134,7 +139,7 @@
               const value = content[node.dataset.field];
               if (value !== undefined && value !== null && value !== '') node.innerHTML = String(value);
             } else if (typeof content.html === 'string') {
-              if (content.html) node.innerHTML = content.html;
+              if (content.html) node.innerHTML = absolutizeHtml(content.html);
             } else {
               Object.keys(content).forEach((key) => {
                 const child = node.querySelector(`[data-field="${key}"]`);
@@ -143,7 +148,7 @@
               });
             }
           } else if (typeof content === 'string' && content) {
-            node.innerHTML = content;
+            node.innerHTML = absolutizeHtml(content);
           }
         });
       });
@@ -153,7 +158,7 @@
         if (typeof hc === 'string') { try { hc = JSON.parse(hc); } catch (_) { hc = {}; } }
         if (hc && hc.image) {
           const media = document.getElementById('heroMedia');
-          if (media) media.style.backgroundImage = `linear-gradient(135deg, rgba(24,48,89,.55), rgba(39,68,114,.45)), url('${hc.image}')`;
+          if (media) media.style.backgroundImage = `linear-gradient(135deg, rgba(24,48,89,.55), rgba(39,68,114,.45)), url('${assetUrl(hc.image)}')`;
         }
       }
     } catch (error) {
@@ -223,6 +228,15 @@
     } catch (error) { /* 接口不可用时保留静态内容 */ }
   }
   loadHomeDynamic();
+
+  // 返回顶部：统一平滑滚动到页面顶部，保证所有页面可用
+  document.querySelectorAll('a[href="#top"]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.history && history.replaceState) history.replaceState(null, '', location.pathname + location.search);
+    });
+  });
 
   window.XH = { API_BASE_URL, api, assetUrl, formatDate, escapeHtml, toast, store };
 })();

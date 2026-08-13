@@ -109,7 +109,7 @@
     </div>
   </footer>
 
-  <div id="alumniDetailModal" class="modal-overlay" hidden>
+  <div id="alumniDetailModal" class="modal-overlay">
     <div class="modal-card" role="dialog" aria-modal="true" aria-label="校友详情">
       <button type="button" id="alumniDetailClose" class="modal-close" aria-label="关闭">×</button>
       <div id="alumniDetailBody"></div>
@@ -226,7 +226,7 @@
           </div>
           <div class="modal-detail-grid">${grid || '<div class="empty-state">暂无更多公开信息</div>'}</div>`;
         const modal = document.getElementById('alumniDetailModal');
-        if (modal) { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+        if (modal) { modal.classList.add('show'); document.body.style.overflow = 'hidden'; }
       }
       alumniList.addEventListener('click', (event) => {
         const card = event.target.closest('[data-alumni]');
@@ -238,16 +238,16 @@
       if (alumniDetailClose) {
         alumniDetailClose.addEventListener('click', () => {
           const modal = document.getElementById('alumniDetailModal');
-          if (modal) { modal.hidden = true; document.body.style.overflow = ''; }
+          if (modal) { modal.classList.remove('show'); document.body.style.overflow = ''; }
         });
       }
       const alumniDetailModal = document.getElementById('alumniDetailModal');
       if (alumniDetailModal) {
         alumniDetailModal.addEventListener('click', (event) => {
-          if (event.target === alumniDetailModal) { alumniDetailModal.hidden = true; document.body.style.overflow = ''; }
+          if (event.target === alumniDetailModal) { alumniDetailModal.classList.remove('show'); document.body.style.overflow = ''; }
         });
         document.addEventListener('keydown', (event) => {
-          if (event.key === 'Escape') { alumniDetailModal.hidden = true; document.body.style.overflow = ''; }
+          if (event.key === 'Escape') { alumniDetailModal.classList.remove('show'); document.body.style.overflow = ''; }
         });
       }
 

@@ -173,6 +173,7 @@
 /* 弹窗（活动报名） */
 .modal-overlay { position: fixed; inset: 0; background: rgba(14,27,50,.55); display: none; align-items: center; justify-content: center; z-index: 260; padding: 20px; }
 .modal-overlay.show { display: flex; }
+.modal-overlay[hidden] { display: none !important; }
 .modal { background: #fff; border-radius: 20px; max-width: 520px; width: 100%; padding: 30px; box-shadow: var(--shadow); max-height: 88vh; overflow: auto; }
 .modal h3 { margin: 0 0 6px; color: var(--deep); }
 .modal .modal-sub { margin: 0 0 18px; color: var(--muted); font-size: 14px; }

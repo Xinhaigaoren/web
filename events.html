@@ -184,7 +184,7 @@
                   <span class="event-meta">已报名 <strong>${countText}</strong></span>
                   ${ended
                     ? '<span class="badge cancelled">已结束</span>'
-                    : `<button class="btn primary" data-register='${JSON.stringify({ id: item.id, title: item.title })}' type="button">报名参加</button>`}
+                    : `<button class="btn primary" data-event-id="${item.id}" data-event-title="${XH.escapeHtml(item.title)}" type="button">报名参加</button>`}
                 </div>
               </article>
             `;
@@ -209,14 +209,16 @@
       });
 
       list.addEventListener('click', (event) => {
-        const button = event.target.closest('button[data-register]');
+        const button = event.target.closest('button[data-event-id]');
         if (!button) return;
-        const info = JSON.parse(button.dataset.register);
-        registerForm.eventId.value = info.id;
-        modalSub.textContent = info.title;
+        registerForm.eventId.value = button.dataset.eventId;
+        modalSub.textContent = button.dataset.eventTitle || '';
         registerStatus.textContent = '';
         registerStatus.className = 'form-status';
         registerForm.reset();
+        const me = XH.store.getUser();
+        if (me && me.name) registerForm.name.value = me.name;
+        if (me && me.phone) registerForm.phone.value = me.phone;
         modal.classList.add('show');
       });
 

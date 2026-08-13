@@ -114,7 +114,7 @@
 
       function coverStyle(item) {
         if (!item.cover_url) return '';
-        return ` style="background-image:linear-gradient(135deg, rgba(24,48,89,.12), rgba(39,68,114,.12)), url('${XH.escapeHtml(item.cover_url)}')"`;
+        return ` style="background-image:linear-gradient(135deg, rgba(24,48,89,.12), rgba(39,68,114,.12)), url('${XH.escapeHtml(XH.assetUrl(item.cover_url))}')"`;
       }
 
       function renderCategories(categories) {
