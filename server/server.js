@@ -294,7 +294,12 @@ app.post('/api/auth/login', async (req, res) => {
       if (!row.password_hash) continue;
       if (await bcrypt.compare(password, row.password_hash)) { user = row; break; }
     }
-    if (!user) return fail(res, 401, '账号或密码错误');
+    if (!user) {
+      if (r.rows.length > 0 && !r.rows.some((row) => row.password_hash)) {
+        return fail(res, 401, '该账号尚未设置密码，请用注册邮箱登录，或通过「忘记密码」获取默认密码');
+      }
+      return fail(res, 401, '账号或密码错误');
+    }
     if (!['active', 'pending'].includes(user.status)) return fail(res, 403, '账号已禁用或审核未通过');
     const token = signToken({ ...user, admin_id: null, admin_level: null });
     await dbQuery(`update public.app_users set last_login_at=now(), updated_at=now() where id=$1`, [user.user_id]).catch(() => {});
