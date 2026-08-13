@@ -228,7 +228,6 @@ async function loadHomeContent() {
     homeForm.donate_intro.value = donate.intro || '';
     const heroImg = hero.image || '';
     homeForm.hero_image.value = heroImg;
-    homeForm.hero_mode.value = hero.mode === 'default' ? 'default' : (heroImg ? 'image' : 'default');
     renderCoverPreview('heroImgPreview', heroImg);
     const aboutBody = sections.home_about_body || {};
     const figuresBody = sections.home_figures_body || {};
@@ -275,8 +274,7 @@ homeForm.addEventListener('submit', async (event) => {
       content: {
         title: form.hero_title || '',
         subtitle: form.hero_subtitle || '',
-        image: form.hero_image || '',
-        mode: form.hero_mode || 'default'
+        image: form.hero_image || ''
       }
     }));
     results.push(await saveSection({

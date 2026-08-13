@@ -174,9 +174,9 @@
 .modal-overlay { position: fixed; inset: 0; background: rgba(14,27,50,.55); display: none; align-items: center; justify-content: center; z-index: 260; padding: 20px; }
 .modal-overlay.show { display: flex; }
 .modal-overlay[hidden] { display: none !important; }
-.modal { background: #fff; border-radius: 20px; max-width: 520px; width: 100%; padding: 30px; box-shadow: var(--shadow); max-height: 88vh; overflow: auto; }
-.modal h3 { margin: 0 0 6px; color: var(--deep); }
-.modal .modal-sub { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+.modal, .modal-card { background: #fff; border-radius: 20px; max-width: 520px; width: 100%; padding: 30px; box-shadow: var(--shadow); max-height: 88vh; overflow: auto; }
+.modal h3, .modal-card h3 { margin: 0 0 6px; color: var(--deep); }
+.modal .modal-sub, .modal-card .modal-sub { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
 .modal-close { float: right; border: 0; background: transparent; font-size: 24px; cursor: pointer; color: var(--muted); line-height: 1; padding: 0; }
 /* 微信登录 */
 .divider-or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; margin: 2px 0 14px; }

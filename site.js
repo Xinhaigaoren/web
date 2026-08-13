@@ -156,9 +156,10 @@
       if (heroSec) {
         let hc = heroSec.content;
         if (typeof hc === 'string') { try { hc = JSON.parse(hc); } catch (_) { hc = {}; } }
-        if (hc && hc.image && hc.mode !== 'default') {
+        // 管理员上传了横幅图就直接整幅显示，不再叠加默认背景或渐变遮罩
+        if (hc && hc.image) {
           const media = document.getElementById('heroMedia');
-          if (media) media.style.backgroundImage = `linear-gradient(135deg, rgba(24,48,89,.55), rgba(39,68,114,.45)), url('${assetUrl(hc.image)}')`;
+          if (media) media.style.backgroundImage = `url('${assetUrl(hc.image)}')`;
         }
       }
     } catch (error) {

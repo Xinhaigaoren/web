@@ -488,6 +488,11 @@ app.patch(['/api/applications/:id/status', '/api/admin/applications/:id/status',
         [v.phone, v.name]
       );
       const userId = u.rows[0].id;
+      // 同步把同手机号的邮箱注册行也提升为已认证校友：保证「邮箱+密码」可登录、可自助重置密码
+      await dbQuery(
+        `update public.app_users set role='alumni', status='active', updated_at=now() where phone=$1`,
+        [v.phone]
+      ).catch(() => {});
       await dbQuery(
         `insert into public.alumni_profiles
          (user_id, verification_id, name, phone, province, city, county, current_province, current_city, current_county,
@@ -2623,7 +2628,7 @@ async function ensureSitePagesSeed() {
 async function ensureSiteSectionsSeed() {
   if (!pool) return;
   const seed = [
-    { page_slug: 'home', section_key: 'home_hero', section_name: '首页横幅', content: { hero_title: '共忆青春海高路，同筑未来校友情', hero_subtitle: '海林市高级中学校友会欢迎你', hero_bg_url: '', btn_text: '加入我们', btn_link: 'account.html' } },
+    { page_slug: 'home', section_key: 'home_hero', section_name: '首页横幅', content: { hero_title: '共忆青春海高路，同筑未来校友情', hero_subtitle: '海林市高级中学校友（新海高人）欢迎你', hero_bg_url: '', btn_text: '加入我们', btn_link: 'account.html' } },
     { page_slug: 'home', section_key: 'home_notice', section_name: '首页公告', content: { notice_text: '欢迎校友回家！请登录后完成校友认证。' } },
     { page_slug: 'home', section_key: 'home_stats', section_name: '数据概览', content: { stats: [{ label: '校友会员', value: '0' }, { label: '活动组织', value: '0' }, { label: '服务母校', value: '0' }] } },
     { page_slug: 'home', section_key: 'home_figures', section_name: '校友风采', content: { title: '校友风采', subtitle: '杰出的海高人在各行各业发光发热', items: [] } },
@@ -2642,6 +2647,50 @@ async function ensureSiteSectionsSeed() {
       );
     }
   }
+}
+
+// 品牌名统一：把旧名称自动更新为新名称（覆盖已存在数据）
+async function ensureBrandRename() {
+  if (!pool) return;
+  const oldName = '海林市高级中学校友会';
+  const newName = '海林市高级中学校友（新海高人）';
+  const walk = async (sectionKey) => {
+    const rows = await dbQuery(
+      `select id, content from public.site_sections where section_key=$1 limit 1`,
+      [sectionKey]
+    ).catch(() => ({ rows: [] }));
+    for (const row of rows.rows || []) {
+      let c = row.content;
+      if (typeof c === 'string') { try { c = JSON.parse(c); } catch (_) { c = {}; } }
+      if (!c || typeof c !== 'object') continue;
+      let changed = false;
+      for (const key of Object.keys(c)) {
+        if (typeof c[key] === 'string' && c[key].includes(oldName)) {
+          c[key] = c[key].split(oldName).join(newName);
+          changed = true;
+        }
+      }
+      if (changed) await dbQuery(
+        `update public.site_sections set content=$1, updated_at=now() where id=$2`,
+        [JSON.stringify(c), row.id]
+      );
+    }
+  };
+  await walk('footer_info');
+  await walk('home_hero');
+}
+
+// 存量数据修复：凡有已通过认证记录的手机号，对应 app_users 一律提升为已认证校友
+async function ensureAlumniRoleSync() {
+  if (!pool) return;
+  await dbQuery(
+    `update public.app_users u
+     set role='alumni', status='active', updated_at=now()
+     where (u.role='pending_alumni' or u.status='pending')
+       and u.phone is not null
+       and exists (select 1 from public.alumni_verifications v
+                   where v.phone = u.phone and v.status='approved')`
+  ).catch(() => {});
 }
 
 app.get('/api/admin/forum/categories', requireAuth, requireAdmin, async (req, res) => {
@@ -3057,6 +3106,8 @@ bootstrapSchema()
   .then(() => ensurePhase2Tables())
   .then(() => ensureSitePagesSeed())
   .then(() => ensureSiteSectionsSeed())
+  .then(() => ensureBrandRename())
+  .then(() => ensureAlumniRoleSync())
   .then(() => ensurePhase3Tables())
   .then(() => {
     app.listen(PORT, () => {
