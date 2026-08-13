@@ -1511,7 +1511,12 @@ function pageFieldInput(key, value) {
 async function loadPageEditor() {
   if (!pageEditorSelect || !pageEditorSectionsBox) return;
   const slug = pageEditorSelect.value;
-  pageEditorSectionsBox.innerHTML = '<p class="status">正在加载……</p>';
+  const me = getUser();
+  const isSuper = me && me.role === 'super_admin';
+  const permNote = isSuper
+    ? '<p style="margin:0 0 12px;color:var(--success)">当前为<span style="font-weight:700">主管理员</span>：保存后立即发布到官网。</p>'
+    : '<p style="margin:0 0 12px;color:var(--warn)">当前为<span style="font-weight:700">普通管理员</span>：保存后生成审批任务，主管理员审核通过后发布。</p>';
+  pageEditorSectionsBox.innerHTML = permNote + '<p class="status">正在加载……</p>';
   try {
     const data = await api(`/api/site/${slug}?t=${Date.now()}`);
     const sections = data.sections || [];

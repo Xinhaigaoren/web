@@ -2736,6 +2736,7 @@ async function ensureSiteSectionsSeed() {
     { page_slug: 'home', section_key: 'home_services', section_name: '校友服务', content: { title: '校友服务', subtitle: '为校友提供更贴心的服务', items: [] } },
     { page_slug: 'about', section_key: 'about_intro', section_name: '校友会介绍', content: { title: '校友会介绍', content: '' } },
     { page_slug: 'about', section_key: 'about_contact', section_name: '联系方式', content: { email: 'xinhaigaoren@126.com', address: '黑龙江省牡丹江市海林市', phone: '' } },
+    { page_slug: 'about', section_key: 'about_body', section_name: '介绍页正文', content: { html: '' } },
     { page_slug: 'contact', section_key: 'contact_info', section_name: '联系我们', content: { email: 'xinhaigaoren@126.com', address: '黑龙江省牡丹江市海林市', phone: '', wechat: '' } },
     { page_slug: 'about', section_key: 'about_hero', section_name: '介绍页横幅', content: { eyebrow: 'About', title: '新海高人', subtitle: '联络校友、服务校友、回馈母校、助力家乡。' } },
     { page_slug: 'news', section_key: 'news_hero', section_name: '新闻页横幅', content: { eyebrow: 'News', title: '新闻公告', subtitle: '记录母校发展，发布校友资讯，传递海高声音。' } },
