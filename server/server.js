@@ -1094,7 +1094,7 @@ app.get('/api/events/:id', async (req, res) => {
     const r = await dbQuery(
       `select e.*, (select count(*) from public.event_registrations er where er.event_id = e.id) as registrations_count
        from public.events e
-       where (e.id = $1 or e.slug = $1) and e.is_published = true
+       where (e.id::text = $1 or e.slug = $1) and e.is_published = true
        limit 1`,
       [req.params.id]
     );
@@ -1111,25 +1111,25 @@ app.post('/api/events/:id/register', async (req, res) => {
     const name = String(b.name || '').trim();
     const phone = String(b.phone || '').trim();
     if (!name || !phone) return fail(res, 400, '姓名和手机号不能为空');
-    const ev = await dbQuery(`select * from public.events where (id=$1 or slug=$1) and is_published=true limit 1`, [req.params.id]);
+    const ev = await dbQuery(`select * from public.events where (id::text=$1 or slug=$1) and is_published=true limit 1`, [req.params.id]);
     if (!ev.rows[0]) return fail(res, 404, '活动不存在');
     const event = ev.rows[0];
     if (event.signup_deadline && new Date(event.signup_deadline) < new Date()) return fail(res, 400, '报名已截止');
     if (event.capacity) {
-      const cnt = await dbQuery(`select count(*)::int as c from public.event_registrations where event_id=$1`, [event.id]);
+      const cnt = await dbQuery(`select count(*)::int as c from public.event_registrations where event_id::text=$1`, [event.id]);
       if (cnt.rows[0].c >= event.capacity) return fail(res, 400, '活动名额已满');
     }
     const me = getOptionalUser(req);
     const email = b.email || null;
     const remark = b.remark || null;
     const duplicate = await dbQuery(
-      `select id from public.event_registrations where event_id=$1 and phone=$2 limit 1`,
+      `select id from public.event_registrations where event_id::text=$1 and phone=$2 limit 1`,
       [event.id, phone]
     );
     const r = duplicate.rows[0]
       ? await dbQuery(
           `update public.event_registrations set name=$2, email=$3, remark=$4, updated_at=now()
-           where id=$1 returning *`,
+           where id::text=$1 returning *`,
           [duplicate.rows[0].id, name, email, remark]
         )
       : await dbQuery(
@@ -1448,7 +1448,7 @@ app.get('/api/admin/events/:id', requireAuth, requireAdmin, async (req, res) => 
     const r = await dbQuery(
       `select e.*, (select count(*) from public.event_registrations er where er.event_id = e.id) as registrations_count
        from public.events e
-       where e.id = $1
+       where e.id::text = $1
        limit 1`,
       [req.params.id]
     );
