@@ -230,7 +230,14 @@ async function loadHomeContent() {
     const aboutBody = sections.home_about_body || {};
     const figuresBody = sections.home_figures_body || {};
     const servicesBody = sections.home_services_body || {};
-    homeForm.about_body_html.value = typeof aboutBody.html === 'string' ? aboutBody.html : '';
+    homeForm.about_box1_title.value = aboutBody.box1_title || '';
+    homeForm.about_box1_content.value = aboutBody.box1_content || '';
+    homeForm.about_box2_title.value = aboutBody.box2_title || '';
+    homeForm.about_box2_content.value = aboutBody.box2_content || '';
+    homeForm.about_box3_title.value = aboutBody.box3_title || '';
+    homeForm.about_box3_content.value = aboutBody.box3_content || '';
+    homeForm.about_box4_title.value = aboutBody.box4_title || '';
+    homeForm.about_box4_content.value = aboutBody.box4_content || '';
     homeForm.figures_body_html.value = typeof figuresBody.html === 'string' ? figuresBody.html : '';
     homeForm.services_body_html.value = typeof servicesBody.html === 'string' ? servicesBody.html : '';
     try {
@@ -324,8 +331,13 @@ homeForm.addEventListener('submit', async (event) => {
       content: { title: form.join_title || '' }
     }));
     results.push(await saveSection({
-      page_slug: 'home', section_key: 'home_about_body', section_name: '校友会特色', display_order: 9,
-      content: { html: form.about_body_html || '' }
+      page_slug: 'home', section_key: 'home_about_body', section_name: '概况四宫格', display_order: 9,
+      content: {
+        box1_title: form.about_box1_title || '', box1_content: form.about_box1_content || '',
+        box2_title: form.about_box2_title || '', box2_content: form.about_box2_content || '',
+        box3_title: form.about_box3_title || '', box3_content: form.about_box3_content || '',
+        box4_title: form.about_box4_title || '', box4_content: form.about_box4_content || ''
+      }
     }));
     results.push(await saveSection({
       page_slug: 'home', section_key: 'home_figures_body', section_name: '校友论坛卡片', display_order: 10,

@@ -160,8 +160,8 @@
 
             <fieldset>
               <legend>校友会概况</legend>
-              <label>标题<input name="about_title" placeholder="校友会概况" /></label>
-              <label>简介<textarea name="about_intro" rows="2" placeholder="海林市高级中学校友（新海高人）以“联络校友、服务校友、回馈母校、助力家乡”为宗旨……"></textarea></label>
+              <label>标题<input name="about_title" placeholder="新海高人概况" /></label>
+              <label>简介<textarea name="about_intro" rows="2" placeholder="新海高人概况正文，可直接修改"></textarea></label>
             </fieldset>
             <fieldset>
               <legend>校友论坛</legend>
@@ -180,10 +180,17 @@
 
             
             <fieldset>
-              <legend>校友会特色（首页四宫格，支持 HTML）</legend>
-              <label>内容
-                <textarea name="about_body_html" rows="4" placeholder="可粘贴包含 组织联络/活动平台/校友互助/支持母校 四个卡片的自定义 HTML"></textarea>
-              </label>
+              <legend>概况四宫格（四个框均可单独修改）</legend>
+              <div class="three-fields">
+                <label>框1 标题<input name="about_box1_title" placeholder="组织联络" /></label>
+                <label>框1 内容<input name="about_box1_content" placeholder="建设年级、地区、行业联络体系……" /></label>
+                <label>框2 标题<input name="about_box2_title" placeholder="活动平台" /></label>
+                <label>框2 内容<input name="about_box2_content" placeholder="发布返校日、论坛、班级聚会、志愿服务等活动信息。" /></label>
+                <label>框3 标题<input name="about_box3_title" placeholder="校友互助" /></label>
+                <label>框3 内容<input name="about_box3_content" placeholder="提供职业交流、创业合作、公益项目与 mentor 计划。" /></label>
+                <label>框4 标题<input name="about_box4_title" placeholder="支持母校" /></label>
+                <label>框4 内容<input name="about_box4_content" placeholder="凝聚校友力量，支持奖助学金、校园建设和教育发展项目。" /></label>
+              </div>
             </fieldset>
             <fieldset>
               <legend>校友论坛卡片（支持 HTML）</legend>
@@ -201,7 +208,7 @@
               <legend>网站页脚</legend>
               <label>名称<input name="footer_name" placeholder="海林市高级中学校友（新海高人）" /></label>
               <label>简介<input name="footer_about" placeholder="以校友情谊为纽带，以服务母校为使命。" /></label>
-              <label>邮箱<input name="footer_email" placeholder="邮箱：alumni@example.com" /></label>
+              <label>邮箱<input name="footer_email" placeholder="邮箱：xinhaigaoren@126.com" /></label>
               <label>地址<input name="footer_address" placeholder="地址：黑龙江省牡丹江市海林市" /></label>
             </fieldset>
 
@@ -221,7 +228,7 @@
         </div>
         <label>选择页面
           <select id="pageEditorSelect">
-            <option value="about">校友会介绍</option>
+            <option value="about">新海高人</option>
             <option value="news">新闻公告</option>
             <option value="events">活动中心</option>
             <option value="directory">校友名录</option>
@@ -633,7 +640,7 @@
             <select id="contentPageFilter">
               <option value="">全部页面</option>
               <option value="home">首页</option>
-              <option value="about">校友会介绍</option>
+              <option value="about">新海高人</option>
               <option value="contact">联系我们</option>
             </select>
             <button id="contentRefreshBtn" type="button" class="ghost">刷新</button>
@@ -647,7 +654,7 @@
               <label>所属页面
                 <select name="page_slug">
                   <option value="home">首页</option>
-                  <option value="about">校友会介绍</option>
+                  <option value="about">新海高人</option>
                   <option value="contact">联系我们</option>
                 </select>
               </label>

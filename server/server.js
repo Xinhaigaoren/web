@@ -2735,9 +2735,9 @@ async function ensureSiteSectionsSeed() {
     { page_slug: 'home', section_key: 'home_figures', section_name: '校友论坛', content: { title: '校友论坛', subtitle: '校友交流互助，分享工作生活，重逢海高情谊。', items: [] } },
     { page_slug: 'home', section_key: 'home_services', section_name: '校友服务', content: { title: '校友服务', subtitle: '为校友提供更贴心的服务', items: [] } },
     { page_slug: 'about', section_key: 'about_intro', section_name: '校友会介绍', content: { title: '校友会介绍', content: '' } },
-    { page_slug: 'about', section_key: 'about_contact', section_name: '联系方式', content: { email: 'alumni@example.com', address: '黑龙江省牡丹江市海林市', phone: '' } },
-    { page_slug: 'contact', section_key: 'contact_info', section_name: '联系我们', content: { email: 'alumni@example.com', address: '黑龙江省牡丹江市海林市', phone: '', wechat: '' } },
-    { page_slug: 'about', section_key: 'about_hero', section_name: '介绍页横幅', content: { eyebrow: 'About', title: '校友会介绍', subtitle: '联络校友、服务校友、回馈母校、助力家乡。' } },
+    { page_slug: 'about', section_key: 'about_contact', section_name: '联系方式', content: { email: 'xinhaigaoren@126.com', address: '黑龙江省牡丹江市海林市', phone: '' } },
+    { page_slug: 'contact', section_key: 'contact_info', section_name: '联系我们', content: { email: 'xinhaigaoren@126.com', address: '黑龙江省牡丹江市海林市', phone: '', wechat: '' } },
+    { page_slug: 'about', section_key: 'about_hero', section_name: '介绍页横幅', content: { eyebrow: 'About', title: '新海高人', subtitle: '联络校友、服务校友、回馈母校、助力家乡。' } },
     { page_slug: 'news', section_key: 'news_hero', section_name: '新闻页横幅', content: { eyebrow: 'News', title: '新闻公告', subtitle: '记录母校发展，发布校友资讯，传递海高声音。' } },
     { page_slug: 'events', section_key: 'events_hero', section_name: '活动页横幅', content: { eyebrow: 'Events', title: '活动中心', subtitle: '返校日、主题论坛、班级聚会、志愿服务……期待与你重逢。' } },
     { page_slug: 'directory', section_key: 'directory_hero', section_name: '名录页横幅', content: { eyebrow: 'Directory', title: '校友名录', subtitle: '已认证校友专属：查询同窗、找到同行。' } },
@@ -2831,6 +2831,34 @@ async function ensureHomeRename() {
   await patchSection('home_join', (c) => {
     if (c.title === '加入海高校友会') c.title = '加入新海高人';
   });
+  await patchSection('about_hero', (c) => {
+    if (c.title === '校友会介绍') c.title = '新海高人';
+  });
+  // 概况四宫格改为后台可单独编辑：去掉旧的整段 HTML，回退到四个可编辑字段
+  await patchSection('home_about_body', (c) => {
+    if ('html' in c) delete c.html;
+  });
+  await patchSection('home_about', (c) => {
+    if (c.title === '校友会概况') c.title = '新海高人概况';
+  });
+  // 联系邮箱统一改为新邮箱（覆盖页脚、联系页等所有已存内容）
+  const allSections = await dbQuery(`select id, content from public.site_sections`).catch(() => ({ rows: [] }));
+  for (const row of allSections.rows || []) {
+    let c = row.content;
+    if (typeof c === 'string') { try { c = JSON.parse(c); } catch (_) { c = {}; } }
+    if (!c || typeof c !== 'object') continue;
+    let changed = false;
+    for (const key of Object.keys(c)) {
+      if (typeof c[key] === 'string' && c[key].includes('alumni@example.com')) {
+        c[key] = c[key].split('alumni@example.com').join('xinhaigaoren@126.com');
+        changed = true;
+      }
+    }
+    if (changed) await dbQuery(
+      `update public.site_sections set content=$1, updated_at=now() where id=$2`,
+      [JSON.stringify(c), row.id]
+    ).catch(() => {});
+  }
   await patchSection('jobs_hero', (c) => {
     if (c.title === '校友招聘') c.title = '新海高人招聘';
   });
