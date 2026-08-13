@@ -950,6 +950,14 @@ async function ensureContentTables() {
     updated_at timestamptz default now(),
     unique (event_id, phone)
   )`);
+  // 老库可能在加唯一约束前就建了表，这里补上（先清理重复，再建唯一索引，保证报名不报错）
+  await dbQuery(
+    `delete from public.event_registrations a using public.event_registrations b
+     where a.event_id = b.event_id and a.phone = b.phone and a.id < b.id`
+  ).catch(() => {});
+  await dbQuery(
+    `create unique index if not exists idx_event_regs_event_phone on public.event_registrations(event_id, phone)`
+  ).catch(() => {});
   await dbQuery(`create table if not exists public.uploads (
     id text primary key,
     user_id bigint references public.app_users(id) on delete set null,
@@ -1904,6 +1912,20 @@ async function ensurePhase2Tables() {
     created_at timestamptz default now()
   )`);
   await dbQuery(`create index if not exists idx_notifications_user on public.notifications (user_id, is_read)`);
+  await dbQuery(`create table if not exists public.map_points (
+    id bigserial primary key,
+    name text not null,
+    province text,
+    city text,
+    longitude text,
+    latitude text,
+    category text default '联络站',
+    description text,
+    is_active boolean default true,
+    created_by bigint,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+  )`);
 }
 
 // ---------- 邮箱验证码登录 ----------
@@ -2552,6 +2574,85 @@ app.get('/api/alumni/map', requireAuth, async (req, res) => {
   }
 });
 
+// 地图标注点（公开，前台展示）
+app.get('/api/map/points', async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select id, name, province, city, longitude, latitude, category, description
+       from public.map_points
+       where is_active = true
+       order by province asc, city asc, id asc
+       limit 500`
+    );
+    return ok(res, { items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取地图标注点失败', { error: e.message });
+  }
+});
+
+// 地图标注点（管理端）
+app.get('/api/admin/map/points', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select * from public.map_points order by province asc, city asc, id desc limit 500`
+    );
+    return ok(res, { items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取地图标注点失败', { error: e.message });
+  }
+});
+
+app.post('/api/admin/map/points', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const name = String(b.name || '').trim();
+    if (!name) return fail(res, 400, '标注点名称不能为空');
+    const r = await dbQuery(
+      `insert into public.map_points (name, province, city, longitude, latitude, category, description, is_active, created_by)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       returning *`,
+      [name, b.province || null, b.city || null, b.longitude || null, b.latitude || null,
+       b.category || '联络站', b.description || null, b.is_active !== false, req.user.admin_id]
+    );
+    await audit(req, 'map_point_create', 'map_point', r.rows[0].id, { name });
+    return ok(res, { point: r.rows[0], message: '标注点已添加' });
+  } catch (e) {
+    return fail(res, 500, '添加标注点失败', { error: e.message });
+  }
+});
+
+app.patch('/api/admin/map/points/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const b = req.body || {};
+    const r = await dbQuery(
+      `update public.map_points set
+         name=$1, province=$2, city=$3, longitude=$4, latitude=$5,
+         category=$6, description=$7, is_active=$8, updated_at=now()
+       where id=$9 returning *`,
+      [String(b.name || '').trim(), b.province || null, b.city || null, b.longitude || null,
+       b.latitude || null, b.category || '联络站', b.description || null, b.is_active !== false, id]
+    );
+    if (!r.rows[0]) return fail(res, 404, '标注点不存在');
+    await audit(req, 'map_point_update', 'map_point', id, { name: r.rows[0].name });
+    return ok(res, { point: r.rows[0], message: '标注点已更新' });
+  } catch (e) {
+    return fail(res, 500, '更新标注点失败', { error: e.message });
+  }
+});
+
+app.delete('/api/admin/map/points/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const r = await dbQuery(`delete from public.map_points where id=$1 returning id`, [id]);
+    if (!r.rows[0]) return fail(res, 404, '标注点不存在');
+    await audit(req, 'map_point_delete', 'map_point', id, {});
+    return ok(res, { message: '标注点已删除' });
+  } catch (e) {
+    return fail(res, 500, '删除标注点失败', { error: e.message });
+  }
+});
+
 // ---------- 活动二维码签到 ----------
 function checkinToken(eventId) {
   const payload = `checkin:${eventId}`;
@@ -2615,7 +2716,16 @@ async function ensureSitePagesSeed() {
     { slug: 'news', title: '新闻公告', description: '校友会新闻与公告' },
     { slug: 'events', title: '活动中心', description: '校友会活动' },
     { slug: 'contact', title: '联系我们', description: '联系我们' },
-    { slug: 'alumni', title: '校友风采', description: '杰出校友风采展示' }
+    { slug: 'alumni', title: '校友风采', description: '杰出校友风采展示' },
+    { slug: 'directory', title: '校友名录', description: '已认证校友名录查询' },
+    { slug: 'forum', title: '校友论坛', description: '校友交流互助' },
+    { slug: 'jobs', title: '校友招聘', description: '校友企业招聘' },
+    { slug: 'companies', title: '校友企业', description: '校友企业黄页' },
+    { slug: 'map', title: '校友地图', description: '校友分布与地标' },
+    { slug: 'messages', title: '校友私信', description: '校友站内沟通' },
+    { slug: 'donate', title: '在线捐赠', description: '支持母校发展' },
+    { slug: 'checkin', title: '活动签到', description: '活动扫码签到' },
+    { slug: 'news-detail', title: '新闻详情', description: '新闻详情页' }
   ];
   for (const p of pages) {
     const exists = await dbQuery("select id from public.site_pages where slug=$1 limit 1", [p.slug]);
@@ -2635,7 +2745,19 @@ async function ensureSiteSectionsSeed() {
     { page_slug: 'home', section_key: 'home_services', section_name: '校友服务', content: { title: '校友服务', subtitle: '为校友提供更贴心的服务', items: [] } },
     { page_slug: 'about', section_key: 'about_intro', section_name: '校友会介绍', content: { title: '校友会介绍', content: '' } },
     { page_slug: 'about', section_key: 'about_contact', section_name: '联系方式', content: { email: 'alumni@example.com', address: '黑龙江省牡丹江市海林市', phone: '' } },
-    { page_slug: 'contact', section_key: 'contact_info', section_name: '联系我们', content: { email: 'alumni@example.com', address: '黑龙江省牡丹江市海林市', phone: '', wechat: '' } }
+    { page_slug: 'contact', section_key: 'contact_info', section_name: '联系我们', content: { email: 'alumni@example.com', address: '黑龙江省牡丹江市海林市', phone: '', wechat: '' } },
+    { page_slug: 'about', section_key: 'about_hero', section_name: '介绍页横幅', content: { eyebrow: 'About', title: '校友会介绍', subtitle: '联络校友、服务校友、回馈母校、助力家乡。' } },
+    { page_slug: 'news', section_key: 'news_hero', section_name: '新闻页横幅', content: { eyebrow: 'News', title: '新闻公告', subtitle: '记录母校发展，发布校友资讯，传递海高声音。' } },
+    { page_slug: 'events', section_key: 'events_hero', section_name: '活动页横幅', content: { eyebrow: 'Events', title: '活动中心', subtitle: '返校日、主题论坛、班级聚会、志愿服务……期待与你重逢。' } },
+    { page_slug: 'directory', section_key: 'directory_hero', section_name: '名录页横幅', content: { eyebrow: 'Directory', title: '校友名录', subtitle: '已认证校友专属：查询同窗、找到同行。' } },
+    { page_slug: 'forum', section_key: 'forum_hero', section_name: '论坛页横幅', content: { eyebrow: 'Forum', title: '校友论坛', subtitle: '校友交流互助，分享工作生活，重逢海高情谊。' } },
+    { page_slug: 'jobs', section_key: 'jobs_hero', section_name: '招聘页横幅', content: { eyebrow: 'Jobs', title: '校友招聘', subtitle: '校友企业发布职位，校友人才精准对接。' } },
+    { page_slug: 'companies', section_key: 'companies_hero', section_name: '企业页横幅', content: { eyebrow: 'Companies', title: '校友企业', subtitle: '凝聚校友企业力量，促进合作共赢。' } },
+    { page_slug: 'map', section_key: 'map_hero', section_name: '地图页横幅', content: { eyebrow: 'Map', title: '校友地图', subtitle: '天涯海角，海高人同在。看看校友们都分布在哪里。' } },
+    { page_slug: 'messages', section_key: 'messages_hero', section_name: '私信页横幅', content: { eyebrow: 'Messages', title: '校友私信', subtitle: '站内即时沟通，聊聊近况、约场球、叙叙旧。' } },
+    { page_slug: 'donate', section_key: 'donate_hero', section_name: '捐赠页横幅', content: { eyebrow: 'Donate', title: '在线捐赠', subtitle: '情系海高，回馈母校，让每一份心意都有回响。' } },
+    { page_slug: 'checkin', section_key: 'checkin_hero', section_name: '签到页横幅', content: { eyebrow: 'Check-in', title: '活动签到', subtitle: '扫码签到，记录你的每一次到场。' } },
+    { page_slug: 'contact', section_key: 'contact_hero', section_name: '联系页横幅', content: { eyebrow: 'Contact', title: '联系我们', subtitle: '校友会秘书处欢迎校友来信来访。' } }
   ];
   for (const item of seed) {
     const exists = await dbQuery(`select id from public.site_sections where section_key=$1 limit 1`, [item.section_key]);

@@ -110,10 +110,15 @@
   // content system: admin edits show up on the public site after refresh
   function detectSiteSlug() {
     const name = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-    if (name === '' || name === 'index.html') return 'home';
-    if (name === 'about.html') return 'about';
-    if (name === 'contact.html') return 'contact';
-    return null;
+    const map = {
+      '': 'home', 'index.html': 'home',
+      'about.html': 'about', 'news.html': 'news', 'news-detail.html': 'news-detail',
+      'events.html': 'events', 'directory.html': 'directory', 'account.html': 'account',
+      'forum.html': 'forum', 'jobs.html': 'jobs', 'companies.html': 'companies',
+      'map.html': 'map', 'messages.html': 'messages', 'contact.html': 'contact',
+      'donate.html': 'donate', 'checkin.html': 'checkin'
+    };
+    return map[name] || null;
   }
 
   async function loadSiteContent() {

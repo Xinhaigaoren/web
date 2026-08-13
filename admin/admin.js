@@ -116,6 +116,8 @@ function setActiveTab(tabName) {
   panels.forEach(panel => panel.classList.toggle('active', panel.id === `${tabName}Panel`));
   if (tabName === 'applications') loadApplications();
   if (tabName === 'homeEditor') loadHomeContent();
+  if (tabName === 'pageEditor') loadPageEditor();
+  if (tabName === 'map') loadMapAdmin();
   if (tabName === 'contentRequests') loadContentRequests();
   if (tabName === 'admins') loadAdminManagement();
   if (tabName === 'account') loadMyAccount();
@@ -1482,6 +1484,204 @@ if (document.querySelector('#contentSectionRows')) {
   document.querySelector('#newSectionToggle').addEventListener('change', toggleSectionKeyInput);
   document.querySelector('#contentPageFilter').addEventListener('change', () => { loadContentSections(); });
   document.querySelector('#contentRefreshBtn').addEventListener('click', () => { loadContentSections(); });
+}
+
+// ---------- 页面内容编辑（所有网站页面） ----------
+const pageEditorSelect = document.querySelector('#pageEditorSelect');
+const pageEditorSectionsBox = document.querySelector('#pageEditorSections');
+
+function pageFieldInput(key, value) {
+  if (value !== null && typeof value === 'object') return '';
+  const v = value === undefined || value === null ? '' : String(value);
+  if (key === 'content' || key === 'html' || key === 'subtitle' || key === 'description' || key === 'intro') {
+    return `<label>${escapeHtml(key)}<textarea name="${escapeHtml(key)}" rows="3">${escapeHtml(v)}</textarea></label>`;
+  }
+  return `<label>${escapeHtml(key)}<input name="${escapeHtml(key)}" value="${escapeHtml(v)}" /></label>`;
+}
+
+async function loadPageEditor() {
+  if (!pageEditorSelect || !pageEditorSectionsBox) return;
+  const slug = pageEditorSelect.value;
+  pageEditorSectionsBox.innerHTML = '<p class="status">正在加载……</p>';
+  try {
+    const data = await api(`/api/site/${slug}?t=${Date.now()}`);
+    const sections = data.sections || [];
+    if (!sections.length) {
+      pageEditorSectionsBox.innerHTML = renderPageEditorSection({
+        section_key: `${slug}_hero`,
+        section_name: '页面横幅',
+        content: { eyebrow: '', title: '', subtitle: '' }
+      });
+      pageEditorSectionsBox.querySelectorAll('form').forEach((form) => form.addEventListener('submit', savePageSection));
+      return;
+    }
+    pageEditorSectionsBox.innerHTML = sections.map((s) => renderPageEditorSection(s)).join('');
+    pageEditorSectionsBox.querySelectorAll('form').forEach((form) => form.addEventListener('submit', savePageSection));
+  } catch (error) {
+    pageEditorSectionsBox.innerHTML = `<p class="status">${escapeHtml(error.message)}</p>`;
+  }
+}
+
+function renderPageEditorSection(section) {
+  const content = safeJson(section.content);
+  const fields = Object.keys(content)
+    .map((k) => pageFieldInput(k, content[k]))
+    .filter(Boolean)
+    .join('') || '<p class="status">暂无字段</p>';
+  return `
+    <form class="editor-form" data-section-key="${escapeHtml(section.section_key)}" data-section-name="${escapeHtml(section.section_name || section.section_key)}">
+      <fieldset>
+        <legend>${escapeHtml(section.section_name || section.section_key)} <code>${escapeHtml(section.section_key)}</code></legend>
+        <div class="field-stack">${fields}</div>
+        <div class="form-actions" style="margin-top:12px">
+          <button type="submit">保存（立即发布）</button>
+        </div>
+        <p class="status"></p>
+      </fieldset>
+    </form>`;
+}
+
+async function savePageSection(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const sectionKey = form.dataset.sectionKey;
+  const sectionName = form.dataset.sectionName || sectionKey;
+  const slug = pageEditorSelect.value;
+  const status = form.querySelector('.status');
+  status.textContent = '正在保存……';
+  status.className = 'status';
+  const content = {};
+  new FormData(form).forEach((value, key) => { content[key] = value; });
+  try {
+    const data = await api('/api/admin/content/sections', {
+      method: 'POST',
+      body: JSON.stringify({ page_slug: slug, section_key: sectionKey, section_name: sectionName, content })
+    });
+    status.textContent = data.message || '已保存';
+    status.className = 'status ok';
+    loadPageEditor();
+  } catch (error) {
+    status.textContent = error.message;
+    status.className = 'status';
+  }
+}
+if (pageEditorSelect) {
+  pageEditorSelect.addEventListener('change', loadPageEditor);
+}
+if (document.querySelector('#pageEditorRefreshBtn')) {
+  document.querySelector('#pageEditorRefreshBtn').addEventListener('click', loadPageEditor);
+}
+
+// ---------- 校友地图管理 ----------
+const mapPointRows = document.querySelector('#mapPointRows');
+const mapStatBox = document.querySelector('#mapStatBox');
+const mapPointForm = document.querySelector('#mapPointForm');
+const mapPointStatus = document.querySelector('#mapPointStatus');
+let mapPointsCache = [];
+
+async function loadMapAdmin() {
+  if (!mapPointRows) return;
+  mapPointRows.innerHTML = '<tr><td colspan="6">正在加载……</td></tr>';
+  if (mapStatBox) mapStatBox.innerHTML = '';
+  try {
+    const [pointsData, statData] = await Promise.all([
+      api('/api/admin/map/points'),
+      api('/api/alumni/map')
+    ]);
+    mapPointsCache = pointsData.items || [];
+    const provinces = statData.provinces || [];
+    const cities = statData.cities || [];
+    const total = provinces.reduce((s, p) => s + (p.count || 0), 0);
+    if (mapStatBox) {
+      mapStatBox.innerHTML = `
+        <article><span>${total}</span><small>已认证校友</small></article>
+        <article><span>${provinces.length}</span><small>覆盖省份</small></article>
+        <article><span>${cities.length}</span><small>覆盖城市</small></article>
+        <article><span>${mapPointsCache.length}</span><small>标注点</small></article>`;
+    }
+    mapPointRows.innerHTML = mapPointsCache.length ? mapPointsCache.map((p) => `
+      <tr>
+        <td><strong>${escapeHtml(p.name)}</strong></td>
+        <td>${escapeHtml(p.province || '')}${p.city ? ' / ' + escapeHtml(p.city) : ''}</td>
+        <td>${escapeHtml(p.category || '联络站')}</td>
+        <td>${escapeHtml(p.description || '')}</td>
+        <td>${p.is_active ? '<span class="badge approved">显示</span>' : '<span class="badge draft">隐藏</span>'}</td>
+        <td><div class="row-actions">
+          <button class="ghost" data-map-edit="${p.id}" type="button">编辑</button>
+          <button class="ghost" data-map-delete="${p.id}" type="button">删除</button>
+        </div></td>
+      </tr>`).join('') : '<tr><td colspan="6">暂无标注点，用下方表单添加</td></tr>';
+  } catch (error) {
+    mapPointRows.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+
+function fillMapPointForm(point) {
+  if (!mapPointForm) return;
+  mapPointForm.reset();
+  const set = (name, value) => { const el = mapPointForm.querySelector(`[name="${name}"]`); if (el) el.value = value || ''; };
+  set('id', point ? point.id : '');
+  set('name', point ? point.name : '');
+  set('province', point ? point.province : '');
+  set('city', point ? point.city : '');
+  set('category', point ? (point.category || '联络站') : '联络站');
+  set('longitude', point ? point.longitude : '');
+  set('latitude', point ? point.latitude : '');
+  set('description', point ? point.description : '');
+  const activeBox = mapPointForm.querySelector('[name="is_active"]');
+  if (activeBox) activeBox.checked = point ? point.is_active !== false : true;
+  if (mapPointStatus) { mapPointStatus.textContent = ''; mapPointStatus.className = 'status'; }
+}
+
+if (mapPointRows) {
+  mapPointRows.addEventListener('click', async (event) => {
+    const editBtn = event.target.closest('button[data-map-edit]');
+    if (editBtn) {
+      const point = mapPointsCache.find((p) => String(p.id) === editBtn.dataset.mapEdit);
+      if (point) { fillMapPointForm(point); mapPointForm.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      return;
+    }
+    const deleteBtn = event.target.closest('button[data-map-delete]');
+    if (deleteBtn && confirm('确认删除该标注点？')) {
+      try {
+        await api(`/api/admin/map/points/${deleteBtn.dataset.mapDelete}`, { method: 'DELETE' });
+        loadMapAdmin();
+      } catch (error) { alert(error.message); }
+    }
+  });
+}
+if (mapPointForm) {
+  mapPointForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (mapPointStatus) { mapPointStatus.textContent = '正在保存……'; mapPointStatus.className = 'status'; }
+    const fd = new FormData(mapPointForm);
+    const id = fd.get('id');
+    const body = {
+      name: fd.get('name'),
+      province: fd.get('province'),
+      city: fd.get('city'),
+      category: fd.get('category'),
+      longitude: fd.get('longitude'),
+      latitude: fd.get('latitude'),
+      description: fd.get('description'),
+      is_active: fd.get('is_active') ? true : false
+    };
+    try {
+      const data = id
+        ? await api(`/api/admin/map/points/${id}`, { method: 'PATCH', body: JSON.stringify(body) })
+        : await api('/api/admin/map/points', { method: 'POST', body: JSON.stringify(body) });
+      if (mapPointStatus) { mapPointStatus.textContent = data.message || '已保存'; mapPointStatus.className = 'status ok'; }
+      fillMapPointForm(null);
+      loadMapAdmin();
+    } catch (error) {
+      if (mapPointStatus) { mapPointStatus.textContent = error.message; mapPointStatus.className = 'status'; }
+    }
+  });
+  const resetBtn = document.querySelector('#mapPointResetBtn');
+  if (resetBtn) resetBtn.addEventListener('click', () => fillMapPointForm(null));
+}
+if (document.querySelector('#mapRefreshBtn')) {
+  document.querySelector('#mapRefreshBtn').addEventListener('click', loadMapAdmin);
 }
 
 // ---------- 论坛管理 ----------

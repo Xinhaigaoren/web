@@ -234,6 +234,10 @@
 .map-bar-track i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #c9985f); border-radius: 999px; }
 .map-bar-count { color: var(--muted); font-size: 13px; text-align: right; }
 .map-city-item { display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; font-size: 14px; color: var(--deep); }
+.map-point-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.map-point-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px; box-shadow: var(--shadow); }
+.map-point-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.map-point-card .more-link { display: inline-block; margin-top: 8px; }
 
 @media (max-width: 860px) {
   .donate-grid, .map-layout { grid-template-columns: 1fr; }

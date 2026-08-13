@@ -65,6 +65,8 @@
       <nav class="tabs" aria-label="后台功能">
         <button class="tab active" data-tab="applications" type="button">校友认证审批</button>
         <button class="tab" data-tab="homeEditor" type="button">编辑官网首页</button>
+        <button class="tab" data-tab="pageEditor" type="button">编辑页面</button>
+        <button class="tab" data-tab="map" type="button">地图管理</button>
         <button class="tab" data-tab="contentRequests" type="button">内容修改审批</button>
         <button class="tab" data-tab="admins" type="button">管理员管理</button>
         <button class="tab" data-tab="account" type="button">我的账号</button>
@@ -213,6 +215,82 @@
             <p class="status" id="homeStatus"></p>
           </form>
         </div>
+      </section>
+
+      <section class="panel" id="pageEditorPanel">
+        <div class="section-title">
+          <div>
+            <h2>编辑页面内容</h2>
+            <p>选一个页面，修改页面顶部标题、副标题、简介等文字。主管理员保存后立即生效，普通管理员生成审批。</p>
+          </div>
+          <button id="pageEditorRefreshBtn" type="button" class="ghost">刷新</button>
+        </div>
+        <label>选择页面
+          <select id="pageEditorSelect">
+            <option value="about">校友会介绍</option>
+            <option value="news">新闻公告</option>
+            <option value="events">活动中心</option>
+            <option value="directory">校友名录</option>
+            <option value="forum">校友论坛</option>
+            <option value="jobs">校友招聘</option>
+            <option value="companies">校友企业</option>
+            <option value="map">校友地图</option>
+            <option value="messages">校友私信</option>
+            <option value="donate">在线捐赠</option>
+            <option value="checkin">活动签到</option>
+            <option value="contact">联系我们</option>
+          </select>
+        </label>
+        <div id="pageEditorSections" style="margin-top:18px"></div>
+      </section>
+
+      <section class="panel" id="mapPanel">
+        <div class="section-title">
+          <div>
+            <h2>校友地图管理</h2>
+            <p>统计来自已认证校友的分布；标注点（联络站、校友企业、地标等）会展示在前台「校友地图」页。</p>
+          </div>
+          <button id="mapRefreshBtn" type="button" class="ghost">刷新</button>
+        </div>
+        <div class="summary-grid" id="mapStatBox"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>名称</th><th>省 / 市</th><th>类型</th><th>描述</th><th>状态</th><th>操作</th></tr>
+            </thead>
+            <tbody id="mapPointRows">
+              <tr><td colspan="6">正在加载……</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <form id="mapPointForm" class="editor-form" style="margin-top:22px">
+          <input type="hidden" name="id" />
+          <fieldset>
+            <legend>添加 / 编辑标注点</legend>
+            <div class="three-fields">
+              <label>名称<input name="name" required placeholder="如：北京校友联络站" /></label>
+              <label>省份<input name="province" placeholder="如：北京市" /></label>
+              <label>城市<input name="city" placeholder="如：北京市" /></label>
+              <label>类型
+                <select name="category">
+                  <option>联络站</option>
+                  <option>校友企业</option>
+                  <option>地标</option>
+                  <option>活动地点</option>
+                </select>
+              </label>
+              <label>经度<input name="longitude" placeholder="可选" /></label>
+              <label>纬度<input name="latitude" placeholder="可选" /></label>
+            </div>
+            <label>描述<textarea name="description" rows="2" placeholder="可选"></textarea></label>
+            <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" name="is_active" checked style="width:auto" /> 前台显示</label>
+            <div class="form-actions" style="margin-top:10px">
+              <button type="submit">保存标注点</button>
+              <button type="button" id="mapPointResetBtn" class="ghost">清空表单</button>
+            </div>
+            <p class="status" id="mapPointStatus"></p>
+          </fieldset>
+        </form>
       </section>
 
       <section class="panel" id="contentRequestsPanel">

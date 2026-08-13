@@ -51,9 +51,9 @@
   <main id="main">
     <section class="page-hero">
       <div class="container">
-        <p class="eyebrow">Map</p>
-        <h1>校友地图</h1>
-        <p>天涯海角，海高人同在。看看校友们都分布在哪里。</p>
+        <p class="eyebrow" data-section="map_hero" data-field="eyebrow">Map</p>
+        <h1 data-section="map_hero" data-field="title">校友地图</h1>
+        <p data-section="map_hero" data-field="subtitle">天涯海角，海高人同在。看看校友们都分布在哪里。</p>
         <div class="crumb"><a href="index.html">首页</a> / 校友地图</div>
       </div>
     </section>
@@ -72,6 +72,12 @@
             <h2 style="color:var(--deep);margin:0 0 16px">按城市分布</h2>
             <input class="search-input" id="citySearch" type="search" placeholder="搜索城市…" aria-label="搜索城市" />
             <div class="map-city-list" id="cityList"></div>
+          </div>
+        </div>
+        <div class="map-points" id="mapPoints" style="margin-top:36px">
+          <h2 style="color:var(--deep);margin:0 0 16px">校友地标与联络站</h2>
+          <div class="map-point-grid" id="mapPointGrid">
+            <div class="empty-state">暂无地标，等管理员在后台添加。</div>
           </div>
         </div>
         <div class="empty-state" id="mapEmpty" hidden>暂无分布数据。</div>
@@ -117,6 +123,7 @@
       const XH = window.XH;
       const provinceList = document.getElementById('provinceList');
       const cityList = document.getElementById('cityList');
+      const pointGrid = document.getElementById('mapPointGrid');
       const emptyBox = document.getElementById('mapEmpty');
       let cities = [];
 
@@ -166,8 +173,33 @@
           : '<div class="empty-state">没有匹配的城市</div>';
       }
 
+      async function loadPoints() {
+        if (!pointGrid) return;
+        try {
+          const data = await XH.api('/api/map/points');
+          const points = data.items || [];
+          if (!points.length) {
+            pointGrid.innerHTML = '<div class="empty-state">暂无地标，等管理员在后台添加。</div>';
+            return;
+          }
+          pointGrid.innerHTML = points.map((p) => `
+            <div class="map-point-card">
+              <div class="map-point-head">
+                <strong>${XH.escapeHtml(p.name)}</strong>
+                <span class="badge approved">${XH.escapeHtml(p.category || '联络站')}</span>
+              </div>
+              <p class="form-tip">${XH.escapeHtml(p.province || '')}${p.city ? ' · ' + XH.escapeHtml(p.city) : ''}</p>
+              <p>${XH.escapeHtml(p.description || '')}</p>
+              <a class="more-link" href="https://map.baidu.com/search/${encodeURIComponent((p.name || '') + ' ' + (p.city || ''))}" target="_blank" rel="noopener">在地图中查看 →</a>
+            </div>`).join('');
+        } catch (error) {
+          pointGrid.innerHTML = `<div class="empty-state">${XH.escapeHtml(error.message)}</div>`;
+        }
+      }
+
       document.getElementById('citySearch').addEventListener('input', renderCities);
       loadMap();
+      loadPoints();
     })();
   </script>
 </body>
