@@ -861,6 +861,12 @@
       // 支持首页「加入新海高人」直达注册 / 登录
       if (location.hash === '#register') switchAuthTab('register');
       if (location.hash === '#login') switchAuthTab('login');
+      // 后台登录页「忘记密码」跳转到此，直达多层级重置流程
+      if (location.hash === '#forgot') {
+        authView.hidden = true;
+        resetView.hidden = false;
+        showResetStep('Account');
+      }
       loadCenter();
     })();
   </script>

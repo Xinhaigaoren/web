@@ -532,13 +532,25 @@ async function setupInviteFromUrl() {
   }
 }
 
+function adminLoginMethod() {
+  const active = document.querySelector('[data-admin-login].active');
+  return active ? active.dataset.adminLogin : 'password';
+}
+document.querySelectorAll('[data-admin-login]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-admin-login]').forEach((b) => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('[data-admin-pane]').forEach((pane) => { pane.hidden = pane.dataset.adminPane !== btn.dataset.adminLogin; });
+    loginStatus.textContent = '';
+  });
+});
+
 const adminSendCodeBtn = document.getElementById('adminSendCodeBtn');
 const adminCodeBox = document.getElementById('adminCodeBox');
 const adminCodeText = document.getElementById('adminCodeText');
 let adminSendTimer = null;
 if (adminSendCodeBtn) {
   adminSendCodeBtn.addEventListener('click', async () => {
-    const account = String(document.getElementById('adminLoginAccount').value || '').trim();
+    const account = String(document.getElementById('adminLoginCodeAccount').value || '').trim();
     if (!account) { loginStatus.textContent = '请先输入管理员账号（邮箱或手机号）'; return; }
     if (!/^\d{6,}$/.test(account) && !account.includes('@')) { loginStatus.textContent = '请输入有效的邮箱或手机号'; return; }
     adminSendCodeBtn.disabled = true;
@@ -578,10 +590,15 @@ loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   loginStatus.textContent = '';
   try {
-    const response = await fetchJson(`${API_BASE_URL}/api/admin/code-login`, {
+    const method = adminLoginMethod();
+    const path = method === 'code' ? '/api/admin/code-login' : '/api/admin/login';
+    const body = method === 'code'
+      ? { email: document.getElementById('adminLoginCodeAccount').value, code: document.getElementById('adminLoginCode').value }
+      : { username: document.getElementById('adminLoginAccount').value, password: document.getElementById('adminLoginPassword').value };
+    const response = await fetchJson(`${API_BASE_URL}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: document.getElementById('adminLoginAccount').value, code: document.getElementById('adminLoginCode').value })
+      body: JSON.stringify(body)
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) throw new Error(data.message || '登录失败');

@@ -118,6 +118,11 @@ async function ensureRootAdmin() {
 // 指定主管理员（张文轩）：邮箱/手机号账号升级为主管理员，支持验证码登录后台
 async function ensureZhangSuperAdmin() {
   if (!pool) return;
+  // 合并：移除旧的 ROOT_ADMIN 主管理员身份，主管理员统一为张文轩
+  await dbQuery(
+    `delete from public.admin_accounts
+     where user_id in (select id from public.app_users where phone='ROOT_ADMIN')`
+  ).catch(() => {});
   const email = 'zwxzwx861@qq.com';
   const phone = '18545372006';
   let ids = await dbQuery(
@@ -305,9 +310,35 @@ app.get('/', (req, res) => {
   res.json({ message: '接口不存在，请访问 /api/health' });
 });
 
-// 管理员密码登录已停用：统一使用「邮箱/手机号 + 验证码」登录
+// 管理员登录：主管理员统一为张文轩（邮箱/手机号 + 密码），忘记密码走多层级重置
 app.post(['/api/admin/login', '/api/login'], async (req, res) => {
-  return fail(res, 400, '密码登录已停用，请使用「邮箱/手机号 + 验证码」登录');
+  try {
+    const loginName = normalizeEmail(req.body?.username || req.body?.phone || req.body?.email || '');
+    const password = String(req.body?.password || '').trim();
+    if (!loginName || !password) return fail(res, 400, '请输入邮箱/手机号和密码');
+    const r = await dbQuery(
+      `select u.id as user_id, u.display_name, u.phone, u.role, u.status, u.password_hash,
+              a.id as admin_id, a.admin_level, a.status as admin_status
+       from public.app_users u
+       join public.admin_accounts a on a.user_id=u.id
+       where lower(u.email)=lower($1) or u.phone=$1
+       order by (u.email is not null) desc, (u.password_hash is not null) desc, u.id asc`,
+      [loginName]
+    );
+    let user = null;
+    for (const row of r.rows) {
+      if (!row.password_hash) continue;
+      if (row.status !== 'active' || row.admin_status !== 'approved') continue;
+      if (await bcrypt.compare(password, row.password_hash)) { user = row; break; }
+    }
+    if (!user) return fail(res, 401, '账号或密码错误，或该账号未设置密码，请先设置后再登录');
+    user.role = user.admin_level === 'super_admin' ? 'super_admin' : 'admin';
+    const token = signToken(user);
+    await audit({ ...req, user }, 'admin_login', 'admin_account', user.admin_id, { loginName });
+    return ok(res, { token, user: { name: user.display_name, role: user.role, admin_level: user.admin_level } });
+  } catch (e) {
+    return fail(res, 500, '登录失败', { error: e.message });
+  }
 });
 
 // 管理员验证码登录：仅「已批准」且未被停用的管理员可用验证码登录后台
@@ -3936,7 +3967,7 @@ app.use((req, res) => {
 });
 
 bootstrapSchema()
-  .then(() => ensureRootAdmin())
+  .then(() => ensureZhangSuperAdmin())
   .then(() => ensureContentTables())
   .then(() => ensureUserTableExtras())
   .then(() => ensurePasswordResetTable())
