@@ -26,26 +26,12 @@
       <form id="loginForm">
         <label>账号（邮箱 / 手机号）<input id="adminLoginAccount" name="username" autocomplete="username" required placeholder="主管理员：zwxzwx861@qq.com 或 18545372006" /></label>
         <label>密码<input id="adminLoginPassword" name="password" type="password" autocomplete="current-password" required placeholder="请输入密码" /></label>
-        <label>验证码
-          <span class="code-row">
-            <input id="adminCaptcha" maxlength="4" autocomplete="off" required placeholder="4 位验证码" />
-            <img id="adminCaptchaImg" alt="验证码，点击刷新" title="看不清？点击刷新" style="height:44px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:#eef3f9" />
-          </span>
-        </label>
-        <input type="hidden" id="adminCaptchaId" />
         <div class="form-actions" style="justify-content:flex-end;margin-top:4px">
           <a href="account.html#forgot" class="form-link">忘记密码？</a>
         </div>
         <button type="submit">登录后台</button>
         <p class="status" id="loginStatus"></p>
       </form>
-      <div id="mfaView" hidden>
-        <h2 style="margin:0 0 8px">二次验证</h2>
-        <p class="form-tip">请输入身份验证器中的 6 位动态码（或备用恢复码）。</p>
-        <label>动态码<input id="mfaCode" inputmode="numeric" maxlength="6" placeholder="6 位数字" /></label>
-        <button type="button" id="mfaVerifyBtn" class="ghost">验证</button>
-        <p class="status" id="mfaStatus"></p>
-      </div>
       <div id="forcePwdView" hidden>
         <h2 style="margin:0 0 8px">首次登录 / 密码已过期</h2>
         <p class="form-tip">为保障账号安全，请先设置新密码（至少 12 位，含大小写、数字和特殊字符）。</p>
@@ -952,29 +938,6 @@
           </form>
         </div>
 
-        <div class="editor-card compact-card">
-          <h3>二次验证（MFA）</h3>
-          <p class="status" style="margin:0 0 10px">建议开启：登录时除密码外还需输入 6 位动态码，显著提升后台安全。</p>
-          <div id="mfaBindBox" hidden>
-            <p class="status">请用 Google Authenticator / Authy 扫描下方二维码，或手动输入密钥，然后输入 6 位动态码完成绑定。</p>
-            <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-              <img id="mfaQrImg" alt="MFA 二维码" style="width:150px;height:150px;border:1px solid var(--line);border-radius:10px;background:#fff" />
-              <div style="flex:1;min-width:220px">
-                <label>密钥<input id="mfaSecret" readonly /></label>
-                <label>6 位动态码<input id="mfaBindCode" inputmode="numeric" maxlength="6" placeholder="输入验证器中的动态码" /></label>
-                <div class="row-actions" style="margin-top:8px">
-                  <button type="button" id="mfaBindBtn" class="approve">确认绑定</button>
-                  <button type="button" id="mfaCancelBtn" class="ghost">取消</button>
-                </div>
-              </div>
-            </div>
-            <p class="status" id="mfaBindStatus"></p>
-          </div>
-          <div class="row-actions">
-            <button type="button" id="mfaEnableBtn">开启 MFA</button>
-            <button type="button" id="mfaDisableBtn" class="ghost">解绑 MFA</button>
-          </div>
-        </div>
       </section>
 
       <section class="panel" id="mediaPanel">

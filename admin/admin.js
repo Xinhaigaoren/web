@@ -541,9 +541,7 @@ loginForm.addEventListener('submit', async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         username: document.getElementById('adminLoginAccount').value,
-        password: document.getElementById('adminLoginPassword').value,
-        captcha: document.getElementById('adminCaptcha').value,
-        captcha_id: document.getElementById('adminCaptchaId').value
+        password: document.getElementById('adminLoginPassword').value
       })
     });
     const data = await response.json().catch(() => ({}));
@@ -551,18 +549,10 @@ loginForm.addEventListener('submit', async (event) => {
     handleAdminLogin(data);
   } catch (error) {
     loginStatus.textContent = error.message;
-    loadAdminCaptcha();
   }
 });
 
 function handleAdminLogin(data) {
-  if (data.require_mfa) {
-    window._mfaSession = data.mfa_session;
-    loginForm.hidden = true;
-    document.getElementById('mfaView').hidden = false;
-    document.getElementById('mfaStatus').textContent = '';
-    return;
-  }
   if (data.must_change_password) {
     window._pendingToken = data.token || '';
     loginForm.hidden = true;
@@ -575,38 +565,6 @@ function handleAdminLogin(data) {
   showDashboard();
   Promise.allSettled([loadApplications(), loadHomeContent(), loadContentRequests()]);
 }
-
-async function loadAdminCaptcha() {
-  try {
-    const response = await fetchJson(`${API_BASE_URL}/api/admin/captcha`);
-    const data = await response.json().catch(() => ({}));
-    const img = document.getElementById('adminCaptchaImg');
-    if (img && data.svg) img.src = data.svg;
-    document.getElementById('adminCaptchaId').value = data.sid || '';
-    const inp = document.getElementById('adminCaptcha');
-    if (inp) inp.value = '';
-  } catch (_) {}
-}
-const adminCaptchaImg = document.getElementById('adminCaptchaImg');
-if (adminCaptchaImg) adminCaptchaImg.addEventListener('click', loadAdminCaptcha);
-loadAdminCaptcha();
-
-document.getElementById('mfaVerifyBtn').addEventListener('click', async () => {
-  const status = document.getElementById('mfaStatus');
-  status.textContent = '';
-  try {
-    const response = await fetchJson(`${API_BASE_URL}/api/admin/mfa/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mfa_session: window._mfaSession, code: document.getElementById('mfaCode').value })
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || data.ok === false) throw new Error(data.message || '动态码错误');
-    handleAdminLogin(data);
-  } catch (error) {
-    status.textContent = error.message;
-  }
-});
 
 document.getElementById('forcePwdBtn').addEventListener('click', async () => {
   const status = document.getElementById('forcePwdStatus');
@@ -885,49 +843,6 @@ function fromDatetimeLocal(value) {
   if (!value) return null;
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
-}
-
-// ---------- MFA 绑定 / 解绑 ----------
-const mfaEnableBtn = document.getElementById('mfaEnableBtn');
-const mfaDisableBtn = document.getElementById('mfaDisableBtn');
-const mfaBindBox = document.getElementById('mfaBindBox');
-if (mfaEnableBtn) {
-  mfaEnableBtn.addEventListener('click', async () => {
-    try {
-      const data = await api('/api/admin/mfa/secret');
-      document.getElementById('mfaSecret').value = data.secret || '';
-      const img = document.getElementById('mfaQrImg');
-      if (img && data.qr_url) img.src = data.qr_url;
-      document.getElementById('mfaBindCode').value = '';
-      document.getElementById('mfaBindStatus').textContent = '';
-      if (mfaBindBox) mfaBindBox.hidden = false;
-    } catch (error) { alert(error.message); }
-  });
-  document.getElementById('mfaCancelBtn').addEventListener('click', () => { if (mfaBindBox) mfaBindBox.hidden = true; });
-  document.getElementById('mfaBindBtn').addEventListener('click', async () => {
-    const status = document.getElementById('mfaBindStatus');
-    status.textContent = '正在绑定……';
-    try {
-      const data = await api('/api/admin/mfa/bind', {
-        method: 'POST',
-        body: JSON.stringify({ secret: document.getElementById('mfaSecret').value, code: document.getElementById('mfaBindCode').value })
-      });
-      status.textContent = data.message || 'MFA 已开启';
-      if (mfaBindBox) mfaBindBox.hidden = true;
-    } catch (error) {
-      status.textContent = error.message;
-    }
-  });
-}
-if (mfaDisableBtn) {
-  mfaDisableBtn.addEventListener('click', async () => {
-    const code = prompt('请输入当前验证器中的 6 位动态码以解绑 MFA：');
-    if (code === null) return;
-    try {
-      const data = await api('/api/admin/mfa/unbind', { method: 'POST', body: JSON.stringify({ code }) });
-      alert(data.message || 'MFA 已解绑');
-    } catch (error) { alert(error.message); }
-  });
 }
 
 function fmtDateTime(value) {
