@@ -3569,7 +3569,7 @@ app.post('/api/auth/security/setup', requireAuth, async (req, res) => {
         await dbQuery(
           `insert into public.user_security_answers (user_id, question_id, question_text, answer_hash)
            values ($1,$2,$3,$4)
-           on conflict (user_id, question_id) do update set answer_hash=excluded.answer_hash, question_text=excluded.question_text, updated_at=now()`,
+           on conflict (user_id, question_id) do update set answer_hash=excluded.answer_hash, question_text=excluded.question_text`,
           [userId, question.id, question.text, answerHash]
         );
       }
