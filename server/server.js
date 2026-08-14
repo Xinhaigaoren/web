@@ -3867,9 +3867,27 @@ app.get('/api/auth/security/status', requireAuth, async (req, res) => {
 
 // 忘记密码：根据账号返回可用重置方式
 const resetSessions = new Map(); // session_token -> { user_id, account, questions, created }
+// 重置流程限流：同一账号/IP 15 分钟内最多 5 次请求，防止滥用
+const resetRateMap = new Map();
+function resetRateLimited(account, ip) {
+  const key = `${account || 'anon'}|${ip || ''}`;
+  const now = Date.now();
+  const entry = resetRateMap.get(key);
+  if (!entry || now - entry.ts > 15 * 60 * 1000) {
+    resetRateMap.set(key, { ts: now, count: 1 });
+    if (resetRateMap.size > 5000) resetRateMap.clear();
+    return false;
+  }
+  entry.count += 1;
+  if (entry.count > 5) return true;
+  entry.ts = now;
+  return false;
+}
+
 app.post('/api/reset/start', async (req, res) => {
   try {
     const account = normalizeEmail(req.body?.account || req.body?.email || '');
+    if (resetRateLimited(account, req.ip)) return fail(res, 429, '操作过于频繁，请 15 分钟后再试');
     const config = await getResetConfig();
     const find = account
       ? await dbQuery(
@@ -3918,6 +3936,8 @@ function getResetSession(sessionToken, res) {
 // L1：验证安全问题（逐题）
 app.post('/api/reset/l1/verify', async (req, res) => {
   try {
+    const rs = req.body?.session_token && resetSessions.get(req.body.session_token);
+    if (resetRateLimited(rs ? rs.account : '', req.ip)) return fail(res, 429, '操作过于频繁，请 15 分钟后再试');
     const s = getResetSession(req.body?.session_token, res);
     if (!s) return;
     const config = await getResetConfig();
@@ -3965,6 +3985,8 @@ app.post('/api/reset/l1/verify', async (req, res) => {
 // L2：验证恢复码
 app.post('/api/reset/l2/verify', async (req, res) => {
   try {
+    const rs = req.body?.session_token && resetSessions.get(req.body.session_token);
+    if (resetRateLimited(rs ? rs.account : '', req.ip)) return fail(res, 429, '操作过于频繁，请 15 分钟后再试');
     const s = getResetSession(req.body?.session_token, res);
     if (!s) return;
     const config = await getResetConfig();
@@ -4006,6 +4028,8 @@ app.post('/api/reset/l2/verify', async (req, res) => {
 // L3：提交人工审核申请（校友信息，不含身份证）
 app.post('/api/reset/l3/submit', async (req, res) => {
   try {
+    const rs = req.body?.session_token && resetSessions.get(req.body.session_token);
+    if (resetRateLimited(rs ? rs.account : '', req.ip)) return fail(res, 429, '操作过于频繁，请 15 分钟后再试');
     const s = getResetSession(req.body?.session_token, res);
     if (!s) return;
     const u = await dbQuery(
@@ -4042,6 +4066,8 @@ app.post('/api/reset/l3/submit', async (req, res) => {
 // L3：使用管理员审核通过后生成的临时重置码
 app.post('/api/reset/l3/use', async (req, res) => {
   try {
+    const rs = req.body?.session_token && resetSessions.get(req.body.session_token);
+    if (resetRateLimited(rs ? rs.account : '', req.ip)) return fail(res, 429, '操作过于频繁，请 15 分钟后再试');
     const s = getResetSession(req.body?.session_token, res);
     if (!s) return;
     const code = String(req.body?.code || '').trim();
@@ -4063,6 +4089,8 @@ app.post('/api/reset/l3/use', async (req, res) => {
 // 重置成功：设置新密码
 app.post('/api/reset/confirm', async (req, res) => {
   try {
+    const rs = req.body?.session_token && resetSessions.get(req.body.session_token);
+    if (resetRateLimited(rs ? rs.account : '', req.ip)) return fail(res, 429, '操作过于频繁，请 15 分钟后再试');
     const s = getResetSession(req.body?.session_token, res);
     if (!s) return;
     const password = String(req.body?.password || '');
