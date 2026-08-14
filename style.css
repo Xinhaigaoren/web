@@ -239,3 +239,24 @@ time { color: var(--accent); font-weight: 700; font-size: 14px; }
 @media (max-width: 640px) {
   .brand-logo { width: 46px; height: 46px; }
 }
+
+/* ===== ???????2026-08? ===== */
+body { background: linear-gradient(180deg, #fbfcfe 0%, #ffffff 42%, #f6f8fc 100%); }
+.site-header { background: rgba(255,255,255,.84); box-shadow: 0 10px 32px rgba(23,32,51,.07); }
+.hero-media::after { content: ""; position: absolute; inset: 0; background: radial-gradient(1100px 460px at 82% 18%, rgba(202,166,106,.26), transparent 56%); pointer-events: none; }
+.hero-card { box-shadow: 0 26px 70px rgba(9,24,45,.35); }
+.btn.primary { background: linear-gradient(135deg, #a8773a, #8a5a22); box-shadow: 0 12px 30px rgba(154,107,47,.30); }
+.btn.primary:hover { box-shadow: 0 16px 40px rgba(154,107,47,.42); transform: translateY(-3px); }
+.btn.ghost:hover { background: rgba(255,255,255,.16); }
+.news-card, .event-item, .alumni-card, .story-link, .contact-card, .map-point-card, .auth-card, .join-card, .account-panel, .account-menu, .map-city-item, .modal-card { box-shadow: 0 14px 40px rgba(23,32,51,.07); }
+.story-link:hover, .news-card:hover, .event-item:hover, .alumni-card:hover, .contact-card:hover { transform: translateY(-5px); box-shadow: 0 22px 52px rgba(23,32,51,.13); }
+.section { padding: 88px 0; }
+.section-head h2, .page-section h2 { letter-spacing: .02em; }
+.page-hero { background: linear-gradient(135deg, #142849 0%, #274472 58%, #1d3a63 100%); position: relative; overflow: hidden; }
+.page-hero::before { content: ""; position: absolute; width: 480px; height: 480px; border-radius: 50%; background: radial-gradient(circle, rgba(202,166,106,.28), transparent 65%); top: -170px; right: -90px; pointer-events: none; }
+.page-hero h1 { text-shadow: 0 6px 24px rgba(0,0,0,.20); position: relative; }
+.page-hero .container > * { position: relative; }
+.notice-bar { background: linear-gradient(90deg, #fdf6ec, #fff8ef); }
+.join-card { border: 1px solid #f0e2cc; background: linear-gradient(135deg, #ffffff 0%, #fdf7ef 100%); }
+.primary-nav a { font-weight: 600; }
+.primary-nav a:hover { color: var(--accent); }
