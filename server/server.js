@@ -249,6 +249,16 @@ async function requireAdmin(req, res, next) {
   return next();
 }
 
+// 校友专属功能：仅「已认证校友 / 管理员」可使用
+async function requireAlumni(req, res, next) {
+  if (!req.user) return fail(res, 401, '未登录');
+  const role = await currentRole(req);
+  if (!['alumni', 'admin', 'super_admin'].includes(role)) {
+    return fail(res, 403, '完成校友认证后才可使用该功能');
+  }
+  return next();
+}
+
 function requireSuperAdmin(req, res, next) {
   if (!req.user || req.user.role !== 'super_admin') return fail(res, 403, '需要主管理员权限');
   return next();
@@ -654,7 +664,7 @@ async function currentRole(req) {
 }
 
 // 校友通讯录：已认证校友和管理员可看
-app.get('/api/alumni/directory', requireAuth, async (req, res) => {
+app.get('/api/alumni/directory', requireAuth, requireAlumni, async (req, res) => {
   try {
     const role = await currentRole(req);
     if (!['alumni', 'admin', 'super_admin'].includes(role)) return fail(res, 403, '完成校友认证后才可查看通讯录');
@@ -2293,7 +2303,7 @@ app.get('/api/forum/posts/:id', async (req, res) => {
   }
 });
 
-app.post('/api/forum/posts', requireAuth, async (req, res) => {
+app.post('/api/forum/posts', requireAuth, requireAlumni, async (req, res) => {
   try {
     const b = req.body || {};
     const title = String(b.title || '').trim();
@@ -2316,7 +2326,7 @@ app.post('/api/forum/posts', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/forum/posts/:id/replies', requireAuth, async (req, res) => {
+app.post('/api/forum/posts/:id/replies', requireAuth, requireAlumni, async (req, res) => {
   try {
     const id = parsePositiveInt(req.params.id, 0);
     const content = String(req.body?.content || '').trim();
@@ -2789,7 +2799,7 @@ app.post('/api/admin/notifications/send', requireAuth, requireAdmin, async (req,
 });
 
 // ---------- 校友地图 ----------
-app.get('/api/alumni/map', requireAuth, async (req, res) => {
+app.get('/api/alumni/map', requireAuth, requireAlumni, async (req, res) => {
   try {
     const r = await dbQuery(
       `select current_province, current_city, count(*)::int as count
@@ -3225,7 +3235,7 @@ function conversationPair(a, b) {
 }
 
 // ---------- 即时聊天（站内私信，轮询） ----------
-app.post('/api/messages/conversations', requireAuth, async (req, res) => {
+app.post('/api/messages/conversations', requireAuth, requireAlumni, async (req, res) => {
   try {
     const peerId = parsePositiveInt(req.body?.peer_id, 0);
     if (!peerId) return fail(res, 400, '请选择聊天对象');
@@ -3246,7 +3256,7 @@ app.post('/api/messages/conversations', requireAuth, async (req, res) => {
   }
 });
 
-app.get('/api/messages/conversations', requireAuth, async (req, res) => {
+app.get('/api/messages/conversations', requireAuth, requireAlumni, async (req, res) => {
   try {
     const r = await dbQuery(
       `select c.id, c.user_a, c.user_b, c.last_message_at,
@@ -3267,7 +3277,7 @@ app.get('/api/messages/conversations', requireAuth, async (req, res) => {
   }
 });
 
-app.get('/api/messages/conversations/:id', requireAuth, async (req, res) => {
+app.get('/api/messages/conversations/:id', requireAuth, requireAlumni, async (req, res) => {
   try {
     const id = parsePositiveInt(req.params.id, 0);
     const convo = await dbQuery(
@@ -3296,7 +3306,7 @@ app.get('/api/messages/conversations/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/messages/conversations/:id', requireAuth, async (req, res) => {
+app.post('/api/messages/conversations/:id', requireAuth, requireAlumni, async (req, res) => {
   try {
     const id = parsePositiveInt(req.params.id, 0);
     const content = String(req.body?.content || '').trim();
@@ -3318,7 +3328,7 @@ app.post('/api/messages/conversations/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.get('/api/messages/unread-count', requireAuth, async (req, res) => {
+app.get('/api/messages/unread-count', requireAuth, requireAlumni, async (req, res) => {
   try {
     const r = await dbQuery(
       `select count(*)::int as count
@@ -3484,7 +3494,7 @@ function genOrderNo() {
 }
 
 // ---------- 智能校友搜索（模糊搜索；配置 AI_API_KEY 后可启用 AI 增强） ----------
-app.get('/api/alumni/search', requireAuth, async (req, res) => {
+app.get('/api/alumni/search', requireAuth, requireAlumni, async (req, res) => {
   try {
     const q = String(req.query.q || '').trim();
     if (q.length < 2) return fail(res, 400, '请输入至少 2 个字');
