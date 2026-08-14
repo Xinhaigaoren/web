@@ -115,7 +115,7 @@ async function ensureRootAdmin() {
   }
 }
 
-// 指定主管理员（张文轩）：邮箱/手机号账号升级为主管理员，支持验证码登录后台
+// 指定主管理员（张文轩）：邮箱/手机号账号升级为主管理员，未设置密码时赋予初始密码
 async function ensureZhangSuperAdmin() {
   if (!pool) return;
   // 合并：移除旧的 ROOT_ADMIN 主管理员身份，主管理员统一为张文轩
@@ -125,24 +125,29 @@ async function ensureZhangSuperAdmin() {
   ).catch(() => {});
   const email = 'zwxzwx861@qq.com';
   const phone = '18545372006';
+  // 未设置密码时使用环境变量 ADMIN_PASSWORD（默认 Hailin@2026#Admin）作为初始密码
+  const initHash = await bcrypt.hash(ADMIN_PASSWORD || 'Hailin@2026#Admin', 10);
   let ids = await dbQuery(
     `select id from public.app_users where lower(email)=lower($1) or phone=$2`,
     [email, phone]
   ).catch(() => ({ rows: [] }));
   if (!ids.rows || !ids.rows.length) {
     const ins = await dbQuery(
-      `insert into public.app_users (email, phone, display_name, role, status, is_email_verified)
-       values ($1,$2,'张文轩','super_admin','active',true)
-       on conflict (email) do update set role='super_admin', status='active', phone=coalesce(excluded.phone, public.app_users.phone), updated_at=now()
+      `insert into public.app_users (email, phone, display_name, role, status, is_email_verified, password_hash)
+       values ($1,$2,'张文轩','super_admin','active',true,$3)
+       on conflict (email) do update set role='super_admin', status='active', phone=coalesce(excluded.phone, public.app_users.phone), password_hash=coalesce(public.app_users.password_hash, excluded.password_hash), updated_at=now()
        returning id`,
-      [email, phone]
+      [email, phone, initHash]
     ).catch(() => ({ rows: [] }));
     ids = ins.rows && ins.rows.length ? { rows: [{ id: ins.rows[0].id }] } : { rows: [] };
   }
   for (const row of ids.rows || []) {
     await dbQuery(
-      `update public.app_users set role='super_admin', status='active', display_name=coalesce(display_name,'张文轩'), updated_at=now() where id=$1`,
-      [row.id]
+      `update public.app_users
+       set role='super_admin', status='active', display_name=coalesce(display_name,'张文轩'),
+           password_hash=coalesce(password_hash, $2), updated_at=now()
+       where id=$1`,
+      [row.id, initHash]
     ).catch(() => {});
     await dbQuery(
       `insert into public.admin_accounts (user_id, admin_level, status, approved_at, note)
@@ -341,42 +346,9 @@ app.post(['/api/admin/login', '/api/login'], async (req, res) => {
   }
 });
 
-// 管理员验证码登录：仅「已批准」且未被停用的管理员可用验证码登录后台
+// 管理员验证码登录已取消：统一使用「邮箱/手机号 + 密码」登录后台
 app.post('/api/admin/code-login', async (req, res) => {
-  try {
-    const identifier = normalizeEmail(req.body?.email || req.body?.account || req.body?.username || '');
-    const code = String(req.body?.code || '').trim();
-    if (!identifier || !/^\d{6}$/.test(code)) return fail(res, 400, '请输入邮箱/手机号和 6 位验证码');
-    const codeHash = crypto.createHash('sha256').update(code).digest('hex');
-    const r = await dbQuery(
-      `select lc.id, lc.expires_at, u.id as user_id, u.display_name, u.phone, u.role, u.status,
-              a.id as admin_id, a.admin_level, a.status as admin_status
-       from public.login_codes lc
-       join public.app_users u on (lower(u.email) = lower($1) or u.phone = $1)
-       left join public.admin_accounts a on a.user_id = u.id
-       where lc.email = $1 and lc.code_hash = $2 and lc.used = false and lc.purpose = 'login'
-       order by lc.created_at desc
-       limit 1`,
-      [identifier, codeHash]
-    );
-    const row = r.rows[0];
-    if (!row) return fail(res, 400, '验证码无效或已使用');
-    if (new Date(row.expires_at) < new Date()) return fail(res, 400, '验证码已过期，请重新获取');
-    if (row.status === 'disabled') return fail(res, 403, '该账号已被停用，请联系主管理员');
-    if (row.admin_id && row.admin_status === 'disabled') return fail(res, 403, '管理员权限已被主管理员停止，无法登录后台');
-    if (!row.admin_id || row.admin_status !== 'approved') return fail(res, 403, '该账号尚未被批准为管理员，无法登录后台');
-    await dbQuery(`update public.login_codes set used=true where id=$1`, [row.id]);
-    const adminRole = row.admin_level === 'super_admin' ? 'super_admin' : 'admin';
-    const token = jwt.sign(
-      { user_id: row.user_id, role: adminRole, admin_id: row.admin_id, admin_level: row.admin_level },
-      TOKEN_SECRET,
-      { expiresIn: '7d' }
-    );
-    await audit({ ...req, user: { user_id: row.user_id, role: row.role } }, 'admin_code_login', 'admin_account', row.admin_id, { identifier });
-    return ok(res, { token, user: { name: row.display_name, role: adminRole, admin_level: row.admin_level } });
-  } catch (e) {
-    return fail(res, 500, '验证码登录失败', { error: e.message });
-  }
+  return fail(res, 400, '管理员验证码登录已取消，请使用「邮箱/手机号 + 密码」登录，或通过「忘记密码」重置');
 });
 
 app.get('/api/admin/me', requireAuth, requireAdmin, async (req, res) => {
