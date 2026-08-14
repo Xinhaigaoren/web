@@ -139,6 +139,7 @@ function setActiveTab(tabName) {
   if (tabName === 'homeEditor') loadHomeContent();
   if (tabName === 'pageEditor') loadPageEditor();
   if (tabName === 'map') loadMapAdmin();
+  if (tabName === 'resetAdmin') loadResetAdmin();
   if (tabName === 'contentRequests') loadContentRequests();
   if (tabName === 'admins') loadAdminManagement();
   if (tabName === 'account') loadMyAccount();
@@ -1799,6 +1800,102 @@ if (mapPointForm) {
 }
 if (document.querySelector('#mapRefreshBtn')) {
   document.querySelector('#mapRefreshBtn').addEventListener('click', loadMapAdmin);
+}
+
+// ---------- 密码重置管理（配置 + 工单） ----------
+async function loadResetAdmin() {
+  const rowsBox = document.querySelector('#resetTicketRows');
+  const cfgForm = document.querySelector('#resetConfigForm');
+  if (cfgForm) {
+    try {
+      const data = await api('/api/admin/reset/config');
+      const cfg = data.config || {};
+      cfgForm.enable_l1.checked = cfg.enable_l1 !== false;
+      cfgForm.enable_l2.checked = cfg.enable_l2 !== false;
+      cfgForm.enable_l3.checked = cfg.enable_l3 === true;
+      cfgForm.l1_threshold.value = cfg.l1_threshold || 3;
+      cfgForm.l2_threshold.value = cfg.l2_threshold || 5;
+    } catch (error) {
+      document.querySelector('#resetConfigStatus').textContent = error.message;
+    }
+  }
+  if (!rowsBox) return;
+  rowsBox.innerHTML = '<tr><td colspan="6">正在加载……</td></tr>';
+  try {
+    const data = await api('/api/admin/reset/tickets');
+    const items = data.items || [];
+    const statusMap = { pending: '待审核', approved: '已通过（等待用户使用重置码）', rejected: '已拒绝', used: '已重置' };
+    rowsBox.innerHTML = items.length ? items.map((t) => {
+      let info = {};
+      try { info = typeof t.info === 'string' ? JSON.parse(t.info) : (t.info || {}); } catch (_) {}
+      const infoText = [info.real_name, `手机尾号${info.phone_last4 || '--'}`, info.graduation_year ? `${info.graduation_year}届` : '', info.teacher_name ? `班主任：${info.teacher_name}` : ''].filter(Boolean).join(' / ');
+      const statusClass = { pending: 'pending', approved: 'approved', rejected: 'rejected', used: 'approved' }[t.status] || 'draft';
+      return `
+        <tr>
+          <td>${escapeHtml(t.ticket_no || '')}</td>
+          <td>${escapeHtml(t.display_name || '')}<br><small>${escapeHtml(t.email || '')} ${escapeHtml(t.phone || '')}</small></td>
+          <td>${escapeHtml(infoText)}<br><small>${escapeHtml(info.description || '')}</small>${t.reject_reason ? `<br><small class="badge rejected">拒绝原因：${escapeHtml(t.reject_reason)}</small>` : ''}</td>
+          <td><span class="badge ${statusClass}">${statusMap[t.status] || t.status}</span></td>
+          <td>${escapeHtml(String(t.created_at || '').slice(0, 16).replace('T', ' '))}</td>
+          <td><div class="row-actions">
+            ${t.status === 'pending' ? `
+              <button class="approve" data-reset-approve="${t.id}">通过并生成重置码</button>
+              <button class="reject" data-reset-reject="${t.id}">拒绝</button>` : ''}
+            ${t.reset_code && (t.status === 'approved' || t.status === 'used') ? `<span class="badge approved">重置码：${escapeHtml(t.reset_code)}</span>` : ''}
+          </div></td>
+        </tr>`;
+    }).join('') : '<tr><td colspan="6">暂无重置工单</td></tr>';
+  } catch (error) {
+    rowsBox.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+if (document.querySelector('#resetConfigForm')) {
+  document.querySelector('#resetConfigForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const status = document.querySelector('#resetConfigStatus');
+    status.textContent = '正在保存……';
+    try {
+      const f = event.currentTarget;
+      await api('/api/admin/reset/config', {
+        method: 'PUT',
+        body: JSON.stringify({
+          enable_l1: f.enable_l1.checked,
+          enable_l2: f.enable_l2.checked,
+          enable_l3: f.enable_l3.checked,
+          l1_threshold: Number(f.l1_threshold.value),
+          l2_threshold: Number(f.l2_threshold.value)
+        })
+      });
+      status.textContent = '配置已保存';
+      status.className = 'status ok';
+    } catch (error) {
+      status.textContent = error.message;
+      status.className = 'status';
+    }
+  });
+}
+if (document.querySelector('#resetTicketRows')) {
+  document.querySelector('#resetTicketRows').addEventListener('click', async (event) => {
+    const approve = event.target.closest('button[data-reset-approve]');
+    const reject = event.target.closest('button[data-reset-reject]');
+    try {
+      if (approve) {
+        const data = await api(`/api/admin/reset/tickets/${approve.dataset.resetApprove}/approve`, { method: 'POST' });
+        alert(`已通过，重置码：${data.reset_code}（10 分钟内有效）。请告知该校友，也可在站内信中查看。`);
+      }
+      if (reject) {
+        const reason = prompt('请输入拒绝原因：', '资料不符');
+        if (reason === null) return;
+        await api(`/api/admin/reset/tickets/${reject.dataset.resetReject}/reject`, { method: 'POST', body: JSON.stringify({ reason }) });
+      }
+      loadResetAdmin();
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+}
+if (document.querySelector('#loadResetAdminBtn')) {
+  document.querySelector('#loadResetAdminBtn').addEventListener('click', loadResetAdmin);
 }
 
 // ---------- 论坛管理 ----------

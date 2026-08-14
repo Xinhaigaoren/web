@@ -102,6 +102,7 @@
 .field { display: grid; gap: 8px; margin-bottom: 16px; }
 .field label { color: var(--muted); font-size: 14px; }
 .field input, .field select, .field textarea { height: 46px; border: 1px solid var(--line); border-radius: 12px; padding: 0 14px; font: inherit; color: var(--ink); background: #fff; width: 100%; }
+.three-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .field textarea { height: auto; padding: 12px 14px; resize: vertical; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid rgba(154,107,47,.18); border-color: var(--accent); }
 .form-actions { display: flex; gap: 12px; align-items: center; margin-top: 8px; flex-wrap: wrap; }

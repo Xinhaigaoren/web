@@ -370,7 +370,30 @@ app.post(['/api/auth/register', '/api/alumni/register'], async (req, res) => {
 });
 
 app.post('/api/auth/login', async (req, res) => {
-  return fail(res, 400, '密码登录已停用，请使用「邮箱/手机号 + 验证码」登录');
+  try {
+    const loginName = normalizeEmail(req.body?.email || req.body?.username || req.body?.phone || '');
+    const password = String(req.body?.password || '').trim();
+    if (!loginName || !password) return fail(res, 400, '请输入邮箱/手机号和密码');
+    const r = await dbQuery(
+      `select id as user_id, display_name, email, phone, role, status, password_hash
+       from public.app_users
+       where lower(email)=lower($1) or phone=$1
+       order by (email is not null) desc, (password_hash is not null) desc, id asc`,
+      [loginName]
+    );
+    let user = null;
+    for (const row of r.rows) {
+      if (!row.password_hash) continue;
+      if (await bcrypt.compare(password, row.password_hash)) { user = row; break; }
+    }
+    if (!user) return fail(res, 401, '账号或密码错误，或该账号未设置密码，请使用验证码登录');
+    if (user.status === 'disabled') return fail(res, 403, '该账号已被停用，请联系管理员');
+    const token = jwt.sign({ user_id: user.user_id, role: user.role, type: 'alumni' }, TOKEN_SECRET, { expiresIn: '7d' });
+    await dbQuery(`update public.app_users set last_login_at=now(), updated_at=now() where id=$1`, [user.user_id]).catch(() => {});
+    return ok(res, { token, user: { name: user.display_name, email: user.email, phone: user.phone, role: user.role, status: user.status } });
+  } catch (e) {
+    return fail(res, 500, '登录失败', { error: e.message });
+  }
 });
 
 // 管理员本人资料和密码
@@ -1605,6 +1628,84 @@ async function ensureUserTableExtras() {
   if (!pool) return;
   await dbQuery(`alter table public.app_users add column if not exists wechat_openid text`);
   await dbQuery(`create unique index if not exists idx_app_users_wechat_openid on public.app_users(wechat_openid) where wechat_openid is not null`);
+  await dbQuery(`alter table public.app_users add column if not exists enabled_l1 boolean default false`).catch(() => {});
+  await dbQuery(`alter table public.app_users add column if not exists enabled_l2 boolean default false`).catch(() => {});
+  await dbQuery(`alter table public.app_users add column if not exists l1_locked_until timestamptz`).catch(() => {});
+  await dbQuery(`alter table public.app_users add column if not exists l2_locked boolean default false`).catch(() => {});
+  await dbQuery(`alter table public.app_users add column if not exists l1_fail_count integer default 0`).catch(() => {});
+  await dbQuery(`alter table public.app_users add column if not exists l2_fail_count integer default 0`).catch(() => {});
+}
+
+async function ensureResetTables() {
+  if (!pool) return;
+  await dbQuery(`create table if not exists public.user_security_answers (
+    id bigserial primary key,
+    user_id bigint not null references public.app_users(id) on delete cascade,
+    question_id text not null,
+    question_text text not null,
+    answer_hash text not null,
+    created_at timestamptz default now(),
+    unique (user_id, question_id)
+  )`);
+  await dbQuery(`create table if not exists public.recovery_codes (
+    id bigserial primary key,
+    user_id bigint not null references public.app_users(id) on delete cascade,
+    code_hash text not null,
+    status integer default 0,
+    used_at timestamptz,
+    created_at timestamptz default now()
+  )`);
+  await dbQuery(`create index if not exists idx_recovery_codes_user on public.recovery_codes(user_id)`);
+  await dbQuery(`create table if not exists public.reset_tickets (
+    id bigserial primary key,
+    ticket_no text unique,
+    user_id bigint not null references public.app_users(id) on delete cascade,
+    info jsonb default '{}',
+    status text default 'pending',
+    reviewer_id bigint,
+    reject_reason text,
+    reset_code text,
+    reset_token text,
+    token_expire timestamptz,
+    created_at timestamptz default now(),
+    reviewed_at timestamptz,
+    reset_at timestamptz
+  )`);
+  await dbQuery(`create index if not exists idx_reset_tickets_user on public.reset_tickets(user_id)`);
+  await dbQuery(`create table if not exists public.reset_logs (
+    id bigserial primary key,
+    user_id bigint,
+    action text,
+    result text,
+    detail jsonb default '{}',
+    ip_address text,
+    created_at timestamptz default now()
+  )`);
+  await dbQuery(`create table if not exists public.system_settings (
+    key text primary key,
+    value text,
+    updated_at timestamptz default now()
+  )`);
+}
+
+// 校友主题安全问题库（适配校友场景）
+const SECURITY_QUESTIONS = [
+  { id: 'q1', text: '您高中班主任的姓氏是什么？' },
+  { id: 'q2', text: '您毕业的届别是哪一年（如 2006）？' },
+  { id: 'q3', text: '您就读高中的班级是几班？' },
+  { id: 'q4', text: '您初中的校名是什么？' },
+  { id: 'q5', text: '您第一只宠物的名字是什么？' },
+  { id: 'q6', text: '您父亲的出生城市是哪里？' },
+  { id: 'q7', text: '您最好的童年朋友叫什么？' },
+  { id: 'q8', text: '您最喜欢的老师的全名是什么？' },
+  { id: 'q9', text: '您最要好的同桌叫什么？' },
+  { id: 'q10', text: '您祖父的职业是什么？' }
+];
+
+function genRecoveryCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const part = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  return `${part()}-${part()}`;
 }
 
 // ---------- 用户管理 ----------
@@ -3420,6 +3521,406 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
     return fail(res, 500, '获取用户信息失败', { error: e.message });
   }
 });
+
+// ==================== 多层级密码重置（安全设置 + L1/L2/L3） ====================
+async function getResetConfig() {
+  const r = await dbQuery(`select value from public.system_settings where key='reset_config' limit 1`).catch(() => ({ rows: [] }));
+  let cfg = {};
+  if (r.rows[0]) { try { cfg = JSON.parse(r.rows[0].value); } catch (_) { cfg = {}; } }
+  return {
+    enable_l1: cfg.enable_l1 !== false,
+    enable_l2: cfg.enable_l2 !== false,
+    enable_l3: cfg.enable_l3 === true,
+    l1_threshold: Math.min(5, Math.max(3, Number(cfg.l1_threshold) || 3)),
+    l2_threshold: Math.min(10, Math.max(3, Number(cfg.l2_threshold) || 5))
+  };
+}
+
+async function resetLog(userId, action, result, detail = {}, req) {
+  await dbQuery(
+    `insert into public.reset_logs (user_id, action, result, detail, ip_address)
+     values ($1,$2,$3,$4,$5)`,
+    [userId || null, action, result, JSON.stringify(detail), req && req.ip || null]
+  ).catch(() => {});
+}
+
+// 安全设置：设置密码 / 安全问题 / 生成恢复码（需登录）
+app.post('/api/auth/security/setup', requireAuth, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const userId = req.user.user_id;
+    if (b.password) {
+      const cur = await dbQuery(`select password_hash from public.app_users where id=$1 limit 1`, [userId]);
+      if (cur.rows[0] && cur.rows[0].password_hash) {
+        const old = String(b.old_password || '');
+        if (!old || !(await bcrypt.compare(old, cur.rows[0].password_hash))) {
+          return fail(res, 401, '原密码不正确');
+        }
+      }
+      const hash = await bcrypt.hash(String(b.password), 10);
+      await dbQuery(`update public.app_users set password_hash=$1, updated_at=now() where id=$2`, [hash, userId]);
+    }
+    if (Array.isArray(b.security_answers) && b.security_answers.length) {
+      for (const item of b.security_answers.slice(0, 3)) {
+        const question = SECURITY_QUESTIONS.find((q) => q.id === item.question_id);
+        const answer = String(item.answer || '').trim();
+        if (!question || answer.length < 2) continue;
+        const answerHash = await bcrypt.hash(answer, 10);
+        await dbQuery(
+          `insert into public.user_security_answers (user_id, question_id, question_text, answer_hash)
+           values ($1,$2,$3,$4)
+           on conflict (user_id, question_id) do update set answer_hash=excluded.answer_hash, question_text=excluded.question_text, updated_at=now()`,
+          [userId, question.id, question.text, answerHash]
+        );
+      }
+      await dbQuery(`update public.app_users set enabled_l1=true, updated_at=now() where id=$1`, [userId]);
+    }
+    let codes = [];
+    if (b.enable_l2) {
+      await dbQuery(`delete from public.recovery_codes where user_id=$1`, [userId]);
+      for (let i = 0; i < 10; i++) {
+        const code = genRecoveryCode();
+        const codeHash = await bcrypt.hash(code, 10);
+        await dbQuery(`insert into public.recovery_codes (user_id, code_hash) values ($1,$2)`, [userId, codeHash]);
+        codes.push(code);
+      }
+      await dbQuery(`update public.app_users set enabled_l2=true, l2_fail_count=0, updated_at=now() where id=$1`, [userId]);
+    }
+    return ok(res, { codes, message: '安全设置已保存。恢复码仅显示这一次，请立即截图或抄写保存。' });
+  } catch (e) {
+    return fail(res, 500, '保存安全设置失败', { error: e.message });
+  }
+});
+
+app.get('/api/auth/security/status', requireAuth, async (req, res) => {
+  try {
+    const u = await dbQuery(
+      `select enabled_l1, enabled_l2, l1_locked_until, l2_locked from public.app_users where id=$1 limit 1`,
+      [req.user.user_id]
+    );
+    const row = u.rows[0] || {};
+    const answers = await dbQuery(
+      `select question_id, question_text from public.user_security_answers where user_id=$1 order by id asc`,
+      [req.user.user_id]
+    );
+    const codeCount = await dbQuery(
+      `select count(*)::int as c from public.recovery_codes where user_id=$1 and status=0`,
+      [req.user.user_id]
+    );
+    return ok(res, {
+      enabled_l1: !!row.enabled_l1,
+      enabled_l2: !!row.enabled_l2,
+      l1_locked_until: row.l1_locked_until || null,
+      l2_locked: !!row.l2_locked,
+      answers: answers.rows,
+      unused_recovery_codes: codeCount.rows[0] ? codeCount.rows[0].c : 0,
+      questions: SECURITY_QUESTIONS
+    });
+  } catch (e) {
+    return fail(res, 500, '获取安全设置失败', { error: e.message });
+  }
+});
+
+// 忘记密码：根据账号返回可用重置方式
+const resetSessions = new Map(); // session_token -> { user_id, account, questions, created }
+app.post('/api/reset/start', async (req, res) => {
+  try {
+    const account = normalizeEmail(req.body?.account || req.body?.email || '');
+    const config = await getResetConfig();
+    const find = account
+      ? await dbQuery(
+          `select id, display_name, enabled_l1, enabled_l2, l1_locked_until, l2_locked
+           from public.app_users where lower(email)=lower($1) or phone=$1 limit 1`,
+          [account]
+        ).catch(() => ({ rows: [] }))
+      : { rows: [] };
+    const user = find.rows[0];
+    if (!user) return ok(res, { methods: [], message: '若该账号存在，请按流程操作' });
+    const sessionToken = crypto.randomBytes(16).toString('hex');
+    let questions = [];
+    if (user.enabled_l1 && !user.l1_locked_until) {
+      const ans = await dbQuery(
+        `select question_id, question_text from public.user_security_answers where user_id=$1 order by id asc`,
+        [user.id]
+      );
+      const pool = ans.rows;
+      if (pool.length >= 2) {
+        const shuffled = pool.slice().sort(() => Math.random() - 0.5).slice(0, 2);
+        questions = shuffled.map((q) => ({ question_id: q.question_id, question_text: q.question_text }));
+      }
+    }
+    resetSessions.set(sessionToken, { user_id: user.id, account, questions, l1_done: 0, created: Date.now() });
+    const methods = [];
+    if (config.enable_l1 && user.enabled_l1) {
+      methods.push({ type: 'l1', name: '安全问题验证', locked: !!user.l1_locked_until, remaining_seconds: user.l1_locked_until ? Math.max(0, Math.floor((new Date(user.l1_locked_until) - new Date()) / 1000)) : 0, has_questions: questions.length >= 2 });
+    }
+    if (config.enable_l2 && user.enabled_l2) {
+      methods.push({ type: 'l2', name: '备用恢复码', locked: !!user.l2_locked, remaining_seconds: 0 });
+    }
+    if (config.enable_l3) methods.push({ type: 'l3', name: '人工客服审核', locked: false, remaining_seconds: 0 });
+    return ok(res, { session_token: sessionToken, methods, questions, l3_enabled: config.enable_l3 });
+  } catch (e) {
+    return fail(res, 500, '获取重置方式失败', { error: e.message });
+  }
+});
+
+function getResetSession(sessionToken, res) {
+  const s = sessionToken && resetSessions.get(sessionToken);
+  if (!s) { fail(res, 400, '会话无效或已过期，请重新发起'); return null; }
+  if (Date.now() - s.created > 30 * 60 * 1000) { resetSessions.delete(sessionToken); fail(res, 400, '会话已过期，请重新发起'); return null; }
+  return s;
+}
+
+// L1：验证安全问题（逐题）
+app.post('/api/reset/l1/verify', async (req, res) => {
+  try {
+    const s = getResetSession(req.body?.session_token, res);
+    if (!s) return;
+    const config = await getResetConfig();
+    const u = await dbQuery(
+      `select l1_fail_count, l1_locked_until from public.app_users where id=$1 limit 1`,
+      [s.user_id]
+    );
+    const user = u.rows[0];
+    if (!user) return fail(res, 404, '账号不存在');
+    if (user.l1_locked_until && new Date(user.l1_locked_until) > new Date()) {
+      return fail(res, 403, '安全问题验证已锁定，请稍后再试或使用其他方式');
+    }
+    const question = s.questions[s.l1_done];
+    if (!question) return fail(res, 400, '没有待验证的问题');
+    if (String(req.body?.question_id) !== question.question_id) return fail(res, 400, '问题不匹配，请重新发起');
+    const ans = await dbQuery(
+      `select answer_hash from public.user_security_answers where user_id=$1 and question_id=$2 limit 1`,
+      [s.user_id, question.question_id]
+    );
+    const okMatch = ans.rows[0] && await bcrypt.compare(String(req.body?.answer || '').trim(), ans.rows[0].answer_hash);
+    if (!okMatch) {
+      const fails = (user.l1_fail_count || 0) + 1;
+      if (fails >= config.l1_threshold) {
+        await dbQuery(`update public.app_users set l1_fail_count=0, l1_locked_until=now()+interval '24 hours' where id=$1`, [s.user_id]);
+        await resetLog(s.user_id, 'l1_verify', 'locked', { question_id: question.question_id }, req);
+        return fail(res, 403, '安全问题验证失败次数过多，该方式已锁定 24 小时，请使用其他方式');
+      }
+      await dbQuery(`update public.app_users set l1_fail_count=$1 where id=$2`, [fails, s.user_id]);
+      await resetLog(s.user_id, 'l1_verify', 'fail', { question_id: question.question_id }, req);
+      return fail(res, 400, `答案错误，剩余尝试次数：${config.l1_threshold - fails} 次`);
+    }
+    s.l1_done += 1;
+    await resetLog(s.user_id, 'l1_verify', 'success', { question_id: question.question_id }, req);
+    if (s.l1_done >= 2) {
+      await dbQuery(`update public.app_users set l1_fail_count=0 where id=$1`, [s.user_id]);
+      return ok(res, { passed: true, is_complete: true, message: '身份验证通过，请设置新密码' });
+    }
+    const next = s.questions[s.l1_done];
+    return ok(res, { passed: true, is_complete: false, next_question: next, message: '回答正确，请回答下一题' });
+  } catch (e) {
+    return fail(res, 500, '验证失败', { error: e.message });
+  }
+});
+
+// L2：验证恢复码
+app.post('/api/reset/l2/verify', async (req, res) => {
+  try {
+    const s = getResetSession(req.body?.session_token, res);
+    if (!s) return;
+    const config = await getResetConfig();
+    const u = await dbQuery(`select l2_fail_count, l2_locked from public.app_users where id=$1 limit 1`, [s.user_id]);
+    const user = u.rows[0];
+    if (!user) return fail(res, 404, '账号不存在');
+    if (user.l2_locked) return fail(res, 403, '恢复码验证已锁定，请联系客服人工重置');
+    const code = String(req.body?.code || '').toUpperCase().trim();
+    const codes = await dbQuery(
+      `select id, code_hash, status from public.recovery_codes where user_id=$1 order by id asc`,
+      [s.user_id]
+    );
+    let matched = null;
+    for (const row of codes.rows) {
+      if (row.status === 0 && await bcrypt.compare(code, row.code_hash)) { matched = row; break; }
+    }
+    if (!matched) {
+      const fails = (user.l2_fail_count || 0) + 1;
+      if (fails >= config.l2_threshold) {
+        await dbQuery(`update public.app_users set l2_fail_count=0, l2_locked=true where id=$1`, [s.user_id]);
+        await resetLog(s.user_id, 'l2_verify', 'locked', {}, req);
+        return fail(res, 403, '恢复码验证失败次数过多，该方式已锁定，请联系客服人工重置');
+      }
+      await dbQuery(`update public.app_users set l2_fail_count=$1 where id=$2`, [fails, s.user_id]);
+      await resetLog(s.user_id, 'l2_verify', 'fail', {}, req);
+      return fail(res, 400, `恢复码错误，剩余尝试次数：${config.l2_threshold - fails} 次`);
+    }
+    await dbQuery(`update public.recovery_codes set status=1, used_at=now() where id=$1`, [matched.id]);
+    const newCode = genRecoveryCode();
+    await dbQuery(`insert into public.recovery_codes (user_id, code_hash) values ($1,$2)`, [s.user_id, await bcrypt.hash(newCode, 10)]);
+    await dbQuery(`update public.app_users set l2_fail_count=0 where id=$1`, [s.user_id]);
+    await resetLog(s.user_id, 'l2_verify', 'success', {}, req);
+    return ok(res, { passed: true, message: '恢复码验证通过，请设置新密码' });
+  } catch (e) {
+    return fail(res, 500, '验证失败', { error: e.message });
+  }
+});
+
+// L3：提交人工审核申请（校友信息，不含身份证）
+app.post('/api/reset/l3/submit', async (req, res) => {
+  try {
+    const s = getResetSession(req.body?.session_token, res);
+    if (!s) return;
+    const u = await dbQuery(
+      `select u.display_name, u.email, u.phone, p.graduation_year, p.class_name, p.homeroom_teacher
+       from public.app_users u
+       left join public.alumni_profiles p on p.user_id = u.id
+       where u.id=$1 limit 1`,
+      [s.user_id]
+    );
+    if (!u.rows[0]) return fail(res, 404, '账号不存在');
+    const b = req.body || {};
+    const info = {
+      real_name: String(b.real_name || '').trim(),
+      phone_last4: String(b.phone_last4 || '').trim(),
+      graduation_year: String(b.graduation_year || '').trim(),
+      teacher_name: String(b.teacher_name || '').trim(),
+      description: String(b.description || '').trim()
+    };
+    if (!info.real_name || !info.phone_last4) return fail(res, 400, '请填写姓名和手机号后四位');
+    const pending = await dbQuery(`select id from public.reset_tickets where user_id=$1 and status='pending' limit 1`, [s.user_id]);
+    if (pending.rows[0]) return fail(res, 400, '您已有一个待审核的申请，请耐心等待');
+    const ticketNo = `RST-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+    await dbQuery(
+      `insert into public.reset_tickets (ticket_no, user_id, info, status) values ($1,$2,$3,'pending')`,
+      [ticketNo, s.user_id, JSON.stringify(info)]
+    );
+    await resetLog(s.user_id, 'l3_submit', 'success', { ticket_no: ticketNo }, req);
+    return ok(res, { ticket_no: ticketNo, message: '申请已提交，请等待管理员审核（预计 1~4 小时）' });
+  } catch (e) {
+    return fail(res, 500, '提交失败', { error: e.message });
+  }
+});
+
+// L3：使用管理员审核通过后生成的临时重置码
+app.post('/api/reset/l3/use', async (req, res) => {
+  try {
+    const s = getResetSession(req.body?.session_token, res);
+    if (!s) return;
+    const code = String(req.body?.code || '').trim();
+    const t = await dbQuery(
+      `select id, status, reset_code, token_expire from public.reset_tickets
+       where user_id=$1 and status='approved' and reset_code=$2 order by id desc limit 1`,
+      [s.user_id, code]
+    );
+    const row = t.rows[0];
+    if (!row) return fail(res, 400, '重置码无效，请确认管理员提供的重置码');
+    if (row.token_expire && new Date(row.token_expire) < new Date()) return fail(res, 400, '重置码已过期，请重新联系管理员');
+    await dbQuery(`update public.reset_tickets set reset_token='used', reset_at=now() where id=$1`, [row.id]);
+    return ok(res, { passed: true, message: '重置码验证通过，请设置新密码' });
+  } catch (e) {
+    return fail(res, 500, '验证失败', { error: e.message });
+  }
+});
+
+// 重置成功：设置新密码
+app.post('/api/reset/confirm', async (req, res) => {
+  try {
+    const s = getResetSession(req.body?.session_token, res);
+    if (!s) return;
+    const password = String(req.body?.password || '');
+    if (password.length < 8) return fail(res, 400, '密码至少 8 位');
+    const hash = await bcrypt.hash(password, 10);
+    const u = await dbQuery(`select email, phone from public.app_users where id=$1 limit 1`, [s.user_id]);
+    await dbQuery(
+      `update public.app_users set password_hash=$1, updated_at=now()
+       where id=$2 or (email is not null and lower(email)=lower($3)) or (phone is not null and phone=$4)`,
+      [hash, s.user_id, u.rows[0]?.email || '', u.rows[0]?.phone || null]
+    );
+    await resetLog(s.user_id, 'reset_success', 'success', {}, req);
+    resetSessions.delete(req.body?.session_token);
+    return ok(res, { message: '密码已重置成功，请用新密码登录' });
+  } catch (e) {
+    return fail(res, 500, '重置失败', { error: e.message });
+  }
+});
+
+// 管理员：重置配置
+app.get('/api/admin/reset/config', requireAuth, requireAdmin, async (req, res) => {
+  return ok(res, { config: await getResetConfig() });
+});
+
+app.put('/api/admin/reset/config', requireAuth, requireSuperAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const value = JSON.stringify({
+      enable_l1: b.enable_l1 !== false,
+      enable_l2: b.enable_l2 !== false,
+      enable_l3: b.enable_l3 === true,
+      l1_threshold: Number(b.l1_threshold) || 3,
+      l2_threshold: Number(b.l2_threshold) || 5
+    });
+    await dbQuery(
+      `insert into public.system_settings (key, value, updated_at) values ('reset_config',$1,now())
+       on conflict (key) do update set value=excluded.value, updated_at=now()`,
+      [value]
+    );
+    return ok(res, { message: '重置配置已保存' });
+  } catch (e) {
+    return fail(res, 500, '保存配置失败', { error: e.message });
+  }
+});
+
+// 管理员：重置工单
+app.get('/api/admin/reset/tickets', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select t.*, u.display_name, u.email, u.phone
+       from public.reset_tickets t
+       left join public.app_users u on u.id = t.user_id
+       order by t.created_at desc limit 200`
+    );
+    return ok(res, { items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取工单失败', { error: e.message });
+  }
+});
+
+app.post('/api/admin/reset/tickets/:id/approve', requireAuth, requireSuperAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const resetCode = genRecoveryCode().replace('-', '').slice(0, 8);
+    const r = await dbQuery(
+      `update public.reset_tickets set status='approved', reviewer_id=$1, reset_code=$2, token_expire=now()+interval '10 minutes', reviewed_at=now()
+       where id=$3 returning *`,
+      [req.user.admin_id, resetCode, id]
+    );
+    if (!r.rows[0]) return fail(res, 404, '工单不存在');
+    await dbQuery(
+      `insert into public.notifications (user_id, title, content, link)
+       values ($1,'密码重置申请已通过','管理员已审核通过您的密码重置申请。重置码：'||$2||'（10 分钟内有效）。请回到「忘记密码」页面选择人工客服方式并输入该重置码。','account.html')`,
+      [r.rows[0].user_id, resetCode]
+    ).catch(() => {});
+    return ok(res, { reset_code: resetCode, message: `已通过，重置码：${resetCode}（10 分钟内有效）` });
+  } catch (e) {
+    return fail(res, 500, '审核失败', { error: e.message });
+  }
+});
+
+app.post('/api/admin/reset/tickets/:id/reject', requireAuth, requireSuperAdmin, async (req, res) => {
+  try {
+    const id = parsePositiveInt(req.params.id, 0);
+    const reason = String(req.body?.reason || '资料不符').trim();
+    const r = await dbQuery(
+      `update public.reset_tickets set status='rejected', reviewer_id=$1, reject_reason=$2, reviewed_at=now()
+       where id=$3 returning *`,
+      [req.user.admin_id, reason, id]
+    );
+    if (!r.rows[0]) return fail(res, 404, '工单不存在');
+    await dbQuery(
+      `insert into public.notifications (user_id, title, content)
+       values ($1,'密码重置申请被拒绝','您的密码重置申请已被拒绝：$2。如有疑问请联系管理员。','account.html')`,
+      [r.rows[0].user_id, reason]
+    ).catch(() => {});
+    return ok(res, { message: '已拒绝该申请' });
+  } catch (e) {
+    return fail(res, 500, '审核失败', { error: e.message });
+  }
+});
+
 app.use((req, res) => {
   fail(res, 404, '接口不存在');
 });
@@ -3430,6 +3931,7 @@ bootstrapSchema()
   .then(() => ensureUserTableExtras())
   .then(() => ensurePasswordResetTable())
   .then(() => ensureAlumniProfileExtras())
+  .then(() => ensureResetTables())
   .then(() => ensurePhase2Tables())
   .then(() => ensureSitePagesSeed())
   .then(() => ensureSiteSectionsSeed())

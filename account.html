@@ -70,19 +70,33 @@
             </div>
 
             <form id="loginForm" class="auth-form">
-              <div class="field"><label for="loginName">邮箱 / 手机号</label><input id="loginName" name="loginName" autocomplete="username" required placeholder="注册时填写的邮箱或手机号" /></div>
-              <div class="field"><label for="loginCode">验证码</label>
-                <div class="code-row">
-                  <input id="loginCode" name="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required placeholder="6 位数字" />
-                  <button type="button" id="sendCodeBtn" class="btn ghost">获取验证码</button>
+              <div class="auth-sub-tabs" role="tablist" aria-label="登录方式">
+                <button type="button" class="active" data-login-method="code">验证码登录</button>
+                <button type="button" data-login-method="password">密码登录</button>
+              </div>
+              <div data-login-pane="code">
+                <div class="field"><label for="loginName">邮箱 / 手机号</label><input id="loginName" name="loginName" autocomplete="username" required placeholder="注册时填写的邮箱或手机号" /></div>
+                <div class="field"><label for="loginCode">验证码</label>
+                  <div class="code-row">
+                    <input id="loginCode" name="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required placeholder="6 位数字" />
+                    <button type="button" id="sendCodeBtn" class="btn ghost">获取验证码</button>
+                  </div>
+                </div>
+                <div id="loginCodeBox" hidden style="text-align:center;margin:10px 0;padding:12px;border:1px dashed var(--accent);border-radius:12px;background:rgba(59,130,246,.06)">
+                  <p class="form-tip" style="margin:0 0 4px">你的验证码（10 分钟内有效，已自动填入）</p>
+                  <p id="loginCodeText" style="font-size:26px;font-weight:800;color:var(--accent);letter-spacing:4px;margin:0"></p>
+                </div>
+                <div class="form-actions">
+                  <button class="btn primary" type="submit">验证码登录</button>
                 </div>
               </div>
-              <div id="loginCodeBox" hidden style="text-align:center;margin:10px 0;padding:12px;border:1px dashed var(--accent);border-radius:12px;background:rgba(59,130,246,.06)">
-                <p class="form-tip" style="margin:0 0 4px">你的验证码（10 分钟内有效，已自动填入）</p>
-                <p id="loginCodeText" style="font-size:26px;font-weight:800;color:var(--accent);letter-spacing:4px;margin:0"></p>
-              </div>
-              <div class="form-actions">
-                <button class="btn primary" type="submit">验证码登录</button>
+              <div data-login-pane="password" hidden>
+                <div class="field"><label for="loginPwdName">邮箱 / 手机号</label><input id="loginPwdName" name="username" autocomplete="username" required placeholder="注册时填写的邮箱或手机号" /></div>
+                <div class="field"><label for="loginPassword">密码</label><input id="loginPassword" name="password" type="password" autocomplete="current-password" required placeholder="请输入密码" /></div>
+                <div class="form-actions">
+                  <button class="btn primary" type="submit">密码登录</button>
+                  <a class="form-link" href="#" id="forgotLink">忘记密码？</a>
+                </div>
               </div>
               <div class="divider-or">或使用微信</div>
               <button type="button" id="wechatLoginBtn" class="btn btn-wechat">微信扫码登录</button>
@@ -102,12 +116,60 @@
           </div>
         </div>
 
+        <!-- 忘记密码：多层级重置 -->
+        <div id="resetView" hidden class="auth-wrap">
+          <div class="auth-card">
+            <h2 style="margin:0 0 6px">找回密码</h2>
+            <p class="form-tip">通过您预设的安全问题 / 恢复码 / 人工审核即可重置密码，无需邮箱或短信。</p>
+            <div id="resetStepAccount">
+              <div class="field"><label for="resetAccount">邮箱 / 手机号</label><input id="resetAccount" autocomplete="username" required placeholder="注册时填写的邮箱或手机号" /></div>
+              <button class="btn primary" type="button" id="resetStartBtn">下一步</button>
+            </div>
+            <div id="resetStepMethods" hidden>
+              <p class="form-tip" style="margin-bottom:10px">请选择一种重置方式：</p>
+              <div id="resetMethods" style="display:grid;gap:10px"></div>
+            </div>
+            <div id="resetStepL1" hidden>
+              <p id="resetL1Progress" class="form-tip"></p>
+              <div class="field"><label id="resetL1Question">问题</label><input id="resetL1Answer" required /></div>
+              <button class="btn primary" type="button" id="resetL1SubmitBtn">提交答案</button>
+            </div>
+            <div id="resetStepL2" hidden>
+              <div class="field"><label for="resetL2Code">恢复码（格式 XXXX-XXXX）</label><input id="resetL2Code" placeholder="如 AB3K-7X9Q" /></div>
+              <button class="btn primary" type="button" id="resetL2SubmitBtn">验证恢复码</button>
+            </div>
+            <div id="resetStepL3" hidden>
+              <p class="form-tip">填写以下校友信息提交人工审核（不涉及身份证等隐私）：</p>
+              <div class="field"><label>真实姓名</label><input id="resetL3Name" required /></div>
+              <div class="field"><label>注册手机号后四位</label><input id="resetL3Phone" maxlength="4" required /></div>
+              <div class="field"><label>毕业届别（如 2006）</label><input id="resetL3Year" /></div>
+              <div class="field"><label>班主任姓名（选填）</label><input id="resetL3Teacher" /></div>
+              <div class="field"><label>补充说明（选填）</label><textarea id="resetL3Desc" rows="2"></textarea></div>
+              <button class="btn primary" type="button" id="resetL3SubmitBtn">提交申请</button>
+            </div>
+            <div id="resetStepL3Code" hidden>
+              <div class="field"><label for="resetL3Code">管理员提供的重置码</label><input id="resetL3Code" placeholder="8 位重置码" /></div>
+              <button class="btn primary" type="button" id="resetL3UseBtn">验证重置码</button>
+            </div>
+            <div id="resetStepPassword" hidden>
+              <div class="field"><label for="resetNewPwd">新密码（至少 8 位）</label><input id="resetNewPwd" type="password" autocomplete="new-password" required /></div>
+              <div class="field"><label for="resetNewPwd2">确认新密码</label><input id="resetNewPwd2" type="password" autocomplete="new-password" required /></div>
+              <button class="btn primary" type="button" id="resetConfirmBtn">重置密码</button>
+            </div>
+            <p class="form-status" id="resetStatus" role="status" aria-live="polite"></p>
+            <div class="form-actions" style="margin-top:10px">
+              <button class="btn ghost" type="button" id="resetBackBtn">返回登录</button>
+            </div>
+          </div>
+        </div>
+
         <!-- 已登录：个人中心 -->
         <div id="centerView" hidden>
           <div class="account-layout">
             <nav class="account-menu" aria-label="个人中心菜单">
               <a href="#certPanel" data-menu="cert" class="active">我的认证</a>
               <a href="#profilePanel" data-menu="profile">我的资料</a>
+              <a href="#securityPanel" data-menu="security">安全设置</a>
               <a href="#notifyPanel" data-menu="notify">我的消息</a>
               <a href="messages.html">我的私信</a>
               <a href="directory.html">校友名录</a>
@@ -163,6 +225,34 @@
                   </div>
                   <p class="form-status" id="profileStatus" role="status" aria-live="polite"></p>
                 </form>
+              </section>
+
+              <!-- 安全设置 -->
+              <section class="account-panel" id="securityPanel" hidden>
+                <h2>安全设置</h2>
+                <p class="form-tip">设置密码与密码重置方式（安全问题 / 备用恢复码），忘记密码时可自助找回，不依赖邮箱或短信。</p>
+                <form id="securityPwdForm" class="auth-form">
+                  <h3 style="color:var(--deep);margin:10px 0 12px">设置 / 修改密码</h3>
+                  <div class="field"><label>原密码（首次设置可留空）</label><input name="old_password" type="password" autocomplete="current-password" /></div>
+                  <div class="field"><label>新密码（至少 8 位）</label><input name="password" type="password" autocomplete="new-password" minlength="8" required /></div>
+                  <button class="btn primary" type="submit">保存密码</button>
+                </form>
+                <form id="securityL1Form" class="auth-form">
+                  <h3 style="color:var(--deep);margin:14px 0 12px">安全问题（L1 · 推荐启用）</h3>
+                  <p class="form-tip" style="margin:0 0 10px">从下方选择 2~3 个问题并填写答案，忘记密码时通过回答安全问题找回。</p>
+                  <div id="securityL1Questions"></div>
+                  <button class="btn primary" type="submit">保存安全问题</button>
+                </form>
+                <div class="auth-form">
+                  <h3 style="color:var(--deep);margin:14px 0 12px">备用恢复码（L2 · 更安全）</h3>
+                  <p class="form-tip" id="securityL2Hint"></p>
+                  <div id="securityL2Codes" hidden style="text-align:center;margin:10px 0;padding:14px;border:1px dashed var(--accent);border-radius:12px;background:rgba(59,130,246,.06)">
+                    <p style="margin:0 0 6px;font-size:13px;color:var(--muted)">以下恢复码仅显示这一次，每个只能使用一次，请截图或抄写保存：</p>
+                    <p id="securityL2CodeText" style="font-size:15px;font-weight:700;color:var(--deep);letter-spacing:1px;margin:0;word-break:break-all"></p>
+                  </div>
+                  <button class="btn primary" type="button" id="securityL2Btn">生成 / 重新生成恢复码</button>
+                </div>
+                <p class="form-status" id="securityStatus" role="status" aria-live="polite"></p>
               </section>
 
               <!-- 我的消息 -->
@@ -226,6 +316,7 @@
       const certOverview = document.getElementById('certOverview');
       const certPanel = document.getElementById('certPanel');
       const profilePanel = document.getElementById('profilePanel');
+      const securityPanel = document.getElementById('securityPanel');
       const notifyPanel = document.getElementById('notifyPanel');
 
       // 认证资料上传
@@ -279,6 +370,19 @@
       }
       document.querySelectorAll('[data-auth-tab]').forEach((btn) => btn.addEventListener('click', () => switchAuthTab(btn.dataset.authTab)));
 
+      // 登录方式切换：验证码 / 密码
+      function currentLoginMethod() {
+        const active = document.querySelector('[data-login-method].active');
+        return active ? active.dataset.loginMethod : 'code';
+      }
+      document.querySelectorAll('[data-login-method]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-login-method]').forEach((b) => b.classList.toggle('active', b === btn));
+          document.querySelectorAll('[data-login-pane]').forEach((pane) => { pane.hidden = pane.dataset.loginPane !== btn.dataset.loginMethod; });
+          loginStatus.textContent = '';
+        });
+      });
+
       // 仅验证码登录：获取验证码（邮箱或手机号均可，验证码直接显示在页面上）
       const sendCodeBtn = document.getElementById('sendCodeBtn');
       const loginCodeBox = document.getElementById('loginCodeBox');
@@ -331,10 +435,18 @@
         loginStatus.textContent = '正在登录……';
         loginStatus.className = 'form-status';
         try {
-          const account = String(document.getElementById('loginName').value || '').trim();
-          const code = String(document.getElementById('loginCode').value || '').trim();
-          if (!account || !code) throw new Error('请输入邮箱/手机号和验证码');
-          const data = await XH.api('/api/auth/code-login', { method: 'POST', body: JSON.stringify({ email: account, code }) });
+          const method = currentLoginMethod();
+          let body, path;
+          if (method === 'password') {
+            body = { email: String(document.getElementById('loginPwdName').value || '').trim(), password: String(document.getElementById('loginPassword').value || '') };
+            path = '/api/auth/login';
+            if (!body.email || !body.password) throw new Error('请输入邮箱/手机号和密码');
+          } else {
+            body = { email: String(document.getElementById('loginName').value || '').trim(), code: String(document.getElementById('loginCode').value || '').trim() };
+            path = '/api/auth/code-login';
+            if (!body.email || !body.code) throw new Error('请输入邮箱/手机号和验证码');
+          }
+          const data = await XH.api(path, { method: 'POST', body: JSON.stringify(body) });
           XH.store.setToken(data.token);
           XH.store.setUser(data.user || {});
           await loadCenter();
@@ -498,8 +610,10 @@
           const target = link.dataset.menu;
           certPanel.hidden = target !== 'cert';
           profilePanel.hidden = target !== 'profile';
+          securityPanel.hidden = target !== 'security';
           notifyPanel.hidden = target !== 'notify';
           if (target === 'cert') loadCenter();
+          if (target === 'security') loadSecurity();
           if (target === 'notify') loadNotifications();
         });
       });
@@ -564,6 +678,273 @@
           document.getElementById('notifyList').innerHTML = `<div class="empty-state">${XH.escapeHtml(error.message)}</div>`;
         }
       }
+
+      // ---------- 忘记密码：多层级重置（L1 安全问题 / L2 恢复码 / L3 人工审核） ----------
+      const resetView = document.getElementById('resetView');
+      const resetStatus = document.getElementById('resetStatus');
+      const forgotLink = document.getElementById('forgotLink');
+      let resetState = { session_token: '', questions: [], l1Index: 0, method: '' };
+
+      function showResetStep(name) {
+        ['Account', 'Methods', 'L1', 'L2', 'L3', 'L3Code', 'Password'].forEach((s) => {
+          const el = document.getElementById('resetStep' + s);
+          if (el) el.hidden = s !== name;
+        });
+        resetStatus.textContent = '';
+        resetStatus.className = 'form-status';
+      }
+
+      if (forgotLink) {
+        forgotLink.addEventListener('click', (event) => {
+          event.preventDefault();
+          authView.hidden = true;
+          resetView.hidden = false;
+          resetState = { session_token: '', questions: [], l1Index: 0, method: '' };
+          document.getElementById('resetAccount').value = document.getElementById('loginPwdName').value || '';
+          showResetStep('Account');
+        });
+      }
+      document.getElementById('resetBackBtn').addEventListener('click', () => {
+        resetView.hidden = true;
+        authView.hidden = false;
+      });
+      document.getElementById('resetStartBtn').addEventListener('click', async () => {
+        const account = String(document.getElementById('resetAccount').value || '').trim();
+        if (!account) { resetStatus.textContent = '请输入邮箱或手机号'; resetStatus.className = 'form-status error'; return; }
+        try {
+          const data = await XH.api('/api/reset/start', { method: 'POST', body: JSON.stringify({ account }) });
+          if (!data.methods || !data.methods.length) {
+            resetStatus.textContent = data.message || '该账号未设置重置方式，请使用验证码登录或联系管理员';
+            resetStatus.className = 'form-status error';
+            return;
+          }
+          resetState.session_token = data.session_token;
+          resetState.questions = data.questions || [];
+          resetState.l1Index = 0;
+          const box = document.getElementById('resetMethods');
+          const l1 = data.methods.find((m) => m.type === 'l1' && !m.locked && m.has_questions);
+          const l2 = data.methods.find((m) => m.type === 'l2' && !m.locked);
+          const l3 = data.methods.find((m) => m.type === 'l3');
+          box.innerHTML = '';
+          if (l1) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn primary';
+            btn.textContent = '🔐 安全问题验证（回答预设问题）';
+            btn.addEventListener('click', () => {
+              resetState.method = 'l1';
+              showResetStep('L1');
+              showL1Question();
+            });
+            box.appendChild(btn);
+          }
+          if (l2) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn primary';
+            btn.textContent = '🔑 备用恢复码（输入保存的恢复码）';
+            btn.addEventListener('click', () => { resetState.method = 'l2'; showResetStep('L2'); });
+            box.appendChild(btn);
+          }
+          if (l3) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn ghost';
+            btn.textContent = '📞 人工客服审核（提交校友信息）';
+            btn.addEventListener('click', () => { resetState.method = 'l3'; showResetStep('L3'); });
+            box.appendChild(btn);
+          }
+          showResetStep('Methods');
+        } catch (error) {
+          resetStatus.textContent = error.message;
+          resetStatus.className = 'form-status error';
+        }
+      });
+
+      function showL1Question() {
+        const q = resetState.questions[resetState.l1Index];
+        if (!q) return;
+        document.getElementById('resetL1Progress').textContent = `第 ${resetState.l1Index + 1} / 2 题`;
+        document.getElementById('resetL1Question').textContent = q.question_text;
+        document.getElementById('resetL1Answer').value = '';
+      }
+      document.getElementById('resetL1SubmitBtn').addEventListener('click', async () => {
+        const q = resetState.questions[resetState.l1Index];
+        try {
+          const data = await XH.api('/api/reset/l1/verify', {
+            method: 'POST',
+            body: JSON.stringify({ session_token: resetState.session_token, question_id: q.question_id, answer: document.getElementById('resetL1Answer').value })
+          });
+          if (data.is_complete) {
+            showResetStep('Password');
+          } else {
+            resetState.l1Index += 1;
+            showL1Question();
+          }
+        } catch (error) {
+          resetStatus.textContent = error.message;
+          resetStatus.className = 'form-status error';
+        }
+      });
+      document.getElementById('resetL2SubmitBtn').addEventListener('click', async () => {
+        try {
+          await XH.api('/api/reset/l2/verify', {
+            method: 'POST',
+            body: JSON.stringify({ session_token: resetState.session_token, code: document.getElementById('resetL2Code').value })
+          });
+          showResetStep('Password');
+        } catch (error) {
+          resetStatus.textContent = error.message;
+          resetStatus.className = 'form-status error';
+        }
+      });
+      document.getElementById('resetL3SubmitBtn').addEventListener('click', async () => {
+        try {
+          const data = await XH.api('/api/reset/l3/submit', {
+            method: 'POST',
+            body: JSON.stringify({
+              session_token: resetState.session_token,
+              real_name: document.getElementById('resetL3Name').value,
+              phone_last4: document.getElementById('resetL3Phone').value,
+              graduation_year: document.getElementById('resetL3Year').value,
+              teacher_name: document.getElementById('resetL3Teacher').value,
+              description: document.getElementById('resetL3Desc').value
+            })
+          });
+          resetStatus.textContent = (data.message || '申请已提交') + (data.ticket_no ? `（工单号：${data.ticket_no}）` : '');
+          resetStatus.className = 'form-status success';
+          showResetStep('L3Code');
+        } catch (error) {
+          resetStatus.textContent = error.message;
+          resetStatus.className = 'form-status error';
+        }
+      });
+      document.getElementById('resetL3UseBtn').addEventListener('click', async () => {
+        try {
+          await XH.api('/api/reset/l3/use', {
+            method: 'POST',
+            body: JSON.stringify({ session_token: resetState.session_token, code: document.getElementById('resetL3Code').value })
+          });
+          showResetStep('Password');
+        } catch (error) {
+          resetStatus.textContent = error.message;
+          resetStatus.className = 'form-status error';
+        }
+      });
+      document.getElementById('resetConfirmBtn').addEventListener('click', async () => {
+        const pwd = document.getElementById('resetNewPwd').value;
+        const pwd2 = document.getElementById('resetNewPwd2').value;
+        if (pwd !== pwd2) { resetStatus.textContent = '两次输入的新密码不一致'; resetStatus.className = 'form-status error'; return; }
+        try {
+          const data = await XH.api('/api/reset/confirm', {
+            method: 'POST',
+            body: JSON.stringify({ session_token: resetState.session_token, password: pwd })
+          });
+          resetStatus.textContent = data.message || '密码已重置';
+          resetStatus.className = 'form-status success';
+          setTimeout(() => {
+            resetView.hidden = true;
+            authView.hidden = false;
+            switchAuthTab('login');
+            document.getElementById('loginPwdName').value = document.getElementById('resetAccount').value || '';
+            document.querySelector('[data-login-method="password"]').click();
+          }, 1200);
+        } catch (error) {
+          resetStatus.textContent = error.message;
+          resetStatus.className = 'form-status error';
+        }
+      });
+
+      // ---------- 个人中心：安全设置 ----------
+      async function loadSecurity() {
+        try {
+          const data = await XH.api('/api/auth/security/status');
+          const box = document.getElementById('securityL1Questions');
+          const existing = {};
+          (data.answers || []).forEach((a) => { existing[a.question_id] = true; });
+          let html = '';
+          for (let i = 0; i < 3; i++) {
+            html += `<div class="three-fields" style="gap:10px;margin-bottom:10px">
+              <select name="question_id_${i}" style="grid-column:span 2">
+                <option value="">— 选择问题 ${i + 1} —</option>
+                ${(data.questions || []).map((q) => `<option value="${q.id}" ${existing[q.id] ? 'selected' : ''}>${XH.escapeHtml(q.text)}</option>`).join('')}
+              </select>
+              <input name="answer_${i}" placeholder="答案（≥2 字）" />
+            </div>`;
+          }
+          box.innerHTML = html;
+          document.getElementById('securityL2Hint').textContent = data.enabled_l2
+            ? `已启用，剩余未使用恢复码 ${data.unused_recovery_codes} 个。`
+            : '尚未启用。点击下方按钮生成 10 个一次性恢复码（每个只能使用一次）。';
+          document.getElementById('securityStatus').textContent = '';
+          document.getElementById('securityStatus').className = 'form-status';
+        } catch (error) {
+          document.getElementById('securityStatus').textContent = error.message;
+        }
+      }
+      document.getElementById('securityPwdForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const status = document.getElementById('securityStatus');
+        status.textContent = '正在保存……';
+        try {
+          const fd = new FormData(document.getElementById('securityPwdForm'));
+          const data = await XH.api('/api/auth/security/setup', {
+            method: 'POST',
+            body: JSON.stringify({ old_password: fd.get('old_password'), password: fd.get('password') })
+          });
+          status.textContent = '密码已保存';
+          status.className = 'form-status success';
+          document.getElementById('securityPwdForm').reset();
+        } catch (error) {
+          status.textContent = error.message;
+          status.className = 'form-status error';
+        }
+      });
+      document.getElementById('securityL1Form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const status = document.getElementById('securityStatus');
+        status.textContent = '正在保存……';
+        const security_answers = [];
+        for (let i = 0; i < 3; i++) {
+          const qid = document.getElementById('securityL1Form').querySelector(`[name="question_id_${i}"]`).value;
+          const answer = document.getElementById('securityL1Form').querySelector(`[name="answer_${i}"]`).value;
+          if (qid && answer && answer.trim().length >= 2) security_answers.push({ question_id: qid, answer: answer.trim() });
+        }
+        if (!security_answers.length) {
+          status.textContent = '请至少选择一个问题并填写答案';
+          status.className = 'form-status error';
+          return;
+        }
+        try {
+          const data = await XH.api('/api/auth/security/setup', {
+            method: 'POST',
+            body: JSON.stringify({ security_answers })
+          });
+          status.textContent = '安全问题已保存';
+          status.className = 'form-status success';
+          loadSecurity();
+        } catch (error) {
+          status.textContent = error.message;
+          status.className = 'form-status error';
+        }
+      });
+      document.getElementById('securityL2Btn').addEventListener('click', async () => {
+        const status = document.getElementById('securityStatus');
+        status.textContent = '正在生成……';
+        try {
+          const data = await XH.api('/api/auth/security/setup', { method: 'POST', body: JSON.stringify({ enable_l2: true }) });
+          const text = document.getElementById('securityL2CodeText');
+          text.textContent = (data.codes || []).join('　');
+          document.getElementById('securityL2Codes').hidden = false;
+          status.textContent = data.message || '恢复码已生成，请妥善保存';
+          status.className = 'form-status success';
+          loadSecurity();
+        } catch (error) {
+          status.textContent = error.message;
+          status.className = 'form-status error';
+        }
+      });
+
       handleWechatCallback();
       // 支持首页「加入新海高人」直达注册 / 登录
       if (location.hash === '#register') switchAuthTab('register');

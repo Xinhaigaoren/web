@@ -76,6 +76,7 @@
         <button class="tab" data-tab="homeEditor" type="button">编辑官网首页</button>
         <button class="tab" data-tab="pageEditor" type="button">编辑页面</button>
         <button class="tab" data-tab="map" type="button">地图管理</button>
+        <button class="tab" data-tab="resetAdmin" type="button">重置管理</button>
         <button class="tab" data-tab="contentRequests" type="button">内容修改审批</button>
         <button class="tab" data-tab="admins" type="button">管理员管理</button>
         <button class="tab" data-tab="account" type="button">我的账号</button>
@@ -300,6 +301,40 @@
             <p class="status" id="mapPointStatus"></p>
           </fieldset>
         </form>
+      </section>
+
+      <section class="panel" id="resetAdminPanel">
+        <div class="section-title">
+          <div>
+            <h2>密码重置管理</h2>
+            <p>配置校友忘记密码的重置方式（L1 安全问题 / L2 恢复码 / L3 人工审核），并处理人工审核工单。</p>
+          </div>
+          <button id="loadResetAdminBtn" type="button" class="ghost">刷新</button>
+        </div>
+        <div class="editor-card compact-card">
+          <h3>重置方式配置</h3>
+          <form id="resetConfigForm" class="editor-form">
+            <div class="three-fields">
+              <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" name="enable_l1" style="width:auto" checked /> 启用 L1 安全问题</label>
+              <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" name="enable_l2" style="width:auto" checked /> 启用 L2 恢复码</label>
+              <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" name="enable_l3" style="width:auto" /> 启用 L3 人工审核</label>
+              <label>L1 失败锁定阈值（3~5 次）<input name="l1_threshold" type="number" min="3" max="5" value="3" /></label>
+              <label>L2 失败锁定阈值（3~10 次）<input name="l2_threshold" type="number" min="3" max="10" value="5" /></label>
+            </div>
+            <div class="form-actions" style="margin-top:10px">
+              <button type="submit">保存配置</button>
+            </div>
+            <p class="status" id="resetConfigStatus"></p>
+          </form>
+        </div>
+        <div class="table-wrap" style="margin-top:18px">
+          <table>
+            <thead>
+              <tr><th>工单号</th><th>用户</th><th>提交信息</th><th>状态</th><th>提交时间</th><th>操作</th></tr>
+            </thead>
+            <tbody id="resetTicketRows"><tr><td colspan="6">正在加载……</td></tr></tbody>
+          </table>
+        </div>
       </section>
 
       <section class="panel" id="contentRequestsPanel">
