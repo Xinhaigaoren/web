@@ -195,10 +195,10 @@ function signToken(user) {
   );
 }
 
-// 指定主管理员（张文轩）：邮箱/手机号账号升级为主管理员，未设置密码时赋予初始密码
+// 指定主管理员：邮箱/手机号账号升级为主管理员，未设置密码时赋予初始密码
 async function ensureZhangSuperAdmin() {
   if (!pool) return;
-  // 合并：移除旧的 ROOT_ADMIN 主管理员身份，主管理员统一为张文轩
+  // 合并：移除旧的 ROOT_ADMIN 主管理员身份，主管理员统一为指定账号
   await dbQuery(
     `delete from public.admin_accounts
      where user_id in (select id from public.app_users where phone='ROOT_ADMIN')`
@@ -214,7 +214,7 @@ async function ensureZhangSuperAdmin() {
   if (!ids.rows || !ids.rows.length) {
     const ins = await dbQuery(
       `insert into public.app_users (email, phone, display_name, role, status, is_email_verified, password_hash)
-       values ($1,$2,'张文轩','super_admin','active',true,$3)
+       values ($1,$2,'主管理员','super_admin','active',true,$3)
        on conflict (email) do update set role='super_admin', status='active', phone=coalesce(excluded.phone, public.app_users.phone), password_hash=coalesce(public.app_users.password_hash, excluded.password_hash), updated_at=now()
        returning id`,
       [email, phone, initHash]
@@ -224,14 +224,14 @@ async function ensureZhangSuperAdmin() {
   for (const row of ids.rows || []) {
     await dbQuery(
       `update public.app_users
-       set role='super_admin', status='active', display_name=coalesce(display_name,'张文轩'),
+       set role='super_admin', status='active', display_name='主管理员',
            password_hash=coalesce(password_hash, $2), updated_at=now()
        where id=$1`,
       [row.id, initHash]
     ).catch(() => {});
     await dbQuery(
       `insert into public.admin_accounts (user_id, admin_level, status, approved_at, note, must_change_password)
-       values ($1,'super_admin','approved',now(),'主管理员（张文轩）', true)
+       values ($1,'super_admin','approved',now(),'主管理员', true)
        on conflict (user_id) do update set admin_level='super_admin', status='approved',
          must_change_password=coalesce(admin_accounts.must_change_password, true), updated_at=now()`,
       [row.id]
@@ -396,7 +396,7 @@ app.get('/', (req, res) => {
   res.json({ message: '接口不存在，请访问 /api/health' });
 });
 
-// 管理员登录：纯密码登录（用户名/手机号/邮箱 + 密码），张文轩为超级管理员
+// 管理员登录：纯密码登录（用户名/手机号/邮箱 + 密码）
 app.post(['/api/admin/login', '/api/login'], async (req, res) => {
   try {
     const loginName = normalizeEmail(req.body?.username || req.body?.phone || req.body?.email || '');
