@@ -348,12 +348,12 @@ app.post(['/api/auth/register', '/api/alumni/register'], async (req, res) => {
   try {
     const b = req.body || {};
     const email = normalizeEmail(b.email);
-    const password = b.password ? requireStrongPassword(b.password) : null;
+    const password = requireStrongPassword(b.password);
     const name = String(b.name || b.display_name || '').trim();
     const phone = String(b.phone || '').trim() || null;
     if (!email || !email.includes('@')) return fail(res, 400, '请输入有效邮箱');
     if (!name) return fail(res, 400, '请输入姓名');
-    const passwordHash = password ? await bcrypt.hash(password, 10) : null;
+    const passwordHash = await bcrypt.hash(password, 10);
     const r = await dbQuery(
       `insert into public.app_users (email, phone, display_name, role, status, password_hash, is_email_verified)
        values ($1,$2,$3,'pending_alumni','pending',$4,false)

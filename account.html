@@ -70,33 +70,11 @@
             </div>
 
             <form id="loginForm" class="auth-form">
-              <div class="auth-sub-tabs" role="tablist" aria-label="登录方式">
-                <button type="button" class="active" data-login-method="code">验证码登录</button>
-                <button type="button" data-login-method="password">密码登录</button>
-              </div>
-              <div data-login-pane="code">
-                <div class="field"><label for="loginName">邮箱 / 手机号</label><input id="loginName" name="loginName" autocomplete="username" required placeholder="注册时填写的邮箱或手机号" /></div>
-                <div class="field"><label for="loginCode">验证码</label>
-                  <div class="code-row">
-                    <input id="loginCode" name="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required placeholder="6 位数字" />
-                    <button type="button" id="sendCodeBtn" class="btn ghost">获取验证码</button>
-                  </div>
-                </div>
-                <div id="loginCodeBox" hidden style="text-align:center;margin:10px 0;padding:12px;border:1px dashed var(--accent);border-radius:12px;background:rgba(59,130,246,.06)">
-                  <p class="form-tip" style="margin:0 0 4px">你的验证码（10 分钟内有效，已自动填入）</p>
-                  <p id="loginCodeText" style="font-size:26px;font-weight:800;color:var(--accent);letter-spacing:4px;margin:0"></p>
-                </div>
-                <div class="form-actions">
-                  <button class="btn primary" type="submit">验证码登录</button>
-                </div>
-              </div>
-              <div data-login-pane="password" hidden>
-                <div class="field"><label for="loginPwdName">邮箱 / 手机号</label><input id="loginPwdName" name="username" autocomplete="username" required placeholder="注册时填写的邮箱或手机号" /></div>
-                <div class="field"><label for="loginPassword">密码</label><input id="loginPassword" name="password" type="password" autocomplete="current-password" required placeholder="请输入密码" /></div>
-                <div class="form-actions">
-                  <button class="btn primary" type="submit">密码登录</button>
-                  <a class="form-link" href="#" id="forgotLink">忘记密码？</a>
-                </div>
+              <div class="field"><label for="loginName">邮箱 / 手机号</label><input id="loginName" name="loginName" autocomplete="username" required placeholder="注册时填写的邮箱或手机号" /></div>
+              <div class="field"><label for="loginPassword">密码</label><input id="loginPassword" name="password" type="password" autocomplete="current-password" required placeholder="请输入密码" /></div>
+              <div class="form-actions">
+                <button class="btn primary" type="submit">登录</button>
+                <a class="form-link" href="#" id="forgotLink">忘记密码？</a>
               </div>
               <div class="divider-or">或使用微信</div>
               <button type="button" id="wechatLoginBtn" class="btn btn-wechat">微信扫码登录</button>
@@ -107,6 +85,7 @@
               <div class="field"><label for="regName">姓名</label><input id="regName" name="name" required placeholder="真实姓名" /></div>
               <div class="field"><label for="regEmail">邮箱</label><input id="regEmail" name="email" type="email" autocomplete="email" required placeholder="name@example.com" /></div>
               <div class="field"><label for="regPhone">手机号（选填）</label><input id="regPhone" name="phone" type="tel" placeholder="用于认证联系" /></div>
+              <div class="field"><label for="regPassword">设置密码（至少 8 位）</label><input id="regPassword" name="password" type="password" autocomplete="new-password" minlength="8" required placeholder="用于以后登录" /></div>
               <div class="form-actions">
                 <button class="btn primary" type="submit">创建账号</button>
                 <span class="form-tip">注册后请继续提交校友认证资料。</span>
@@ -370,83 +349,17 @@
       }
       document.querySelectorAll('[data-auth-tab]').forEach((btn) => btn.addEventListener('click', () => switchAuthTab(btn.dataset.authTab)));
 
-      // 登录方式切换：验证码 / 密码
-      function currentLoginMethod() {
-        const active = document.querySelector('[data-login-method].active');
-        return active ? active.dataset.loginMethod : 'code';
-      }
-      document.querySelectorAll('[data-login-method]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('[data-login-method]').forEach((b) => b.classList.toggle('active', b === btn));
-          document.querySelectorAll('[data-login-pane]').forEach((pane) => { pane.hidden = pane.dataset.loginPane !== btn.dataset.loginMethod; });
-          loginStatus.textContent = '';
-        });
-      });
-
-      // 仅验证码登录：获取验证码（邮箱或手机号均可，验证码直接显示在页面上）
-      const sendCodeBtn = document.getElementById('sendCodeBtn');
-      const loginCodeBox = document.getElementById('loginCodeBox');
-      const loginCodeText = document.getElementById('loginCodeText');
-      let sendCooldownTimer = null;
-      if (sendCodeBtn) {
-        sendCodeBtn.addEventListener('click', async () => {
-          const account = String(document.getElementById('loginName').value || '').trim();
-          if (!account) { loginStatus.textContent = '请先输入注册时填写的邮箱或手机号'; loginStatus.className = 'form-status error'; return; }
-          if (!/^\d{6,}$/.test(account) && !account.includes('@')) { loginStatus.textContent = '请输入有效的邮箱或手机号'; loginStatus.className = 'form-status error'; return; }
-          sendCodeBtn.disabled = true;
-          sendCodeBtn.textContent = '发送中…';
-          try {
-            const data = await XH.api('/api/auth/send-login-code', { method: 'POST', body: JSON.stringify({ email: account }) });
-            if (data.login_code) {
-              if (loginCodeText) loginCodeText.textContent = data.login_code;
-              if (loginCodeBox) loginCodeBox.hidden = false;
-              const codeInput = document.getElementById('loginCode');
-              if (codeInput) codeInput.value = data.login_code;
-              loginStatus.textContent = '验证码已发送并自动填入，点击「验证码登录」即可';
-              loginStatus.className = 'form-status success';
-            } else {
-              loginStatus.textContent = data.message || '验证码已发送';
-              loginStatus.className = 'form-status success';
-            }
-            let seconds = 60;
-            sendCodeBtn.textContent = `${seconds} 秒后重发`;
-            clearInterval(sendCooldownTimer);
-            sendCooldownTimer = setInterval(() => {
-              seconds -= 1;
-              if (seconds <= 0) {
-                clearInterval(sendCooldownTimer);
-                sendCodeBtn.disabled = false;
-                sendCodeBtn.textContent = '重新获取';
-              } else {
-                sendCodeBtn.textContent = `${seconds} 秒后重发`;
-              }
-            }, 1000);
-          } catch (error) {
-            loginStatus.textContent = error.message;
-            loginStatus.className = 'form-status error';
-            sendCodeBtn.disabled = false;
-            sendCodeBtn.textContent = '获取验证码';
-          }
-        });
-      }
-
       loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         loginStatus.textContent = '正在登录……';
         loginStatus.className = 'form-status';
         try {
-          const method = currentLoginMethod();
-          let body, path;
-          if (method === 'password') {
-            body = { email: String(document.getElementById('loginPwdName').value || '').trim(), password: String(document.getElementById('loginPassword').value || '') };
-            path = '/api/auth/login';
-            if (!body.email || !body.password) throw new Error('请输入邮箱/手机号和密码');
-          } else {
-            body = { email: String(document.getElementById('loginName').value || '').trim(), code: String(document.getElementById('loginCode').value || '').trim() };
-            path = '/api/auth/code-login';
-            if (!body.email || !body.code) throw new Error('请输入邮箱/手机号和验证码');
-          }
-          const data = await XH.api(path, { method: 'POST', body: JSON.stringify(body) });
+          const body = {
+            email: String(document.getElementById('loginName').value || '').trim(),
+            password: String(document.getElementById('loginPassword').value || '')
+          };
+          if (!body.email || !body.password) throw new Error('请输入邮箱/手机号和密码');
+          const data = await XH.api('/api/auth/login', { method: 'POST', body: JSON.stringify(body) });
           XH.store.setToken(data.token);
           XH.store.setUser(data.user || {});
           await loadCenter();
@@ -700,7 +613,7 @@
           authView.hidden = true;
           resetView.hidden = false;
           resetState = { session_token: '', questions: [], l1Index: 0, method: '' };
-          document.getElementById('resetAccount').value = document.getElementById('loginPwdName').value || '';
+          document.getElementById('resetAccount').value = document.getElementById('loginName').value || '';
           showResetStep('Account');
         });
       }
@@ -846,8 +759,7 @@
             resetView.hidden = true;
             authView.hidden = false;
             switchAuthTab('login');
-            document.getElementById('loginPwdName').value = document.getElementById('resetAccount').value || '';
-            document.querySelector('[data-login-method="password"]').click();
+            document.getElementById('loginName').value = document.getElementById('resetAccount').value || '';
           }, 1200);
         } catch (error) {
           resetStatus.textContent = error.message;
