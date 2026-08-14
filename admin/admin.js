@@ -539,16 +539,96 @@ loginForm.addEventListener('submit', async (event) => {
     const response = await fetchJson(`${API_BASE_URL}/api/admin/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: document.getElementById('adminLoginAccount').value, password: document.getElementById('adminLoginPassword').value })
+      body: JSON.stringify({
+        username: document.getElementById('adminLoginAccount').value,
+        password: document.getElementById('adminLoginPassword').value,
+        captcha: document.getElementById('adminCaptcha').value,
+        captcha_id: document.getElementById('adminCaptchaId').value
+      })
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) throw new Error(data.message || '登录失败');
-    setToken(data.token);
-    setUser(data.user || {});
-    showDashboard();
-    await Promise.allSettled([loadApplications(), loadHomeContent(), loadContentRequests()]);
+    handleAdminLogin(data);
   } catch (error) {
     loginStatus.textContent = error.message;
+    loadAdminCaptcha();
+  }
+});
+
+function handleAdminLogin(data) {
+  if (data.require_mfa) {
+    window._mfaSession = data.mfa_session;
+    loginForm.hidden = true;
+    document.getElementById('mfaView').hidden = false;
+    document.getElementById('mfaStatus').textContent = '';
+    return;
+  }
+  if (data.must_change_password) {
+    window._pendingToken = data.token || '';
+    loginForm.hidden = true;
+    document.getElementById('forcePwdView').hidden = false;
+    document.getElementById('forcePwdStatus').textContent = '检测到首次登录或密码已过期，请先设置新密码。';
+    return;
+  }
+  setToken(data.token);
+  setUser(data.user || {});
+  showDashboard();
+  Promise.allSettled([loadApplications(), loadHomeContent(), loadContentRequests()]);
+}
+
+async function loadAdminCaptcha() {
+  try {
+    const response = await fetchJson(`${API_BASE_URL}/api/admin/captcha`);
+    const data = await response.json().catch(() => ({}));
+    const img = document.getElementById('adminCaptchaImg');
+    if (img && data.svg) img.src = data.svg;
+    document.getElementById('adminCaptchaId').value = data.sid || '';
+    const inp = document.getElementById('adminCaptcha');
+    if (inp) inp.value = '';
+  } catch (_) {}
+}
+const adminCaptchaImg = document.getElementById('adminCaptchaImg');
+if (adminCaptchaImg) adminCaptchaImg.addEventListener('click', loadAdminCaptcha);
+loadAdminCaptcha();
+
+document.getElementById('mfaVerifyBtn').addEventListener('click', async () => {
+  const status = document.getElementById('mfaStatus');
+  status.textContent = '';
+  try {
+    const response = await fetchJson(`${API_BASE_URL}/api/admin/mfa/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mfa_session: window._mfaSession, code: document.getElementById('mfaCode').value })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.ok === false) throw new Error(data.message || '动态码错误');
+    handleAdminLogin(data);
+  } catch (error) {
+    status.textContent = error.message;
+  }
+});
+
+document.getElementById('forcePwdBtn').addEventListener('click', async () => {
+  const status = document.getElementById('forcePwdStatus');
+  const pwd = document.getElementById('forceNewPwd').value;
+  const pwd2 = document.getElementById('forceNewPwd2').value;
+  status.textContent = '';
+  if (pwd !== pwd2) { status.textContent = '两次输入的新密码不一致'; return; }
+  try {
+    const response = await fetchJson(`${API_BASE_URL}/api/admin/account/password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window._pendingToken}` },
+      body: JSON.stringify({ old_password: document.getElementById('forceOldPwd').value, password: pwd, account_name: document.getElementById('adminLoginAccount').value })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.ok === false) throw new Error(data.message || '修改失败');
+    clearToken();
+    showLogin();
+    loginForm.hidden = false;
+    document.getElementById('forcePwdView').hidden = true;
+    loginStatus.textContent = '密码已修改，请使用新密码重新登录';
+  } catch (error) {
+    status.textContent = error.message;
   }
 });
 
@@ -731,10 +811,15 @@ if (passwordForm) {
       return;
     }
     try {
-      const data = await api('/api/admin/account/password', { method: 'POST', body: JSON.stringify(body) });
-      passwordStatus.textContent = data.message || '密码已修改';
+      const me = getUser();
+      const data = await api('/api/admin/account/password', {
+        method: 'POST',
+        body: JSON.stringify({ old_password: body.old_password, password: body.password, account_name: me.name || '' })
+      });
+      passwordStatus.textContent = data.message || '密码修改成功，请重新登录';
       passwordStatus.className = 'status ok';
       passwordForm.reset();
+      setTimeout(() => { clearToken(); showLogin(); }, 1200);
     } catch (error) {
       passwordStatus.textContent = error.message;
       passwordStatus.className = 'status';
@@ -800,6 +885,49 @@ function fromDatetimeLocal(value) {
   if (!value) return null;
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+// ---------- MFA 绑定 / 解绑 ----------
+const mfaEnableBtn = document.getElementById('mfaEnableBtn');
+const mfaDisableBtn = document.getElementById('mfaDisableBtn');
+const mfaBindBox = document.getElementById('mfaBindBox');
+if (mfaEnableBtn) {
+  mfaEnableBtn.addEventListener('click', async () => {
+    try {
+      const data = await api('/api/admin/mfa/secret');
+      document.getElementById('mfaSecret').value = data.secret || '';
+      const img = document.getElementById('mfaQrImg');
+      if (img && data.qr_url) img.src = data.qr_url;
+      document.getElementById('mfaBindCode').value = '';
+      document.getElementById('mfaBindStatus').textContent = '';
+      if (mfaBindBox) mfaBindBox.hidden = false;
+    } catch (error) { alert(error.message); }
+  });
+  document.getElementById('mfaCancelBtn').addEventListener('click', () => { if (mfaBindBox) mfaBindBox.hidden = true; });
+  document.getElementById('mfaBindBtn').addEventListener('click', async () => {
+    const status = document.getElementById('mfaBindStatus');
+    status.textContent = '正在绑定……';
+    try {
+      const data = await api('/api/admin/mfa/bind', {
+        method: 'POST',
+        body: JSON.stringify({ secret: document.getElementById('mfaSecret').value, code: document.getElementById('mfaBindCode').value })
+      });
+      status.textContent = data.message || 'MFA 已开启';
+      if (mfaBindBox) mfaBindBox.hidden = true;
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  });
+}
+if (mfaDisableBtn) {
+  mfaDisableBtn.addEventListener('click', async () => {
+    const code = prompt('请输入当前验证器中的 6 位动态码以解绑 MFA：');
+    if (code === null) return;
+    try {
+      const data = await api('/api/admin/mfa/unbind', { method: 'POST', body: JSON.stringify({ code }) });
+      alert(data.message || 'MFA 已解绑');
+    } catch (error) { alert(error.message); }
+  });
 }
 
 function fmtDateTime(value) {
@@ -1320,15 +1448,14 @@ if (userRows) {
       } catch (error) { alert(error.message); statusBtn.disabled = false; }
     }
     if (resetBtn) {
-      const password = prompt('请输入新密码（至少 8 位，留空则自动生成）：');
-      if (password === null) return;
+      if (!confirm('确认重置该管理员的密码？将生成一次性临时密码，对方登录后需立即修改密码。')) return;
       resetBtn.disabled = true;
       try {
         const data = await api(`/api/admin/users/${resetBtn.dataset.userReset}/reset-password`, {
           method: 'POST',
-          body: JSON.stringify({ password })
+          body: JSON.stringify({})
         });
-        alert(`密码已重置：${data.temp_password || '（已设置）'}`);
+        alert(`已生成临时密码：${data.temp_password || ''}\n请通过安全渠道告知该管理员，对方首次登录后必须修改密码。`);
         await loadUsers(userPage);
       } catch (error) { alert(error.message); resetBtn.disabled = false; }
     }
