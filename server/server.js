@@ -115,6 +115,111 @@ async function ensureRootAdmin() {
   }
 }
 
+// ==================== 管理员后台安全（验证码 / 密码强度 / MFA / 配置） ====================
+const captchaStore = new Map(); // sid -> { code, ts }
+const mfaSessions = new Map();  // mfa_session -> { user_id, admin_id, created }
+const ADMIN_WEAK_PASSWORDS = new Set([
+  'password','12345678','qwertyui','admin123','11111111','abcdefgh','letmein','123456789',
+  'welcome1','123123123','admin1234','root1234','1234567890','qwerty123','1qaz2wsx',
+  'adminadmin','123456789a','password123','87654321','00000000','hailin2026','xinhaigaoren'
+]);
+
+async function getAdminSecurityConfig() {
+  const r = await dbQuery(`select value from public.system_settings where key='admin_security_config' limit 1`).catch(() => ({ rows: [] }));
+  let cfg = {};
+  if (r.rows[0]) { try { cfg = JSON.parse(r.rows[0].value); } catch (_) { cfg = {}; } }
+  return {
+    min_length: Math.min(20, Math.max(8, Number(cfg.min_length) || 12)),
+    history_count: Math.min(10, Math.max(3, Number(cfg.history_count) || 5)),
+    login_fail_threshold: Math.min(10, Math.max(3, Number(cfg.login_fail_threshold) || 5)),
+    lock_minutes: Math.min(120, Math.max(5, Number(cfg.lock_minutes) || 30)),
+    session_minutes: Math.min(120, Math.max(10, Number(cfg.session_minutes) || 30)),
+    pwd_expire_days: Number(cfg.pwd_expire_days) || 90,
+    mfa_force_super: cfg.mfa_force_super === true
+  };
+}
+
+function hasTripleRepeat(value) {
+  for (let i = 0; i + 2 < value.length; i++) {
+    if (value[i] === value[i + 1] && value[i + 1] === value[i + 2]) return true;
+  }
+  return false;
+}
+
+function requireAdminPassword(password, accountName) {
+  const value = String(password || '');
+  const cfgRef = { min_length: 12 }; // 强度校验使用默认值，保存前再按配置二次校验
+  const errors = [];
+  if (value.length < cfgRef.min_length) errors.push(`密码长度至少需要 ${cfgRef.min_length} 个字符`);
+  if (!/[A-Z]/.test(value)) errors.push('密码需要至少包含一个大写字母');
+  if (!/[a-z]/.test(value)) errors.push('密码需要至少包含一个小写字母');
+  if (!/\d/.test(value)) errors.push('密码需要至少包含一个数字');
+  if (!/[!@#$%^&*()_+\-=]/.test(value)) errors.push('密码需要至少包含一个特殊字符');
+  if (/(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz|012|123|234|345|456|567|678|789|890)/i.test(value)) errors.push('密码不能包含连续字符（如 abc、123）');
+  if (hasTripleRepeat(value)) errors.push('密码不能包含重复字符超过 2 次（如 aaa、111）');
+  if (accountName && value.toLowerCase().includes(String(accountName).toLowerCase())) errors.push('密码不能包含账号名');
+  if (ADMIN_WEAK_PASSWORDS.has(value.toLowerCase())) errors.push('密码过于简单，请使用更复杂的密码');
+  if (errors.length) throw new Error(errors.join('；'));
+  return value;
+}
+
+function makeAdminTempPassword() {
+  const upper = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+  const lower = 'abcdefghjkmnpqrstuvwxyz';
+  const digits = '23456789';
+  const special = '!@#$%^&*';
+  const all = upper + lower + digits + special;
+  let pwd = upper[Math.floor(Math.random() * upper.length)] + lower[Math.floor(Math.random() * lower.length)] +
+            digits[Math.floor(Math.random() * digits.length)] + special[Math.floor(Math.random() * special.length)];
+  for (let i = 0; i < 8; i++) pwd += all[Math.floor(Math.random() * all.length)];
+  return pwd.split('').sort(() => Math.random() - 0.5).join('');
+}
+
+function totpSecret() {
+  return crypto.randomBytes(20).toString('base64').replace(/[^A-Za-z0-9]/g, '').slice(0, 32);
+}
+
+function totpCode(secret, timeStep) {
+  const key = Buffer.from(String(secret), 'utf8');
+  const counter = Math.floor(timeStep / 30000);
+  const buf = Buffer.alloc(8);
+  buf.writeBigUInt64BE(BigInt(counter));
+  const hmac = crypto.createHmac('sha1', key).update(buf).digest();
+  const offset = hmac[hmac.length - 1] & 0x0f;
+  const code = ((hmac[offset] & 0x7f) << 24) | ((hmac[offset + 1] & 0xff) << 16) | ((hmac[offset + 2] & 0xff) << 8) | (hmac[offset + 3] & 0xff);
+  return String(code % 1000000).padStart(6, '0');
+}
+
+function verifyTotp(secret, code, window = 1) {
+  const now = Date.now();
+  for (let w = -window; w <= window; w++) {
+    if (totpCode(secret, now + w * 30000) === String(code || '').trim()) return true;
+  }
+  return false;
+}
+
+async function adminLoginLog(adminId, username, result, failReason, req) {
+  await dbQuery(
+    `insert into public.admin_login_logs (admin_id, username, result, fail_reason, ip_address, user_agent)
+     values ($1,$2,$3,$4,$5,$6)`,
+    [adminId || null, username || '', result, failReason || null, req.ip || null, String(req.headers['user-agent'] || '').slice(0, 255)]
+  ).catch(() => {});
+}
+
+function signToken(user) {
+  return jwt.sign(
+    {
+      user_id: user.user_id,
+      admin_id: user.admin_id,
+      display_name: user.display_name,
+      role: user.role,
+      admin_level: user.admin_level || null,
+    },
+    TOKEN_SECRET,
+    { expiresIn: '7d' }
+  );
+}
+
 // 指定主管理员（张文轩）：邮箱/手机号账号升级为主管理员，未设置密码时赋予初始密码
 async function ensureZhangSuperAdmin() {
   if (!pool) return;
@@ -150,9 +255,10 @@ async function ensureZhangSuperAdmin() {
       [row.id, initHash]
     ).catch(() => {});
     await dbQuery(
-      `insert into public.admin_accounts (user_id, admin_level, status, approved_at, note)
-       values ($1,'super_admin','approved',now(),'主管理员（张文轩）')
-       on conflict (user_id) do update set admin_level='super_admin', status='approved', updated_at=now()`,
+      `insert into public.admin_accounts (user_id, admin_level, status, approved_at, note, must_change_password)
+       values ($1,'super_admin','approved',now(),'主管理员（张文轩）', true)
+       on conflict (user_id) do update set admin_level='super_admin', status='approved',
+         must_change_password=coalesce(admin_accounts.must_change_password, true), updated_at=now()`,
       [row.id]
     ).catch(() => {});
   }
@@ -315,15 +421,40 @@ app.get('/', (req, res) => {
   res.json({ message: '接口不存在，请访问 /api/health' });
 });
 
-// 管理员登录：主管理员统一为张文轩（邮箱/手机号 + 密码），忘记密码走多层级重置
+// 图形验证码（防暴力破解）
+app.get('/api/admin/captcha', (req, res) => {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  const sid = crypto.randomBytes(12).toString('hex');
+  captchaStore.set(sid, { code, ts: Date.now() });
+  const texts = code.split('').map((c, i) =>
+    `<text x="${26 + i * 26}" y="${34}" font-size="28" font-weight="bold" fill="#1e3a5f" transform="rotate(${Math.floor(Math.random() * 24) - 12} ${26 + i * 26} 34)">${c}</text>`
+  ).join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="130" height="48" viewBox="0 0 130 48"><rect width="130" height="48" fill="#eef3f9" rx="6"/><line x1="5" y1="${8 + Math.floor(Math.random() * 18)}" x2="125" y2="${8 + Math.floor(Math.random() * 18)}" stroke="#c3d2e4"/><line x1="10" y1="${18 + Math.floor(Math.random() * 14)}" x2="120" y2="${18 + Math.floor(Math.random() * 14)}" stroke="#c3d2e4"/>${texts.join('')}</svg>`;
+  return ok(res, { sid, svg: 'data:image/svg+xml;base64,' + Buffer.from(svg).toString('base64') });
+});
+
+// 管理员登录：主管理员统一为张文轩（邮箱/手机号 + 密码 + 图形验证码），忘记密码走多层级重置
 app.post(['/api/admin/login', '/api/login'], async (req, res) => {
   try {
     const loginName = normalizeEmail(req.body?.username || req.body?.phone || req.body?.email || '');
     const password = String(req.body?.password || '').trim();
+    const captcha = String(req.body?.captcha || '').trim();
+    const sid = String(req.body?.captcha_id || '').trim();
     if (!loginName || !password) return fail(res, 400, '请输入邮箱/手机号和密码');
+    const cap = sid && captchaStore.get(sid);
+    if (!cap || Date.now() - cap.ts > 5 * 60 * 1000 || cap.code.toLowerCase() !== captcha.toLowerCase()) {
+      captchaStore.delete(sid);
+      await adminLoginLog(null, loginName, 'fail', '验证码错误', req);
+      return fail(res, 400, '验证码错误，请重新输入');
+    }
+    captchaStore.delete(sid);
+    const cfg = await getAdminSecurityConfig();
     const r = await dbQuery(
       `select u.id as user_id, u.display_name, u.phone, u.role, u.status, u.password_hash,
-              a.id as admin_id, a.admin_level, a.status as admin_status
+              a.id as admin_id, a.admin_level, a.status as admin_status, a.login_fail_count, a.locked_until,
+              a.must_change_password, a.pwd_changed_at, a.mfa_secret, a.mfa_enabled
        from public.app_users u
        join public.admin_accounts a on a.user_id=u.id
        where lower(u.email)=lower($1) or u.phone=$1
@@ -336,13 +467,78 @@ app.post(['/api/admin/login', '/api/login'], async (req, res) => {
       if (row.status !== 'active' || row.admin_status !== 'approved') continue;
       if (await bcrypt.compare(password, row.password_hash)) { user = row; break; }
     }
-    if (!user) return fail(res, 401, '账号或密码错误，或该账号未设置密码，请先设置后再登录');
+    if (!user) {
+      await adminLoginLog(null, loginName, 'fail', '密码错误', req);
+      return fail(res, 401, '账号或密码错误，或该账号未设置密码');
+    }
+    if (user.locked_until && new Date(user.locked_until) > new Date()) {
+      const mins = Math.ceil((new Date(user.locked_until) - new Date()) / 60000);
+      await adminLoginLog(user.admin_id, loginName, 'locked', '账号锁定中', req);
+      return fail(res, 403, `账号已被锁定，请等待约 ${mins} 分钟后再试`);
+    }
+    // 密码错误计数与锁定
+    const okPwd = await bcrypt.compare(password, user.password_hash);
+    if (!okPwd) {
+      const fails = (user.login_fail_count || 0) + 1;
+      let lockedUntil = null;
+      if (fails >= cfg.login_fail_threshold) {
+        lockedUntil = new Date(Date.now() + cfg.lock_minutes * 60000);
+      }
+      await dbQuery(
+        `update public.admin_accounts set login_fail_count=$1, locked_until=$2, updated_at=now() where id=$3`,
+        [fails, lockedUntil, user.admin_id]
+      );
+      await adminLoginLog(user.admin_id, loginName, 'fail', lockedUntil ? '触发锁定' : '密码错误', req);
+      if (lockedUntil) return fail(res, 403, `连续登录失败次数过多，账号已锁定 ${cfg.lock_minutes} 分钟`);
+      return fail(res, 401, `账号或密码错误，剩余尝试次数：${cfg.login_fail_threshold - fails} 次`);
+    }
+    await dbQuery(
+      `update public.admin_accounts set login_fail_count=0, locked_until=null, updated_at=now() where id=$1`,
+      [user.admin_id]
+    );
+    await adminLoginLog(user.admin_id, loginName, 'success', null, req);
     user.role = user.admin_level === 'super_admin' ? 'super_admin' : 'admin';
+    if (user.mfa_enabled) {
+      const mfaSession = crypto.randomBytes(16).toString('hex');
+      mfaSessions.set(mfaSession, { user_id: user.user_id, admin_id: user.admin_id, created: Date.now() });
+      return ok(res, { require_mfa: true, mfa_session: mfaSession, message: '密码验证成功，请输入 6 位动态验证码' });
+    }
+    const forceChange = !!user.must_change_password ||
+      (user.pwd_changed_at && (Date.now() - new Date(user.pwd_changed_at)) > cfg.pwd_expire_days * 86400000);
     const token = signToken(user);
     await audit({ ...req, user }, 'admin_login', 'admin_account', user.admin_id, { loginName });
-    return ok(res, { token, user: { name: user.display_name, role: user.role, admin_level: user.admin_level } });
+    return ok(res, {
+      token,
+      must_change_password: forceChange,
+      user: { name: user.display_name, role: user.role, admin_level: user.admin_level },
+      message: forceChange ? '首次登录或密码已过期，请先修改密码' : '登录成功'
+    });
   } catch (e) {
     return fail(res, 500, '登录失败', { error: e.message });
+  }
+});
+
+// MFA 动态码验证
+app.post('/api/admin/mfa/verify', async (req, res) => {
+  try {
+    const s = req.body?.mfa_session && mfaSessions.get(req.body.mfa_session);
+    if (!s) return fail(res, 400, '会话无效或已过期，请重新登录');
+    const a = await dbQuery(`select a.mfa_secret, u.display_name, u.role, a.admin_level, a.must_change_password, a.pwd_changed_at
+                             from public.admin_accounts a join public.app_users u on u.id=a.user_id
+                             where a.id=$1 limit 1`, [s.admin_id]);
+    const row = a.rows[0];
+    if (!row || !row.mfa_secret || !verifyTotp(row.mfa_secret, req.body?.code)) {
+      return fail(res, 400, '动态码错误，请重试');
+    }
+    mfaSessions.delete(req.body.mfa_session);
+    const cfg = await getAdminSecurityConfig();
+    const forceChange = !!row.must_change_password ||
+      (row.pwd_changed_at && (Date.now() - new Date(row.pwd_changed_at)) > cfg.pwd_expire_days * 86400000);
+    const adminRole = row.admin_level === 'super_admin' ? 'super_admin' : 'admin';
+    const token = jwt.sign({ user_id: s.user_id, role: adminRole, admin_id: s.admin_id, admin_level: row.admin_level }, TOKEN_SECRET, { expiresIn: '7d' });
+    return ok(res, { token, must_change_password: forceChange, user: { name: row.display_name, role: adminRole, admin_level: row.admin_level } });
+  } catch (e) {
+    return fail(res, 500, 'MFA 验证失败', { error: e.message });
   }
 });
 
@@ -434,21 +630,50 @@ app.patch('/api/admin/account/profile', requireAuth, requireAdmin, async (req, r
 
 app.post('/api/admin/account/password', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const password = requireStrongPassword(req.body?.password);
+    const cfg = await getAdminSecurityConfig();
+    const accountName = String(req.body?.account_name || req.user.display_name || '');
+    const password = requireAdminPassword(req.body?.password, accountName);
     const oldPassword = String(req.body?.old_password || '');
+    if (!oldPassword) return fail(res, 400, '请输入当前密码');
     const r = await dbQuery(`select password_hash from public.app_users where id=$1 limit 1`, [req.user.user_id]);
     const oldHash = r.rows[0]?.password_hash;
-    if (oldHash && oldPassword) {
+    if (oldHash) {
       const matched = await bcrypt.compare(oldPassword, oldHash);
-      if (!matched) return fail(res, 401, '原密码不正确');
+      if (!matched) return fail(res, 401, '当前密码错误');
+    }
+    // 历史密码检查
+    const hist = await dbQuery(
+      `select password_hash from public.admin_password_history where admin_id=$1 order by created_at desc limit $2`,
+      [req.user.admin_id, cfg.history_count]
+    );
+    for (const h of hist.rows) {
+      if (await bcrypt.compare(password, h.password_hash)) return fail(res, 400, '新密码与最近使用的密码重复，请更换');
     }
     const hash = await bcrypt.hash(password, 10);
-    await dbQuery(`update public.app_users set password_hash=$1, updated_at=now() where id=$2`, [hash, req.user.user_id]);
-    await dbQuery(`update public.admin_accounts set last_password_changed_at=now(), updated_at=now() where id=$1`, [req.user.admin_id]).catch(() => {});
+    const uInfo = r.rows[0];
+    await dbQuery(
+      `update public.app_users set password_hash=$1, updated_at=now()
+       where id=$2 or (email is not null and lower(email)=lower($3)) or (phone is not null and phone=$4)`,
+      [hash, req.user.user_id, req.user.email || '', req.user.phone || null]
+    );
+    await dbQuery(
+      `update public.admin_accounts set must_change_password=false, pwd_changed_at=now(), last_password_changed_at=now(), updated_at=now() where id=$1`,
+      [req.user.admin_id]
+    ).catch(() => {});
+    await dbQuery(
+      `insert into public.admin_password_history (admin_id, password_hash) values ($1,$2)`,
+      [req.user.admin_id, hash]
+    ).catch(() => {});
+    await dbQuery(
+      `delete from public.admin_password_history
+       where admin_id=$1 and id not in (
+         select id from public.admin_password_history where admin_id=$1 order by created_at desc limit $2)`,
+      [req.user.admin_id, cfg.history_count]
+    ).catch(() => {});
     await audit(req, 'admin_password_change', 'admin_account', req.user.admin_id, {});
-    return ok(res, { message: '密码已修改，下次登录请使用新密码' });
+    return ok(res, { message: '密码修改成功，请使用新密码重新登录' });
   } catch (e) {
-    return fail(res, 500, '修改密码失败', { error: e.message });
+    return fail(res, 400, e.message || '修改密码失败');
   }
 });
 
@@ -1649,6 +1874,34 @@ async function ensureUserTableExtras() {
   await dbQuery(`alter table public.app_users add column if not exists l2_fail_count integer default 0`).catch(() => {});
 }
 
+async function ensureAdminSecurityTables() {
+  if (!pool) return;
+  await dbQuery(`alter table public.admin_accounts add column if not exists login_fail_count integer default 0`).catch(() => {});
+  await dbQuery(`alter table public.admin_accounts add column if not exists locked_until timestamptz`).catch(() => {});
+  await dbQuery(`alter table public.admin_accounts add column if not exists must_change_password boolean default false`).catch(() => {});
+  await dbQuery(`alter table public.admin_accounts add column if not exists pwd_changed_at timestamptz`).catch(() => {});
+  await dbQuery(`alter table public.admin_accounts add column if not exists mfa_secret text`).catch(() => {});
+  await dbQuery(`alter table public.admin_accounts add column if not exists mfa_enabled boolean default false`).catch(() => {});
+  await dbQuery(`create table if not exists public.admin_password_history (
+    id bigserial primary key,
+    admin_id bigint not null,
+    password_hash text not null,
+    created_at timestamptz default now()
+  )`);
+  await dbQuery(`create index if not exists idx_admin_pwd_history on public.admin_password_history(admin_id, created_at desc)`);
+  await dbQuery(`create table if not exists public.admin_login_logs (
+    id bigserial primary key,
+    admin_id bigint,
+    username text,
+    result text,
+    fail_reason text,
+    ip_address text,
+    user_agent text,
+    created_at timestamptz default now()
+  )`);
+  await dbQuery(`create index if not exists idx_admin_login_logs on public.admin_login_logs(admin_id, created_at desc)`);
+}
+
 async function ensureResetTables() {
   if (!pool) return;
   await dbQuery(`create table if not exists public.user_security_answers (
@@ -1791,8 +2044,10 @@ app.post('/api/admin/users/:id/reset-password', requireAuth, requireAdmin, async
     const current = await dbQuery(`select * from public.app_users where id=$1 limit 1`, [id]);
     if (!current.rows[0]) return fail(res, 404, '用户不存在');
     if (current.rows[0].phone === 'ROOT_ADMIN') return fail(res, 403, '主管理员请通过环境变量修改密码');
-    const newPassword = String(req.body?.password || '').trim() || crypto.randomBytes(6).toString('base64url');
-    if (newPassword.length < 8) return fail(res, 400, '新密码至少 8 位');
+    const newPassword = String(req.body?.password || '').trim() || makeAdminTempPassword();
+    try { requireAdminPassword(newPassword, ''); } catch (e) {
+      if (req.body?.password) return fail(res, 400, e.message);
+    }
     const hash = await bcrypt.hash(newPassword, 10);
     const uInfo = current.rows[0];
     await dbQuery(
@@ -1802,10 +2057,110 @@ app.post('/api/admin/users/:id/reset-password', requireAuth, requireAdmin, async
           or (phone is not null and phone=$4)`,
       [hash, id, uInfo.email || '', uInfo.phone || null]
     );
+    // 管理员账号：标记强制改密 + 记录
+    await dbQuery(
+      `update public.admin_accounts set must_change_password=true, mfa_enabled=false, pwd_changed_at=null, updated_at=now()
+       where user_id=$1`,
+      [id]
+    ).catch(() => {});
+    await dbQuery(
+      `insert into public.notifications (user_id, title, content, link)
+       values ($1,'管理员密码已重置','超级管理员已重置您的后台密码，请使用临时密码登录并在登录后立即修改密码。','admin/')`,
+      [id]
+    ).catch(() => {});
     await audit(req, 'user_reset_password', 'app_user', id, {});
-    return ok(res, { message: '密码已重置', temp_password: newPassword });
+    return ok(res, { message: '密码已重置并标记为需修改', temp_password: newPassword });
   } catch (e) {
     return fail(res, 500, '重置密码失败', { error: e.message });
+  }
+});
+
+// MFA 绑定：获取新密钥
+app.get('/api/admin/mfa/secret', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const secret = totpSecret();
+    const label = encodeURIComponent('新海高人后台-' + (req.user.display_name || '管理员'));
+    const otpauth = `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent('XinHaiGaoRen')}`;
+    return ok(res, { secret, otpauth, qr_url: `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(otpauth)}` });
+  } catch (e) {
+    return fail(res, 500, '获取密钥失败', { error: e.message });
+  }
+});
+
+// MFA 绑定：验证动态码后启用
+app.post('/api/admin/mfa/bind', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const secret = String(req.body?.secret || '');
+    const code = String(req.body?.code || '').trim();
+    if (!secret || !verifyTotp(secret, code)) return fail(res, 400, '动态码错误，请重试');
+    await dbQuery(
+      `update public.admin_accounts set mfa_secret=$1, mfa_enabled=true, updated_at=now() where user_id=$2`,
+      [secret, req.user.user_id]
+    );
+    await audit(req, 'admin_mfa_bind', 'admin_account', req.user.admin_id, {});
+    return ok(res, { message: 'MFA 绑定成功，下次登录需输入 6 位动态码' });
+  } catch (e) {
+    return fail(res, 500, '绑定失败', { error: e.message });
+  }
+});
+
+// MFA 解绑（需当前密码或动态码）
+app.post('/api/admin/mfa/unbind', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const code = String(req.body?.code || '').trim();
+    const a = await dbQuery(`select mfa_secret from public.admin_accounts where user_id=$1 limit 1`, [req.user.user_id]);
+    const secret = a.rows[0] && a.rows[0].mfa_secret;
+    if (secret && !verifyTotp(secret, code)) return fail(res, 400, '动态码错误，无法解绑');
+    await dbQuery(
+      `update public.admin_accounts set mfa_secret=null, mfa_enabled=false, updated_at=now() where user_id=$1`,
+      [req.user.user_id]
+    );
+    await audit(req, 'admin_mfa_unbind', 'admin_account', req.user.admin_id, {});
+    return ok(res, { message: 'MFA 已解绑' });
+  } catch (e) {
+    return fail(res, 500, '解绑失败', { error: e.message });
+  }
+});
+
+// 密码策略 / 登录日志（后台）
+app.get('/api/admin/config/password', requireAuth, requireAdmin, async (req, res) => {
+  return ok(res, { config: await getAdminSecurityConfig() });
+});
+
+app.put('/api/admin/config/password', requireAuth, requireSuperAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const value = JSON.stringify({
+      min_length: Number(b.min_length) || 12,
+      history_count: Number(b.history_count) || 5,
+      login_fail_threshold: Number(b.login_fail_threshold) || 5,
+      lock_minutes: Number(b.lock_minutes) || 30,
+      session_minutes: Number(b.session_minutes) || 30,
+      pwd_expire_days: Number(b.pwd_expire_days) || 90,
+      mfa_force_super: b.mfa_force_super === true
+    });
+    await dbQuery(
+      `insert into public.system_settings (key, value, updated_at) values ('admin_security_config',$1,now())
+       on conflict (key) do update set value=excluded.value, updated_at=now()`,
+      [value]
+    );
+    return ok(res, { message: '安全配置已保存' });
+  } catch (e) {
+    return fail(res, 500, '保存配置失败', { error: e.message });
+  }
+});
+
+app.get('/api/admin/logs/login', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select l.*, u.display_name from public.admin_login_logs l
+       left join public.admin_accounts a on a.id = l.admin_id
+       left join public.app_users u on u.id = a.user_id
+       order by l.created_at desc limit 200`
+    );
+    return ok(res, { items: r.rows });
+  } catch (e) {
+    return fail(res, 500, '获取登录日志失败', { error: e.message });
   }
 });
 
@@ -3945,6 +4300,7 @@ bootstrapSchema()
   .then(() => ensurePasswordResetTable())
   .then(() => ensureAlumniProfileExtras())
   .then(() => ensureResetTables())
+  .then(() => ensureAdminSecurityTables())
   .then(() => ensurePhase2Tables())
   .then(() => ensureSitePagesSeed())
   .then(() => ensureSiteSectionsSeed())
