@@ -10,6 +10,7 @@
   <meta property="og:title" content="校友个人主页 - 海林市高级中学校友（新海高人）" />
   <meta property="og:description" content="新海高人校友个人主页。" />
   <meta property="og:url" content="https://xinhaigaoren.github.io/web/alumni.html" />
+  <script src="site.js?v=20260813"></script>
   <style>
     :root {
       --deep: #183059;
@@ -56,10 +57,10 @@
 
     .body { max-width: 1200px; margin: 0 auto; padding: 10px 20px 70px; }
     .toolbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 24px; box-shadow: var(--shadow); }
-    .index-bar { display: flex; flex-wrap: wrap; gap: 4px; }
-    .index-bar button { width: 30px; height: 30px; border: 1px solid var(--line); background: #fff; border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--deep); cursor: pointer; }
-    .index-bar button.active { background: var(--deep); color: #fff; border-color: var(--deep); }
-    .index-bar button.empty { color: #c3ccd8; cursor: not-allowed; }
+    .index-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+    .index-bar .chip { padding: 7px 16px; border: 1px solid var(--line); background: #fff; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--deep); cursor: pointer; }
+    .index-bar .chip:hover { border-color: var(--accent); color: var(--accent); }
+    .index-bar .chip.active { background: var(--deep); color: #fff; border-color: var(--deep); }
     .search-box { flex: 1; min-width: 220px; }
     .search-box input { width: 100%; height: 40px; border: 1px solid var(--line); border-radius: 999px; padding: 0 18px; font: inherit; }
     .stats { display: flex; gap: 22px; font-size: 14px; color: var(--muted); }
@@ -83,6 +84,15 @@
     .side-list li:hover { color: var(--accent); }
     .side-list small { color: #9aa6b8; white-space: nowrap; }
     .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+    .auth-hint { text-align: center; padding: 50px 20px; }
+    .auth-hint .btn { display: inline-block; margin-top: 14px; padding: 10px 26px; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 700; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.55); display: none; align-items: center; justify-content: center; z-index: 999; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-card { background: #fff; border-radius: 16px; max-width: 540px; width: 100%; max-height: 86vh; overflow: auto; padding: 28px; position: relative; box-shadow: 0 24px 60px rgba(23,32,51,.25); }
+    .modal-close { position: absolute; top: 12px; right: 16px; border: 0; background: none; font-size: 28px; line-height: 1; cursor: pointer; color: var(--muted); }
+    .modal-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+    .modal-detail-grid .item small { color: var(--muted); display: block; margin-bottom: 2px; }
+    .modal-detail-grid .item strong { color: var(--deep); word-break: break-all; }
 
     .footer { border-top: 1px solid var(--line); background: #fff; text-align: center; color: var(--muted); font-size: 13px; padding: 26px 20px; }
     @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .side-card { order: -1; } .primary-nav { display: none; } }
@@ -126,113 +136,115 @@
 
   <main class="body">
     <div class="toolbar">
-      <div class="index-bar" id="indexBar"></div>
+      <div class="index-bar" id="yearBar"></div>
+    </div>
+    <div class="auth-hint" id="authHint" hidden>
+      <p>请先登录并完成校友认证后，查看校友风采。</p>
+      <a class="btn" href="account.html">去登录 / 注册</a>
     </div>
 
     <div class="layout">
       <div class="card-grid" id="cardGrid"></div>
       <aside class="side-card">
-        <h3>最新更新</h3>
+        <h3>最新认证</h3>
         <ul class="side-list" id="sideList"></ul>
       </aside>
     </div>
   </main>
 
+  <div class="modal-overlay" id="alumniModal">
+    <div class="modal-card">
+      <button class="modal-close" id="alumniModalClose" type="button">×</button>
+      <div id="alumniModalBody"></div>
+    </div>
+  </div>
+
   <footer class="footer">© 2026 海林市高级中学校友（新海高人）· 校友个人主页</footer>
 
   <script>
-    const ALUMNI = [
-      { id: 1, name: '张伟', pinyin: 'zhang', college: '哈尔滨工业大学 · 复合材料与工程', title: '2024届', tags: ['省级优秀毕业生', '博士在读'], updateTime: 2 },
-      { id: 2, name: '李文静', pinyin: 'li', college: '北京大学 · 经济学院', title: '2023届', tags: ['省优青', '博导'], updateTime: 1 },
-      { id: 3, name: '王强', pinyin: 'wang', college: '清华大学 · 计算机科学与技术', title: '2022届', tags: ['ACM金牌', '创业'], updateTime: 4 },
-      { id: 4, name: '刘洋', pinyin: 'liu', college: '浙江大学 · 医学院', title: '2021届', tags: ['主治医师'], updateTime: 6 },
-      { id: 5, name: '陈晨', pinyin: 'chen', college: '复旦大学 · 新闻学院', title: '2020届', tags: ['央媒记者'], updateTime: 12 },
-      { id: 6, name: '杨帆', pinyin: 'yang', college: '上海交通大学 · 船舶海洋工程', title: '2019届', tags: ['省优青', '博导'], updateTime: 3 },
-      { id: 7, name: '赵磊', pinyin: 'zhao', college: '中国科学技术大学 · 物理学院', title: '2018届', tags: ['中科院百人'], updateTime: 8 },
-      { id: 8, name: '黄静', pinyin: 'huang', college: '北京师范大学 · 教育学部', title: '2017届', tags: ['特级教师'], updateTime: 15 },
-      { id: 9, name: '周涛', pinyin: 'zhou', college: '华中科技大学 · 光电国家研究中心', title: '2016届', tags: ['博导', '省杰青'], updateTime: 5 },
-      { id: 10, name: '吴敏', pinyin: 'wu', college: '中山大学 · 岭南学院', title: '2015届', tags: ['金融高管'], updateTime: 20 },
-      { id: 11, name: '徐亮', pinyin: 'xu', college: '西安交通大学 · 电气工程', title: '2014届', tags: ['国网专家'], updateTime: 7 },
-      { id: 12, name: '孙丽', pinyin: 'sun', college: '南京大学 · 天文与空间科学学院', title: '2013届', tags: ['青年学者'], updateTime: 9 },
-      { id: 13, name: '马超', pinyin: 'ma', college: '同济大学 · 土木工程学院', title: '2012届', tags: ['注册结构师'], updateTime: 14 },
-      { id: 14, name: '朱婷', pinyin: 'zhu', college: '中国人民大学 · 法学院', title: '2011届', tags: ['律师', '仲裁员'], updateTime: 11 },
-      { id: 15, name: '胡军', pinyin: 'hu', college: '国防科技大学 · 计算机学院', title: '2010届', tags: ['军队专家'], updateTime: 16 },
-      { id: 16, name: '郭倩', pinyin: 'guo', college: '武汉大学 · 测绘遥感', title: '2009届', tags: ['北斗项目'], updateTime: 10 },
-      { id: 17, name: '林海', pinyin: 'lin', college: '哈尔滨工程大学 · 船舶工程学院', title: '2008届', tags: ['总工程师'], updateTime: 18 },
-      { id: 18, name: '何雨', pinyin: 'he', college: '厦门大学 · 经济学院', title: '2007届', tags: ['投行'], updateTime: 22 },
-      { id: 19, name: '高翔', pinyin: 'gao', college: '北京航空航天大学 · 宇航学院', title: '2006届', tags: ['航天工程师'], updateTime: 13 },
-      { id: 20, name: '罗成', pinyin: 'luo', college: '吉林大学 · 汽车工程学院', title: '2005届', tags: ['车企高管'], updateTime: 25 },
-      { id: 21, name: '郑好', pinyin: 'zheng', college: '天津大学 · 化工学院', title: '2004届', tags: ['省优青'], updateTime: 17 },
-      { id: 22, name: '梁晨', pinyin: 'liang', college: '四川大学 · 华西医学院', title: '2003届', tags: ['主任医师'], updateTime: 19 },
-      { id: 23, name: '谢芳', pinyin: 'xie', college: '山东大学 · 数学学院', title: '2002届', tags: ['教授'], updateTime: 21 },
-      { id: 24, name: '唐磊', pinyin: 'tang', college: '东南大学 · 建筑学院', title: '2001届', tags: ['建筑师'], updateTime: 24 },
-      { id: 25, name: '许洋', pinyin: 'xu', college: '中国农业大学 · 农学院', title: '2000届', tags: ['农业专家'], updateTime: 28 },
-      { id: 26, name: '邓超', pinyin: 'deng', college: '北京理工大学 · 车辆工程', title: '1999届', tags: ['博导'], updateTime: 26 },
-      { id: 27, name: '冯雪', pinyin: 'feng', college: '南开大学 · 化学学院', title: '1998届', tags: ['长江学者'], updateTime: 30 },
-      { id: 28, name: '彭伟', pinyin: 'peng', college: '兰州大学 · 大气科学', title: '1997届', tags: ['气象专家'], updateTime: 32 },
-      { id: 29, name: '蒋明', pinyin: 'jiang', college: '东北大学 · 材料学院', title: '1996届', tags: ['教授'], updateTime: 27 },
-      { id: 30, name: '魏然', pinyin: 'wei', college: '哈尔滨师范大学 · 文学院', title: '1995届', tags: ['作家'], updateTime: 23 }
-    ];
-
-    const palette = ['#274472', '#3a5f8a', '#9a6b2f', '#4a7ba6', '#6b4f8a', '#2f7d6a', '#a6532f', '#3f6fa8'];
-    function initial(name) { return name ? name[0] : '?'; }
-    function avatarColor(id) { return palette[id % palette.length]; }
-    function timeText(days) { return days <= 7 ? `${days} 天前更新` : days <= 30 ? `${Math.round(days / 7)} 周前更新` : `${Math.round(days / 30)} 月前更新`; }
-    function pinyinHead(name) { return (ALUMNI.find(a => a.name === name) || {}).pinyin ? (ALUMNI.find(a => a.name === name).pinyin[0] || '').toUpperCase() : ''; }
-
+    const XH = window.XH;
     const grid = document.getElementById('cardGrid');
     const sideList = document.getElementById('sideList');
     const searchInput = document.getElementById('searchInput');
-    const indexBar = document.getElementById('indexBar');
-    let currentLetter = '';
+    const yearBar = document.getElementById('yearBar');
+    const authHint = document.getElementById('authHint');
+    let alumni = [];
+    let currentYear = '';
     let currentQuery = '';
+    const palette = ['#274472', '#3a5f8a', '#9a6b2f', '#4a7ba6', '#6b4f8a', '#2f7d6a', '#a6532f', '#3f6fa8'];
 
-    function availableLetters() {
-      const set = new Set(ALUMNI.map(a => a.pinyin[0].toUpperCase()));
-      return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => ({ letter: l, has: set.has(l) }));
-    }
-    function renderIndex() {
-      indexBar.innerHTML = availableLetters().map(l =>
-        `<button class="${l.has ? '' : 'empty'}${currentLetter === l.letter ? ' active' : ''}" data-letter="${l.letter}" ${l.has ? '' : 'disabled'}>${l.letter}</button>`
-      ).join('');
-      indexBar.querySelectorAll('button[data-letter]:not([disabled])').forEach(b => {
-        b.addEventListener('click', () => { currentLetter = currentLetter === b.dataset.letter ? '' : b.dataset.letter; render(); });
-      });
-    }
+    function initial(name) { return name ? name[0] : '?'; }
+    function avatarColor(id) { return palette[(id || 0) % palette.length]; }
     function filtered() {
-      let list = ALUMNI.slice();
-      if (currentLetter) list = list.filter(a => a.pinyin[0].toUpperCase() === currentLetter);
+      let list = alumni.slice();
+      if (currentYear) list = list.filter(a => String(a.graduation_year || '') === currentYear);
       const q = currentQuery.trim().toLowerCase();
-      if (q) list = list.filter(a => a.name.toLowerCase().includes(q) || a.college.toLowerCase().includes(q) || a.tags.join('').toLowerCase().includes(q));
-      return list.sort((a, b) => a.updateTime - b.updateTime);
+      if (q) list = list.filter(a => (a.name || '').toLowerCase().includes(q) || (a.company || '').toLowerCase().includes(q) || (a.class_name || '').toLowerCase().includes(q) || (a.industry || '').toLowerCase().includes(q) || (a.position_title || '').toLowerCase().includes(q));
+      return list;
+    }
+    function renderYears() {
+      const years = [...new Set(alumni.map(a => a.graduation_year).filter(Boolean))].sort((a, b) => String(b).localeCompare(String(a)));
+      yearBar.innerHTML = `<span class="chip${currentYear === '' ? ' active' : ''}" data-year="">全部</span>` +
+        years.map(y => `<span class="chip${currentYear === y ? ' active' : ''}" data-year="${y}">${y}届</span>`).join('');
+      yearBar.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+        currentYear = c.dataset.year;
+        render();
+      }));
     }
     function render() {
       const list = filtered();
-      document.getElementById('statTotal').textContent = ALUMNI.length;
-      document.getElementById('statRecent').textContent = ALUMNI.filter(a => a.updateTime <= 7).length;
-      grid.innerHTML = list.length ? list.map(a => `
-        <article class="alumni-card" data-name="${a.name}">
-          <div class="avatar" style="background:linear-gradient(135deg, ${avatarColor(a.id)}, ${avatarColor(a.id + 2)})">${initial(a.name)}</div>
-          <h3>${a.name}</h3>
-          <div class="college">${a.college}</div>
-          <div class="tags">${a.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
-          <div class="updated">${timeText(a.updateTime)}</div>
-        </article>`).join('') : '<div class="empty">没有匹配的校友</div>';
-      sideList.innerHTML = ALUMNI.slice().sort((a, b) => a.updateTime - b.updateTime).slice(0, 8).map(a =>
-        `<li data-name="${a.name}"><span>${a.name}</span><small>${timeText(a.updateTime)}</small></li>`
+      document.getElementById('statTotal').textContent = alumni.length;
+      document.getElementById('statRecent').textContent = new Set(alumni.map(a => a.graduation_year).filter(Boolean)).size;
+      grid.innerHTML = list.length ? list.map((a, i) => {
+        const tags = [a.graduation_year ? `${a.graduation_year}届` : '', a.class_name || '', a.position_title || '', a.industry || ''].filter(Boolean);
+        return `
+          <article class="alumni-card" data-i="${i}" style="cursor:pointer">
+            <div class="avatar" style="background:linear-gradient(135deg, ${avatarColor(a.id)}, ${avatarColor((a.id || 0) + 2)})">${initial(a.name)}</div>
+            <h3>${XH.escapeHtml(a.name)}</h3>
+            <div class="college">${XH.escapeHtml([a.company, a.position_title].filter(Boolean).join(' · ')) || '—'}</div>
+            <div class="tags">${tags.slice(0, 3).map(t => `<span class="tag">${XH.escapeHtml(t)}</span>`).join('')}</div>
+            <div class="updated">点击查看详情</div>
+          </article>`;
+      }).join('') : '<div class="empty">没有匹配的校友</div>';
+      sideList.innerHTML = alumni.slice(0, 8).map(a =>
+        `<li data-i="${alumni.indexOf(a)}"><span>${XH.escapeHtml(a.name)}</span><small>${XH.escapeHtml(a.graduation_year ? a.graduation_year + '届' : '')}</small></li>`
       ).join('');
-      document.querySelectorAll('[data-name]').forEach(el => {
-        el.addEventListener('click', () => {
-          searchInput.value = el.dataset.name;
-          currentQuery = el.dataset.name;
-          currentLetter = '';
-          render();
-        });
-      });
+      document.querySelectorAll('[data-i]').forEach(el => el.addEventListener('click', () => openDetail(alumni[Number(el.dataset.i)])));
     }
+    function openDetail(item) {
+      if (!item) return;
+      const rows = [
+        ['入学年份', item.enrollment_year], ['毕业年份', item.graduation_year], ['班级', item.class_name], ['班主任', item.homeroom_teacher],
+        ['现居地区', [item.current_province, item.current_city].filter(Boolean).join(' ')], ['籍贯', [item.province, item.city, item.county].filter(Boolean).join(' ')],
+        ['单位', item.company], ['职务', item.position_title], ['行业', item.industry], ['联系电话', item.phone], ['邮箱', item.email]
+      ].filter(r => r[1]);
+      const gridHtml = rows.map(([k, v]) => `<div class="item"><small>${XH.escapeHtml(k)}</small><strong>${XH.escapeHtml(String(v))}</strong></div>`).join('');
+      const bioHtml = item.bio ? `<div class="item" style="grid-column:1/-1"><small>个人简介</small><p style="margin:4px 0 0;white-space:pre-wrap">${XH.escapeHtml(item.bio)}</p></div>` : '';
+      document.getElementById('alumniModalBody').innerHTML = `
+        <h3 style="margin:0 0 12px;color:var(--deep)">${XH.escapeHtml(item.name)}</h3>
+        <div class="modal-detail-grid">${gridHtml}${bioHtml}</div>`;
+      document.getElementById('alumniModal').classList.add('show');
+    }
+    async function load() {
+      try {
+        const data = await XH.api('/api/alumni/directory?t=' + Date.now());
+        alumni = data.alumni || [];
+        authHint.hidden = true;
+        renderYears();
+        render();
+      } catch (error) {
+        if (error.status === 401 || error.status === 403) {
+          authHint.hidden = false;
+        } else {
+          authHint.hidden = false;
+          authHint.querySelector('p').textContent = error.message;
+        }
+      }
+    }
+    document.getElementById('alumniModalClose').addEventListener('click', () => document.getElementById('alumniModal').classList.remove('show'));
+    document.getElementById('alumniModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
     searchInput.addEventListener('input', () => { currentQuery = searchInput.value; render(); });
-    renderIndex();
-    render();
+    load();
   </script>
 </body>
 </html>
