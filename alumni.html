@@ -233,11 +233,21 @@
         renderYears();
         render();
       } catch (error) {
+        const me = XH.store.getUser();
+        const p = authHint.querySelector('p');
+        const link = authHint.querySelector('a');
         if (error.status === 401 || error.status === 403) {
           authHint.hidden = false;
+          p.textContent = '请先登录并完成校友认证后，查看校友风采。';
+          link.style.display = '';
+        } else if (me && me.name) {
+          authHint.hidden = false;
+          p.textContent = error.message || '服务暂不可用（后端可能正在启动），请稍后刷新重试。';
+          link.style.display = 'none';
         } else {
           authHint.hidden = false;
-          authHint.querySelector('p').textContent = error.message;
+          p.textContent = '请先登录并完成校友认证后，查看校友风采。';
+          link.style.display = '';
         }
       }
     }
