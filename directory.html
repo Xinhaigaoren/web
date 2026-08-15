@@ -218,6 +218,9 @@
           ['邮箱', item.email]
         ].filter((r) => r[1]);
         const grid = rows.map(([k, v]) => `<div class="item"><small>${XH.escapeHtml(k)}</small><strong>${XH.escapeHtml(String(v))}</strong></div>`).join('');
+        const bioHtml = item.bio
+          ? `<div class="item" style="grid-column:1/-1"><small>个人简介</small><p style="margin:4px 0 0;white-space:pre-wrap">${XH.escapeHtml(item.bio)}</p></div>`
+          : '';
         const body = document.getElementById('alumniDetailBody');
         if (!body) return;
         body.innerHTML = `
@@ -228,7 +231,7 @@
               <small style="color:var(--muted)">${XH.escapeHtml([item.industry, item.company].filter(Boolean).join(' · '))}</small>
             </div>
           </div>
-          <div class="modal-detail-grid">${grid || '<div class="empty-state">暂无更多公开信息</div>'}</div>`;
+          <div class="modal-detail-grid">${(grid || '') + bioHtml || '<div class="empty-state">暂无更多公开信息</div>'}</div>`;
         const modal = document.getElementById('alumniDetailModal');
         if (modal) { modal.classList.add('show'); document.body.style.overflow = 'hidden'; }
       }
