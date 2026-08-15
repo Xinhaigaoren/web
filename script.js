@@ -36,6 +36,6 @@ const API_BASE_URL = window.HAILIN_CONFIG?.API_BASE_URL || 'http://localhost:300
       location.reload();
     });
   } else {
-    holder.innerHTML = '<a href="account.html">校友登录/注册</a><a href="directory.html">校友名录</a><a href="admin/">管理员入口</a>';
+    holder.innerHTML = '<a href="account.html">校友登录/注册</a><a href="alumni.html">校友名录</a><a href="admin/">管理员入口</a>';
   }
 })();

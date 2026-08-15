@@ -113,7 +113,7 @@
         location.reload();
       });
     } else {
-      holder.innerHTML = '<a href="account.html">校友登录/注册</a><a href="directory.html">校友名录</a><a href="admin/">管理员入口</a>';
+      holder.innerHTML = '<a href="account.html">校友登录/注册</a><a href="alumni.html">校友名录</a><a href="admin/">管理员入口</a>';
     }
   }
   renderAccountLink();
@@ -124,7 +124,7 @@
     const map = {
       '': 'home', 'index.html': 'home',
       'about.html': 'about', 'news.html': 'news', 'news-detail.html': 'news-detail',
-      'events.html': 'events', 'directory.html': 'directory', 'account.html': 'account',
+      'events.html': 'events', 'alumni.html': 'alumni', 'account.html': 'account',
       'forum.html': 'forum', 'jobs.html': 'jobs', 'companies.html': 'companies',
       'map.html': 'map', 'messages.html': 'messages', 'contact.html': 'contact',
       'checkin.html': 'checkin'
