@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>校友风采 - 海林市高级中学校友（新海高人）</title>
-  <meta name="description" content="新海高人杰出校友风采展示：从这里认识活跃在各行各业的海高校友。" />
+  <title>校友个人主页 - 海林市高级中学校友（新海高人）</title>
+  <meta name="description" content="新海高人校友个人主页：从这里认识活跃在各行各业的海高校友。" />
   <link rel="canonical" href="https://xinhaigaoren.github.io/web/alumni.html" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="校友风采 - 海林市高级中学校友（新海高人）" />
-  <meta property="og:description" content="新海高人杰出校友风采展示。" />
+  <meta property="og:title" content="校友个人主页 - 海林市高级中学校友（新海高人）" />
+  <meta property="og:description" content="新海高人校友个人主页。" />
   <meta property="og:url" content="https://xinhaigaoren.github.io/web/alumni.html" />
   <style>
     :root {
@@ -41,13 +41,20 @@
     .primary-nav a:hover, .primary-nav a.current { color: var(--accent); border-bottom: 2px solid var(--accent); }
     .header-actions { display: flex; gap: 10px; font-size: 14px; color: var(--deep); }
 
-    .page-head { background: linear-gradient(135deg, #142849, #274472 60%, #1d3a63); color: #fff; padding: 52px 20px 58px; position: relative; overflow: hidden; }
+    .page-head { background: linear-gradient(135deg, #10243f, #1d3a63 55%, #17345a); color: #fff; padding: 46px 20px 40px; position: relative; overflow: hidden; }
     .page-head::before { content: ""; position: absolute; width: 420px; height: 420px; border-radius: 50%; background: radial-gradient(circle, rgba(202,166,106,.28), transparent 65%); top: -150px; right: -80px; }
     .page-head .wrap { max-width: 1200px; margin: 0 auto; position: relative; }
+    .page-head .en { font-size: 13px; letter-spacing: .3em; color: var(--accent-2); text-transform: uppercase; margin-bottom: 8px; }
     .page-head h1 { margin: 0 0 8px; font-size: 34px; letter-spacing: .05em; }
-    .page-head p { margin: 0; color: rgba(255,255,255,.85); }
+    .page-head .motto { display: inline-block; margin-top: 12px; padding: 6px 16px; border: 1px solid rgba(255,255,255,.35); border-radius: 999px; font-size: 14px; letter-spacing: .2em; color: rgba(255,255,255,.92); }
+    .query-strip { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; margin: -26px auto 26px; max-width: 1200px; position: relative; z-index: 5; box-shadow: var(--shadow); }
+    .query-strip h2 { margin: 0; font-size: 15px; color: var(--deep); white-space: nowrap; }
+    .query-strip .search-box { flex: 1; min-width: 220px; }
+    .big-stats { display: flex; gap: 40px; }
+    .big-stats .item b { display: block; font-size: 30px; color: var(--accent); font-weight: 800; line-height: 1.1; }
+    .big-stats .item span { font-size: 13px; color: var(--muted); }
 
-    .body { max-width: 1200px; margin: 0 auto; padding: 30px 20px 70px; }
+    .body { max-width: 1200px; margin: 0 auto; padding: 10px 20px 70px; }
     .toolbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 24px; box-shadow: var(--shadow); }
     .index-bar { display: flex; flex-wrap: wrap; gap: 4px; }
     .index-bar button { width: 30px; height: 30px; border: 1px solid var(--line); background: #fff; border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--deep); cursor: pointer; }
@@ -101,19 +108,25 @@
 
   <section class="page-head">
     <div class="wrap">
-      <h1>校友风采</h1>
-      <p>新海高人 · 桃李满天下 —— 认识活跃在各行各业的海高校友</p>
+      <p class="en">Alumni Personal Homepage</p>
+      <h1>校友个人主页</h1>
+      <p style="color:rgba(255,255,255,.85)">新海高人 · 桃李满天下 —— 认识活跃在各行各业的海高校友</p>
+      <span class="motto">共忆青春海高路 · 同筑未来校友情</span>
     </div>
   </section>
+
+  <div class="query-strip">
+    <h2>校友查询</h2>
+    <div class="search-box"><input id="searchInput" placeholder="请输入校友姓名或关键字" /></div>
+    <div class="big-stats">
+      <div class="item"><b id="statTotal">0</b><span>已开通主页校友人数</span></div>
+      <div class="item"><b id="statRecent">0</b><span>近期更新的校友人数</span></div>
+    </div>
+  </div>
 
   <main class="body">
     <div class="toolbar">
       <div class="index-bar" id="indexBar"></div>
-      <div class="search-box"><input id="searchInput" placeholder="输入姓名、院校或关键词检索校友…" /></div>
-      <div class="stats">
-        <span>已开通主页校友 <strong id="statTotal">0</strong> 位</span>
-        <span>近 7 天更新 <strong id="statRecent">0</strong> 位</span>
-      </div>
     </div>
 
     <div class="layout">
@@ -125,7 +138,7 @@
     </div>
   </main>
 
-  <footer class="footer">© 2026 海林市高级中学校友（新海高人）· 校友风采</footer>
+  <footer class="footer">© 2026 海林市高级中学校友（新海高人）· 校友个人主页</footer>
 
   <script>
     const ALUMNI = [
