@@ -21,25 +21,35 @@
     const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
     const token = store.getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
-    let response;
-    try {
-      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      const timer = controller ? setTimeout(() => controller.abort(), 25000) : null;
+    const isRead = !options.method || options.method === 'GET';
+    const maxTries = isRead ? 3 : 1;
+    let lastErr = null;
+    for (let attempt = 0; attempt < maxTries; attempt++) {
       try {
-        response = await fetch(`${API_BASE_URL}${path}`, Object.assign({}, options, { headers }, controller ? { signal: controller.signal } : {}));
-      } finally {
-        if (timer) clearTimeout(timer);
+        let response;
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timer = controller ? setTimeout(() => controller.abort(), 25000) : null;
+        try {
+          response = await fetch(`${API_BASE_URL}${path}`, Object.assign({}, options, { headers }, controller ? { signal: controller.signal } : {}));
+        } finally {
+          if (timer) clearTimeout(timer);
+        }
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.ok === false) {
+          const err = new Error(data.message || '请求失败，请稍后重试');
+          err.status = response.status;
+          throw err;
+        }
+        return data;
+      } catch (e) {
+        lastErr = e;
+        if (attempt < maxTries - 1) await new Promise((r) => setTimeout(r, 1200));
       }
-    } catch (e) {
-      throw new Error(e && e.name === 'AbortError' ? '请求超时：网络较慢或服务暂不可用，请稍后重试' : '网络异常：服务可能正在启动，请稍后刷新重试');
     }
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || data.ok === false) {
-      const err = new Error(data.message || '请求失败，请稍后重试');
-      err.status = response.status;
-      throw err;
+    if (lastErr && lastErr.name === 'AbortError') {
+      throw new Error('请求超时：网络较慢或服务暂不可用，请稍后重试');
     }
-    return data;
+    throw lastErr || new Error('网络异常：服务可能正在启动，请稍后刷新重试');
   }
 
   function assetUrl(path) {
