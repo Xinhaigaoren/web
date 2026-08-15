@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>校友风采 - 海林市高级中学校友（新海高人）</title>
+  <meta name="description" content="新海高人杰出校友风采展示：从这里认识活跃在各行各业的海高校友。" />
+  <link rel="canonical" href="https://xinhaigaoren.github.io/web/alumni.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="校友风采 - 海林市高级中学校友（新海高人）" />
+  <meta property="og:description" content="新海高人杰出校友风采展示。" />
+  <meta property="og:url" content="https://xinhaigaoren.github.io/web/alumni.html" />
+  <style>
+    :root {
+      --deep: #183059;
+      --deep-2: #274472;
+      --accent: #9a6b2f;
+      --accent-2: #caa66a;
+      --line: #e7eaf0;
+      --soft: #f5f7fb;
+      --ink: #172033;
+      --muted: #657085;
+      --radius: 16px;
+      --shadow: 0 14px 40px rgba(23, 32, 51, .08);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Noto Serif SC", "Songti SC", "Microsoft YaHei", system-ui, sans-serif; color: var(--ink); background: linear-gradient(180deg, #fbfcfe, #ffffff 40%, #f5f8fc); line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; }
+
+    .site-header { position: sticky; top: 0; z-index: 50; background: #fff; border-bottom: 1px solid var(--line); box-shadow: 0 8px 26px rgba(23,32,51,.05); }
+    .header-top { background: var(--deep); color: rgba(255,255,255,.88); font-size: 13px; }
+    .top-inner { height: 36px; display: flex; align-items: center; justify-content: space-between; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+    .nav-wrap { max-width: 1200px; margin: 0 auto; height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 20px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-logo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+    .brand-text strong { display: block; font-size: 19px; letter-spacing: .03em; color: var(--deep); }
+    .brand-text small { color: var(--muted); font-size: 12px; }
+    .primary-nav { display: flex; gap: 24px; font-size: 15px; color: #2f3b51; }
+    .primary-nav a { padding: 6px 2px; font-weight: 600; }
+    .primary-nav a:hover, .primary-nav a.current { color: var(--accent); border-bottom: 2px solid var(--accent); }
+    .header-actions { display: flex; gap: 10px; font-size: 14px; color: var(--deep); }
+
+    .page-head { background: linear-gradient(135deg, #142849, #274472 60%, #1d3a63); color: #fff; padding: 52px 20px 58px; position: relative; overflow: hidden; }
+    .page-head::before { content: ""; position: absolute; width: 420px; height: 420px; border-radius: 50%; background: radial-gradient(circle, rgba(202,166,106,.28), transparent 65%); top: -150px; right: -80px; }
+    .page-head .wrap { max-width: 1200px; margin: 0 auto; position: relative; }
+    .page-head h1 { margin: 0 0 8px; font-size: 34px; letter-spacing: .05em; }
+    .page-head p { margin: 0; color: rgba(255,255,255,.85); }
+
+    .body { max-width: 1200px; margin: 0 auto; padding: 30px 20px 70px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 24px; box-shadow: var(--shadow); }
+    .index-bar { display: flex; flex-wrap: wrap; gap: 4px; }
+    .index-bar button { width: 30px; height: 30px; border: 1px solid var(--line); background: #fff; border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--deep); cursor: pointer; }
+    .index-bar button.active { background: var(--deep); color: #fff; border-color: var(--deep); }
+    .index-bar button.empty { color: #c3ccd8; cursor: not-allowed; }
+    .search-box { flex: 1; min-width: 220px; }
+    .search-box input { width: 100%; height: 40px; border: 1px solid var(--line); border-radius: 999px; padding: 0 18px; font: inherit; }
+    .stats { display: flex; gap: 22px; font-size: 14px; color: var(--muted); }
+    .stats strong { color: var(--accent); font-size: 20px; margin-right: 4px; }
+
+    .layout { display: grid; grid-template-columns: 1fr 280px; gap: 26px; align-items: start; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px; }
+    .alumni-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; text-align: center; box-shadow: var(--shadow); transition: transform .2s ease, box-shadow .2s ease; }
+    .alumni-card:hover { transform: translateY(-5px); box-shadow: 0 22px 50px rgba(23,32,51,.13); }
+    .avatar { width: 72px; height: 72px; margin: 0 auto 12px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; font-weight: 800; color: #fff; }
+    .alumni-card h3 { margin: 0 0 4px; color: var(--deep); font-size: 18px; }
+    .alumni-card .college { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    .alumni-card .tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 10px; }
+    .alumni-card .tag { background: #f0e8da; color: var(--accent); font-size: 12px; padding: 3px 10px; border-radius: 999px; font-weight: 600; }
+    .alumni-card .updated { color: #9aa6b8; font-size: 12px; }
+
+    .side-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+    .side-card h3 { margin: 0 0 12px; font-size: 16px; color: var(--deep); border-left: 4px solid var(--accent); padding-left: 10px; }
+    .side-list { list-style: none; margin: 0; padding: 0; }
+    .side-list li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 14px; cursor: pointer; }
+    .side-list li:hover { color: var(--accent); }
+    .side-list small { color: #9aa6b8; white-space: nowrap; }
+    .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+
+    .footer { border-top: 1px solid var(--line); background: #fff; text-align: center; color: var(--muted); font-size: 13px; padding: 26px 20px; }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .side-card { order: -1; } .primary-nav { display: none; } }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-top"><div class="top-inner"><span>连接母校 · 凝聚校友 · 服务社会</span><span>校友登录 / 加入新海高人</span></div></div>
+    <div class="nav-wrap">
+      <a class="brand" href="index.html">
+        <img class="brand-logo" src="assets/haigao-logo.jpg" alt="校徽" />
+        <span class="brand-text"><strong>海林市高级中学校友（新海高人）</strong><small>Hailin Senior High School Alumni</small></span>
+      </a>
+      <nav class="primary-nav">
+        <a href="index.html">首页</a>
+        <a href="about.html">校友会介绍</a>
+        <a href="alumni.html" class="current">校友风采</a>
+        <a href="news.html">新闻公告</a>
+        <a href="account.html">加入我们</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="page-head">
+    <div class="wrap">
+      <h1>校友风采</h1>
+      <p>新海高人 · 桃李满天下 —— 认识活跃在各行各业的海高校友</p>
+    </div>
+  </section>
+
+  <main class="body">
+    <div class="toolbar">
+      <div class="index-bar" id="indexBar"></div>
+      <div class="search-box"><input id="searchInput" placeholder="输入姓名、院校或关键词检索校友…" /></div>
+      <div class="stats">
+        <span>已开通主页校友 <strong id="statTotal">0</strong> 位</span>
+        <span>近 7 天更新 <strong id="statRecent">0</strong> 位</span>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="card-grid" id="cardGrid"></div>
+      <aside class="side-card">
+        <h3>最新更新</h3>
+        <ul class="side-list" id="sideList"></ul>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="footer">© 2026 海林市高级中学校友（新海高人）· 校友风采</footer>
+
+  <script>
+    const ALUMNI = [
+      { id: 1, name: '张伟', pinyin: 'zhang', college: '哈尔滨工业大学 · 复合材料与工程', title: '2024届', tags: ['省级优秀毕业生', '博士在读'], updateTime: 2 },
+      { id: 2, name: '李文静', pinyin: 'li', college: '北京大学 · 经济学院', title: '2023届', tags: ['省优青', '博导'], updateTime: 1 },
+      { id: 3, name: '王强', pinyin: 'wang', college: '清华大学 · 计算机科学与技术', title: '2022届', tags: ['ACM金牌', '创业'], updateTime: 4 },
+      { id: 4, name: '刘洋', pinyin: 'liu', college: '浙江大学 · 医学院', title: '2021届', tags: ['主治医师'], updateTime: 6 },
+      { id: 5, name: '陈晨', pinyin: 'chen', college: '复旦大学 · 新闻学院', title: '2020届', tags: ['央媒记者'], updateTime: 12 },
+      { id: 6, name: '杨帆', pinyin: 'yang', college: '上海交通大学 · 船舶海洋工程', title: '2019届', tags: ['省优青', '博导'], updateTime: 3 },
+      { id: 7, name: '赵磊', pinyin: 'zhao', college: '中国科学技术大学 · 物理学院', title: '2018届', tags: ['中科院百人'], updateTime: 8 },
+      { id: 8, name: '黄静', pinyin: 'huang', college: '北京师范大学 · 教育学部', title: '2017届', tags: ['特级教师'], updateTime: 15 },
+      { id: 9, name: '周涛', pinyin: 'zhou', college: '华中科技大学 · 光电国家研究中心', title: '2016届', tags: ['博导', '省杰青'], updateTime: 5 },
+      { id: 10, name: '吴敏', pinyin: 'wu', college: '中山大学 · 岭南学院', title: '2015届', tags: ['金融高管'], updateTime: 20 },
+      { id: 11, name: '徐亮', pinyin: 'xu', college: '西安交通大学 · 电气工程', title: '2014届', tags: ['国网专家'], updateTime: 7 },
+      { id: 12, name: '孙丽', pinyin: 'sun', college: '南京大学 · 天文与空间科学学院', title: '2013届', tags: ['青年学者'], updateTime: 9 },
+      { id: 13, name: '马超', pinyin: 'ma', college: '同济大学 · 土木工程学院', title: '2012届', tags: ['注册结构师'], updateTime: 14 },
+      { id: 14, name: '朱婷', pinyin: 'zhu', college: '中国人民大学 · 法学院', title: '2011届', tags: ['律师', '仲裁员'], updateTime: 11 },
+      { id: 15, name: '胡军', pinyin: 'hu', college: '国防科技大学 · 计算机学院', title: '2010届', tags: ['军队专家'], updateTime: 16 },
+      { id: 16, name: '郭倩', pinyin: 'guo', college: '武汉大学 · 测绘遥感', title: '2009届', tags: ['北斗项目'], updateTime: 10 },
+      { id: 17, name: '林海', pinyin: 'lin', college: '哈尔滨工程大学 · 船舶工程学院', title: '2008届', tags: ['总工程师'], updateTime: 18 },
+      { id: 18, name: '何雨', pinyin: 'he', college: '厦门大学 · 经济学院', title: '2007届', tags: ['投行'], updateTime: 22 },
+      { id: 19, name: '高翔', pinyin: 'gao', college: '北京航空航天大学 · 宇航学院', title: '2006届', tags: ['航天工程师'], updateTime: 13 },
+      { id: 20, name: '罗成', pinyin: 'luo', college: '吉林大学 · 汽车工程学院', title: '2005届', tags: ['车企高管'], updateTime: 25 },
+      { id: 21, name: '郑好', pinyin: 'zheng', college: '天津大学 · 化工学院', title: '2004届', tags: ['省优青'], updateTime: 17 },
+      { id: 22, name: '梁晨', pinyin: 'liang', college: '四川大学 · 华西医学院', title: '2003届', tags: ['主任医师'], updateTime: 19 },
+      { id: 23, name: '谢芳', pinyin: 'xie', college: '山东大学 · 数学学院', title: '2002届', tags: ['教授'], updateTime: 21 },
+      { id: 24, name: '唐磊', pinyin: 'tang', college: '东南大学 · 建筑学院', title: '2001届', tags: ['建筑师'], updateTime: 24 },
+      { id: 25, name: '许洋', pinyin: 'xu', college: '中国农业大学 · 农学院', title: '2000届', tags: ['农业专家'], updateTime: 28 },
+      { id: 26, name: '邓超', pinyin: 'deng', college: '北京理工大学 · 车辆工程', title: '1999届', tags: ['博导'], updateTime: 26 },
+      { id: 27, name: '冯雪', pinyin: 'feng', college: '南开大学 · 化学学院', title: '1998届', tags: ['长江学者'], updateTime: 30 },
+      { id: 28, name: '彭伟', pinyin: 'peng', college: '兰州大学 · 大气科学', title: '1997届', tags: ['气象专家'], updateTime: 32 },
+      { id: 29, name: '蒋明', pinyin: 'jiang', college: '东北大学 · 材料学院', title: '1996届', tags: ['教授'], updateTime: 27 },
+      { id: 30, name: '魏然', pinyin: 'wei', college: '哈尔滨师范大学 · 文学院', title: '1995届', tags: ['作家'], updateTime: 23 }
+    ];
+
+    const palette = ['#274472', '#3a5f8a', '#9a6b2f', '#4a7ba6', '#6b4f8a', '#2f7d6a', '#a6532f', '#3f6fa8'];
+    function initial(name) { return name ? name[0] : '?'; }
+    function avatarColor(id) { return palette[id % palette.length]; }
+    function timeText(days) { return days <= 7 ? `${days} 天前更新` : days <= 30 ? `${Math.round(days / 7)} 周前更新` : `${Math.round(days / 30)} 月前更新`; }
+    function pinyinHead(name) { return (ALUMNI.find(a => a.name === name) || {}).pinyin ? (ALUMNI.find(a => a.name === name).pinyin[0] || '').toUpperCase() : ''; }
+
+    const grid = document.getElementById('cardGrid');
+    const sideList = document.getElementById('sideList');
+    const searchInput = document.getElementById('searchInput');
+    const indexBar = document.getElementById('indexBar');
+    let currentLetter = '';
+    let currentQuery = '';
+
+    function availableLetters() {
+      const set = new Set(ALUMNI.map(a => a.pinyin[0].toUpperCase()));
+      return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => ({ letter: l, has: set.has(l) }));
+    }
+    function renderIndex() {
+      indexBar.innerHTML = availableLetters().map(l =>
+        `<button class="${l.has ? '' : 'empty'}${currentLetter === l.letter ? ' active' : ''}" data-letter="${l.letter}" ${l.has ? '' : 'disabled'}>${l.letter}</button>`
+      ).join('');
+      indexBar.querySelectorAll('button[data-letter]:not([disabled])').forEach(b => {
+        b.addEventListener('click', () => { currentLetter = currentLetter === b.dataset.letter ? '' : b.dataset.letter; render(); });
+      });
+    }
+    function filtered() {
+      let list = ALUMNI.slice();
+      if (currentLetter) list = list.filter(a => a.pinyin[0].toUpperCase() === currentLetter);
+      const q = currentQuery.trim().toLowerCase();
+      if (q) list = list.filter(a => a.name.toLowerCase().includes(q) || a.college.toLowerCase().includes(q) || a.tags.join('').toLowerCase().includes(q));
+      return list.sort((a, b) => a.updateTime - b.updateTime);
+    }
+    function render() {
+      const list = filtered();
+      document.getElementById('statTotal').textContent = ALUMNI.length;
+      document.getElementById('statRecent').textContent = ALUMNI.filter(a => a.updateTime <= 7).length;
+      grid.innerHTML = list.length ? list.map(a => `
+        <article class="alumni-card" data-name="${a.name}">
+          <div class="avatar" style="background:linear-gradient(135deg, ${avatarColor(a.id)}, ${avatarColor(a.id + 2)})">${initial(a.name)}</div>
+          <h3>${a.name}</h3>
+          <div class="college">${a.college}</div>
+          <div class="tags">${a.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+          <div class="updated">${timeText(a.updateTime)}</div>
+        </article>`).join('') : '<div class="empty">没有匹配的校友</div>';
+      sideList.innerHTML = ALUMNI.slice().sort((a, b) => a.updateTime - b.updateTime).slice(0, 8).map(a =>
+        `<li data-name="${a.name}"><span>${a.name}</span><small>${timeText(a.updateTime)}</small></li>`
+      ).join('');
+      document.querySelectorAll('[data-name]').forEach(el => {
+        el.addEventListener('click', () => {
+          searchInput.value = el.dataset.name;
+          currentQuery = el.dataset.name;
+          currentLetter = '';
+          render();
+        });
+      });
+    }
+    searchInput.addEventListener('input', () => { currentQuery = searchInput.value; render(); });
+    renderIndex();
+    render();
+  </script>
+</body>
+</html>
