@@ -124,6 +124,21 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="eventDetailModal" role="dialog" aria-modal="true" aria-label="活动详情">
+    <div class="modal-card event-detail-card">
+      <button class="modal-close" id="eventDetailClose" type="button" aria-label="关闭">×</button>
+      <div id="eventDetailCover" class="event-detail-cover"></div>
+      <h2 id="eventDetailTitle" style="color:var(--deep);margin:6px 0 10px"></h2>
+      <div class="event-detail-meta" id="eventDetailMeta"></div>
+      <div class="rich-text event-detail-content" id="eventDetailContent" style="margin:16px 0 0"></div>
+      <div class="form-actions" style="margin-top:20px">
+        <button class="btn primary" id="eventDetailRegisterBtn" type="button">报名参加</button>
+        <span class="form-tip" id="eventDetailCount"></span>
+      </div>
+      <p class="form-status" id="eventDetailStatus" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+
   <script src="site.js?v=20260813"></script>
   <script>
     (function () {
@@ -133,11 +148,71 @@
       const modeRow = document.getElementById('modeRow');
       const searchInput = document.getElementById('eventSearch');
       const modal = document.getElementById('registerModal');
+      const detailModal = document.getElementById('eventDetailModal');
       const registerForm = document.getElementById('registerForm');
       const registerStatus = document.getElementById('registerStatus');
       const modalSub = document.getElementById('modalSub');
+      let currentDetailId = null;
       let mode = 'upcoming';
       let searchTimer = null;
+
+      function absoluteImages(html) {
+        return String(html || '').replace(/(\bsrc|\bposter)=(["'])(\/[^"']*)\2/g, (m, attr, q, url) => `${attr}=${q}${XH.assetUrl(url)}${q}`);
+      }
+
+      function openRegister(eventId, eventTitle) {
+        registerForm.eventId.value = eventId;
+        modalSub.textContent = eventTitle || '';
+        registerStatus.textContent = '';
+        registerStatus.className = 'form-status';
+        registerForm.reset();
+        const me = XH.store.getUser();
+        if (me && me.name) registerForm.name.value = me.name;
+        if (me && me.phone) registerForm.phone.value = me.phone;
+        modal.classList.add('show');
+      }
+
+      async function openEventDetail(eventId) {
+        if (!detailModal) return;
+        currentDetailId = eventId;
+        document.getElementById('eventDetailStatus').textContent = '加载中……';
+        document.getElementById('eventDetailCover').innerHTML = '';
+        document.getElementById('eventDetailContent').innerHTML = '';
+        detailModal.classList.add('show');
+        try {
+          const data = await XH.api(`/api/events/${encodeURIComponent(eventId)}`);
+          const ev = data.event || {};
+          document.getElementById('eventDetailTitle').textContent = ev.title || '';
+          document.getElementById('eventDetailCover').style.backgroundImage = ev.cover_url ? `url('${XH.assetUrl(ev.cover_url)}')` : '';
+          document.getElementById('eventDetailCover').style.display = ev.cover_url ? 'block' : 'none';
+          const meta = [];
+          if (ev.start_time) meta.push(`时间：${XH.formatDate(ev.start_time, true)}`);
+          if (ev.end_time) meta.push(`结束：${XH.formatDate(ev.end_time, true)}`);
+          if (ev.location) meta.push(`地点：${XH.escapeHtml(ev.location)}`);
+          if (ev.signup_deadline) meta.push(`报名截止：${XH.formatDate(ev.signup_deadline)}`);
+          if (ev.capacity) meta.push(`名额：${ev.registrations_count || 0}/${ev.capacity}`);
+          document.getElementById('eventDetailMeta').innerHTML = `<p class="form-tip">${meta.join('　')}</p>`;
+          document.getElementById('eventDetailContent').innerHTML = absoluteImages(ev.content || ev.summary || '暂无详细介绍');
+          const ended = isPast(ev);
+          document.getElementById('eventDetailRegisterBtn').style.display = ended ? 'none' : '';
+          document.getElementById('eventDetailCount').textContent = ended ? '该活动已结束' : '';
+          document.getElementById('eventDetailStatus').textContent = '';
+        } catch (error) {
+          document.getElementById('eventDetailStatus').textContent = error.message;
+        }
+      }
+
+      document.getElementById('eventDetailClose').addEventListener('click', () => detailModal.classList.remove('show'));
+      detailModal.addEventListener('click', (event) => {
+        if (event.target === detailModal) detailModal.classList.remove('show');
+      });
+      document.getElementById('eventDetailRegisterBtn').addEventListener('click', () => {
+        detailModal.classList.remove('show');
+        if (currentDetailId) {
+          const title = document.getElementById('eventDetailTitle').textContent || '';
+          openRegister(currentDetailId, title);
+        }
+      });
 
       function dateBlock(value) {
         const date = new Date(value);
@@ -181,7 +256,7 @@
               : `${item.registrations_count || 0} 人报名`;
             const ended = isPast(item);
             return `
-              <article class="event-item">
+              <article class="event-item" data-event-detail="${item.id}" title="点击查看详情" style="cursor:pointer">
                 ${dateBlock(item.start_time)}
                 <div class="event-main">
                   <h3>${XH.escapeHtml(item.title)}</h3>
@@ -218,16 +293,12 @@
 
       list.addEventListener('click', (event) => {
         const button = event.target.closest('button[data-event-id]');
-        if (!button) return;
-        registerForm.eventId.value = button.dataset.eventId;
-        modalSub.textContent = button.dataset.eventTitle || '';
-        registerStatus.textContent = '';
-        registerStatus.className = 'form-status';
-        registerForm.reset();
-        const me = XH.store.getUser();
-        if (me && me.name) registerForm.name.value = me.name;
-        if (me && me.phone) registerForm.phone.value = me.phone;
-        modal.classList.add('show');
+        if (button) {
+          openRegister(button.dataset.eventId, button.dataset.eventTitle || '');
+          return;
+        }
+        const item = event.target.closest('[data-event-detail]');
+        if (item) openEventDetail(item.dataset.eventDetail);
       });
 
       document.getElementById('modalClose').addEventListener('click', () => modal.classList.remove('show'));

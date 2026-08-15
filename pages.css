@@ -50,6 +50,10 @@
 /* 活动列表 */
 .event-list { display: grid; gap: 18px; }
 .event-item { display: grid; grid-template-columns: 96px 1fr auto; gap: 22px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 22px 26px; transition: transform .2s ease, box-shadow .2s ease; }
+.event-item:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+.event-detail-cover { height: 200px; border-radius: 14px; background-size: cover; background-position: center; margin-bottom: 14px; }
+.event-detail-meta p { margin: 0; }
+.event-detail-card h2 { font-size: 24px; }
 .event-item:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(23,32,51,.08); }
 .event-date { text-align: center; background: var(--deep); color: #fff; border-radius: 14px; padding: 12px 8px; line-height: 1.15; }
 .event-date strong { display: block; font-size: 28px; }
