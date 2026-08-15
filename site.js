@@ -256,6 +256,17 @@
   }
   loadHomeDynamic();
 
+  // 实时同步：后台修改内容后，前台页面自动定时刷新；切回标签页时立即刷新
+  async function syncLive() {
+    if (document.visibilityState === 'hidden') return;
+    await Promise.allSettled([loadSiteContent(), loadFooter(), loadHomeDynamic()]);
+    document.dispatchEvent(new CustomEvent('xh:live-refresh'));
+  }
+  window.setInterval(() => { syncLive().catch(() => {}); }, 60000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') syncLive().catch(() => {});
+  });
+
   // 返回顶部：统一平滑滚动到页面顶部，保证所有页面可用
   document.querySelectorAll('a[href="#top"]').forEach((link) => {
     link.addEventListener('click', (event) => {

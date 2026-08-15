@@ -791,6 +791,15 @@ refreshBtn.addEventListener('click', () => {
   const active = document.querySelector('.tab.active')?.dataset.tab || 'applications';
   setActiveTab(active);
 });
+// 实时同步：后台每 30 秒自动刷新只读列表（认证审批/内容审批/统计/消息），新申请与审批结果即时可见
+window.setInterval(() => {
+  if (document.visibilityState === 'hidden') return;
+  const active = document.querySelector('.tab.active')?.dataset.tab || '';
+  if (active === 'applications') loadApplications();
+  else if (active === 'contentRequests') loadContentRequests();
+  else if (active === 'stats') loadStats();
+  else if (active === 'notifications') loadNotificationsAdmin();
+}, 30000);
 loadHomeBtn.addEventListener('click', loadHomeContent);
 loadRequestsBtn.addEventListener('click', loadContentRequests);
 logoutBtn.addEventListener('click', () => {

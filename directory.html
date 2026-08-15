@@ -10,9 +10,9 @@
   <meta property="og:title" content="校友名录 - 海林市高级中学校友（新海高人）" />
   <meta property="og:description" content="海林市高级中学校友名录查询（需完成校友认证后开放）。" />
   <meta property="og:url" content="https://xinhaigaoren.github.io/web/directory.html" />
-  <link rel="stylesheet" href="style.css?v=20260815" />
-  <link rel="stylesheet" href="pages.css?v=20260815" />
-  <script src="config.js?v=20260815"></script>
+  <link rel="stylesheet" href="style.css?v=20260816" />
+  <link rel="stylesheet" href="pages.css?v=20260816" />
+  <script src="config.js?v=20260816"></script>
   <style>
     .dir-summary { display: flex; gap: 20px; margin-bottom: 18px; flex-wrap: wrap; }
     .dir-summary .stat-box { flex: 0 0 auto; min-width: 170px; padding: 14px 22px; background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 24px rgba(23,32,51,.05); }
@@ -152,7 +152,7 @@
     </div>
   </div>
 
-  <script src="site.js?v=20260815"></script>
+  <script src="site.js?v=20260816"></script>
   <script>
     (function () {
       const XH = window.XH;
@@ -170,6 +170,7 @@
       let searchTimer = null;
       let currentAlumni = [];
       let currentYear = '';
+      let lastSig = '';
       const palette = ['#274472', '#3a5f8a', '#9a6b2f', '#4a7ba6', '#6b4f8a', '#2f7d6a', '#a6532f', '#3f6fa8'];
 
       function initial(name) {
@@ -177,6 +178,9 @@
       }
       function avatarColor(id) {
         return palette[(Number(id) || 0) % palette.length];
+      }
+      function itemsSignature(items) {
+        return items.slice(0, 300).map((a) => `${a.id}:${a.name}:${a.graduation_year}:${a.company || ''}:${a.position_title || ''}`).join('|');
       }
 
       function renderYears(items) {
@@ -200,10 +204,14 @@
         if (yearInput) year = yearInput.value.trim() || currentYear;
         if (q) params.set('q', q);
         if (year) params.set('year', year);
+        params.set('t', Date.now());
         try {
           const data = await XH.api(`/api/alumni/directory?${params.toString()}`);
           const items = data.alumni || [];
           currentAlumni = items;
+          const sig = itemsSignature(items);
+          if (lastSig && sig !== lastSig && XH.toast) XH.toast('名录数据已更新，请查看最新内容');
+          lastSig = sig;
           renderYears(items);
           if (statTotal) statTotal.textContent = items.length;
           if (statRecent) statRecent.textContent = new Set(items.map((a) => a.graduation_year).filter(Boolean)).size;
@@ -269,6 +277,14 @@
         loadDirectory();
       });
       if (refreshBtn) refreshBtn.addEventListener('click', loadDirectory);
+      function livePoll() {
+        if (document.visibilityState === 'hidden') return;
+        if (directoryBox && !directoryBox.hidden && XH.store.getToken()) loadDirectory();
+      }
+      window.setInterval(livePoll, 30000);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') livePoll();
+      });
 
       function openAlumniDetail(item) {
         const rows = [
