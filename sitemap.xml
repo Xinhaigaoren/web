@@ -5,7 +5,7 @@
   <url><loc>https://xinhaigaoren.github.io/web/news.html</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://xinhaigaoren.github.io/web/events.html</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://xinhaigaoren.github.io/web/account.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://xinhaigaoren.github.io/web/alumni.html</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://xinhaigaoren.github.io/web/directory.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://xinhaigaoren.github.io/web/forum.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://xinhaigaoren.github.io/web/jobs.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://xinhaigaoren.github.io/web/map.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
