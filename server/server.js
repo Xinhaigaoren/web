@@ -817,6 +817,7 @@ async function currentRole(req) {
 // 校友通讯录：已认证校友和管理员可看
 app.get('/api/alumni/directory', requireAuth, requireAlumni, async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     const role = await currentRole(req);
     if (!['alumni', 'admin', 'super_admin'].includes(role)) return fail(res, 403, '完成校友认证后才可查看通讯录');
     const { province, city, county, year, q } = req.query;
@@ -838,7 +839,18 @@ app.get('/api/alumni/directory', requireAuth, requireAlumni, async (req, res) =>
        limit 500`,
       params
     );
-    return ok(res, { alumni: r.rows });
+    // 统计口径：全量已认证校友的总人数与覆盖届别，不受当前筛选条件影响，保证数量与名录始终同步
+    let total = r.rows.length;
+    let yearCount = 0;
+    try {
+      const t = await dbQuery(
+        `select count(*)::int as total, count(distinct graduation_year)::int as years
+         from public.alumni_profiles where status='active'`
+      );
+      total = t.rows[0].total;
+      yearCount = t.rows[0].years;
+    } catch (_) { /* 保留筛选结果数量作为兜底 */ }
+    return ok(res, { alumni: r.rows, total, yearCount });
   } catch (e) {
     return fail(res, 500, '获取校友通讯录失败', { error: e.message });
   }
@@ -1259,6 +1271,44 @@ async function ensureContentTables() {
     data text,
     created_at timestamptz default now()
   )`);
+  // 老库可能在功能迭代前就建了表，这里逐列补齐，避免发布新闻/活动时因缺列报错
+  const newsCols = [
+    ['slug', 'text'], ['title', 'text'], ['summary', 'text'], ['content', 'text'],
+    ['cover_url', 'text'], ['category', "text default '综合'"], ['author', 'text'],
+    ['source', 'text'], ['is_published', 'boolean default true'],
+    ['published_at', 'timestamptz default now()'], ['view_count', 'integer default 0'],
+    ['created_at', 'timestamptz default now()'], ['updated_at', 'timestamptz default now()'],
+    ['created_by', 'bigint']
+  ];
+  for (const [name, def] of newsCols) {
+    await dbQuery(`alter table public.news_articles add column if not exists ${name} ${def}`).catch(() => {});
+  }
+  const eventCols = [
+    ['slug', 'text'], ['title', 'text'], ['summary', 'text'], ['content', 'text'],
+    ['cover_url', 'text'], ['category', "text default '校友活动'"], ['location', 'text'],
+    ['start_time', 'timestamptz'], ['end_time', 'timestamptz'], ['signup_deadline', 'timestamptz'],
+    ['capacity', 'integer'], ['is_published', 'boolean default true'],
+    ['created_at', 'timestamptz default now()'], ['updated_at', 'timestamptz default now()'],
+    ['created_by', 'bigint']
+  ];
+  for (const [name, def] of eventCols) {
+    await dbQuery(`alter table public.events add column if not exists ${name} ${def}`).catch(() => {});
+  }
+  const regCols = [
+    ['event_id', 'bigint'], ['user_id', 'bigint'], ['name', 'text'], ['phone', 'text'],
+    ['email', 'text'], ['remark', 'text'], ['status', "text default 'registered'"],
+    ['created_at', 'timestamptz default now()'], ['updated_at', 'timestamptz default now()']
+  ];
+  for (const [name, def] of regCols) {
+    await dbQuery(`alter table public.event_registrations add column if not exists ${name} ${def}`).catch(() => {});
+  }
+  const uploadCols = [
+    ['filename', 'text'], ['mime_type', 'text'], ['size_bytes', 'integer'],
+    ['purpose', 'text'], ['data', 'text'], ['created_at', 'timestamptz default now()']
+  ];
+  for (const [name, def] of uploadCols) {
+    await dbQuery(`alter table public.uploads add column if not exists ${name} ${def}`).catch(() => {});
+  }
 }
 
 // ---------- 新闻公告（公开） ----------
@@ -1346,7 +1396,7 @@ app.post('/api/admin/news', requireAuth, requireAdmin, async (req, res) => {
     await audit(req, 'news_create', 'news_article', r.rows[0].id, { title });
     return ok(res, { article: r.rows[0], message: '新闻已发布' });
   } catch (e) {
-    return fail(res, 500, '发布新闻失败', { error: e.message });
+    return fail(res, 500, '发布新闻失败：' + (e.message || e), { error: e.message });
   }
 });
 
@@ -1366,7 +1416,7 @@ app.patch('/api/admin/news/:id', requireAuth, requireAdmin, async (req, res) => 
     await audit(req, 'news_update', 'news_article', req.params.id, { title });
     return ok(res, { article: r.rows[0], message: '新闻已更新' });
   } catch (e) {
-    return fail(res, 500, '更新新闻失败', { error: e.message });
+    return fail(res, 500, '更新新闻失败：' + (e.message || e), { error: e.message });
   }
 });
 

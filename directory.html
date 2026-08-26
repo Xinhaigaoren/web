@@ -213,8 +213,8 @@
           if (lastSig && sig !== lastSig && XH.toast) XH.toast('名录数据已更新，请查看最新内容');
           lastSig = sig;
           renderYears(items);
-          if (statTotal) statTotal.textContent = items.length;
-          if (statRecent) statRecent.textContent = new Set(items.map((a) => a.graduation_year).filter(Boolean)).size;
+          if (statTotal) statTotal.textContent = data.total !== undefined ? data.total : items.length;
+          if (statRecent) statRecent.textContent = data.yearCount !== undefined ? data.yearCount : new Set(items.map((a) => a.graduation_year).filter(Boolean)).size;
           if (sideList) {
             sideList.innerHTML = items.slice(0, 8).map((item, index) =>
               `<li data-alumni="${index}" title="查看详情"><span>${XH.escapeHtml(item.name)}</span><small>${XH.escapeHtml(item.graduation_year ? item.graduation_year + '届' : '')}</small></li>`
