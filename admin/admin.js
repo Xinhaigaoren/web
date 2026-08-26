@@ -111,25 +111,45 @@ async function fetchJson(url, options = {}) {
 }
 
 async function api(path, options = {}) {
-  const response = await fetchJson(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
-      ...(options.headers || {})
+  const maxTries = options.retries || 2;
+  let lastErr = null;
+  for (let attempt = 0; attempt < maxTries; attempt++) {
+    try {
+      const response = await fetchJson(`${API_BASE_URL}${path}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
+          ...(options.headers || {})
+        }
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.ok === false) {
+        const message = data.message || data.error || (response.status ? `服务器繁忙（HTTP ${response.status}），请稍后重试` : '接口请求失败');
+        // 管理员权限被停止 / 登录失效时，强制退出后台回到登录页
+        if (response.status === 401 || /已被停止|未启用/.test(message)) {
+          clearToken();
+          setTimeout(() => { if (dashboard && !dashboard.hidden) showLogin(); }, 0);
+        }
+        // 5xx：服务重启/过载，自动重试
+        if (response.status >= 500 && attempt < maxTries - 1) {
+          await new Promise((r) => setTimeout(r, 1500));
+          continue;
+        }
+        throw new Error(message);
+      }
+      return data;
+    } catch (e) {
+      lastErr = e;
+      // 网络中断（非超时）：快速重试；超时/业务错误不重试
+      if (attempt < maxTries - 1 && /网络异常|服务器繁忙|HTTP 5\d\d/.test(e.message)) {
+        await new Promise((r) => setTimeout(r, 1500));
+        continue;
+      }
+      throw lastErr;
     }
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.ok === false) {
-    const message = data.message || data.error || '接口请求失败';
-    // 管理员权限被停止 / 登录失效时，强制退出后台回到登录页
-    if (response.status === 401 || /已被停止|未启用/.test(message)) {
-      clearToken();
-      setTimeout(() => { if (dashboard && !dashboard.hidden) showLogin(); }, 0);
-    }
-    throw new Error(message);
   }
-  return data;
+  throw lastErr || new Error('接口请求失败');
 }
 
 function setActiveTab(tabName) {
@@ -921,7 +941,7 @@ function openNewsEditor(item) {
 if (newsForm) {
   newsForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    newsStatus.textContent = '正在保存……';
+    newsStatus.textContent = '正在保存……（网络不稳定时自动重试）';
     newsStatus.className = 'status';
     const body = Object.fromEntries(new FormData(newsForm).entries());
     body.is_published = body.is_published === 'on';
@@ -937,7 +957,7 @@ if (newsForm) {
       newsEditor.hidden = true;
       await loadNews(newsPage);
     } catch (error) {
-      newsStatus.textContent = error.message;
+      newsStatus.textContent = error.message || '保存失败，请稍后重试';
       newsStatus.className = 'status';
     }
   });
