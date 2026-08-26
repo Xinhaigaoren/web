@@ -1307,7 +1307,7 @@ async function loadUsers(page = 1) {
           <td><strong>${escapeHtml(item.display_name)}</strong>${source ? `<br><small>${escapeHtml(source)}</small>` : ''}</td>
           <td>${escapeHtml(item.phone || '')}<br>${escapeHtml(item.email || '')}</td>
           <td>${userRoleText(item.role)}${item.admin_level ? `<br><small>${adminLevelText(item.admin_level)}</small>` : ''}</td>
-          <td><span class="badge ${statusClass}">${statusText(item.status)}</span></td>
+          <td><span class="badge ${statusClass}">${statusText(item.status)}</span>${item.has_password === false ? '<br><span class="badge draft" title="该账号未设置登录密码，无法用密码登录，请点「重置密码」">未设密码</span>' : ''}</td>
           <td><span class="badge ${verifyClass}">${verifyMap[vStatus] || '未申请认证'}</span></td>
           <td>${escapeHtml(String(item.created_at || '').slice(0, 10))}</td>
           <td>

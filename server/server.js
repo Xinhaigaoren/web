@@ -450,6 +450,16 @@ app.post(['/api/admin/login', '/api/login'], async (req, res) => {
     }
     if (!user) {
       await adminLoginLog(null, loginName, 'fail', '密码错误', req);
+      if (r.rows.length === 0) {
+        // 该邮箱/手机号存在但未开通管理员权限：明确提示，避免误导为密码错误
+        const exist = await dbQuery(
+          `select id from public.app_users where lower(email)=lower($1) or phone=$1 limit 1`,
+          [loginName]
+        ).catch(() => ({ rows: [] }));
+        if (exist.rows && exist.rows[0]) {
+          return fail(res, 401, '该账号不是管理员，无法登录后台；校友请到官网「加入新海高人」登录');
+        }
+      }
       return fail(res, 401, '账号或密码错误，或该账号未设置密码');
     }
     if (user.locked_until && new Date(user.locked_until) > new Date()) {
@@ -543,11 +553,15 @@ app.post('/api/auth/login', async (req, res) => {
       [loginName]
     );
     let user = null;
+    let hasAccountNoPwd = false;
     for (const row of r.rows) {
-      if (!row.password_hash) continue;
+      if (!row.password_hash) { hasAccountNoPwd = true; continue; }
       if (await bcrypt.compare(password, row.password_hash)) { user = row; break; }
     }
-    if (!user) return fail(res, 401, '账号或密码错误，或该账号未设置密码');
+    if (!user) {
+      if (hasAccountNoPwd) return fail(res, 401, '该账号未设置密码，请使用「忘记密码」重置，或联系管理员设置');
+      return fail(res, 401, '账号或密码错误，请重新输入');
+    }
     if (user.status === 'disabled') return fail(res, 403, '该账号已被停用，请联系管理员');
     const token = jwt.sign({ user_id: user.user_id, role: user.role, type: 'alumni' }, TOKEN_SECRET, { expiresIn: '7d' });
     await dbQuery(`update public.app_users set last_login_at=now(), updated_at=now() where id=$1`, [user.user_id]).catch(() => {});
@@ -1993,6 +2007,7 @@ app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
     const offset = (page - 1) * pageSize;
     const r = await dbQuery(
       `select u.id, u.display_name, u.email, u.phone, u.role, u.status, u.created_at, u.last_login_at, u.wechat_openid,
+              (u.password_hash is not null) as has_password,
               a.admin_level, a.status as admin_status,
               p.graduation_year, p.class_name,
               (select v.status from public.alumni_verifications v where v.phone = u.phone order by v.created_at desc limit 1) as verification_status

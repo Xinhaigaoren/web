@@ -22,7 +22,7 @@
     const token = store.getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
     const isRead = !options.method || options.method === 'GET';
-    const maxTries = isRead ? 3 : 1;
+    const maxTries = options.retries || (isRead ? 3 : 1);
     let lastErr = null;
     for (let attempt = 0; attempt < maxTries; attempt++) {
       try {

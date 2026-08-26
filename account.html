@@ -10,9 +10,9 @@
   <meta property="og:title" content="校友中心 - 海林市高级中学校友（新海高人）" />
   <meta property="og:description" content="海林市高级中学校友登录、注册与校友认证。" />
   <meta property="og:url" content="https://xinhaigaoren.github.io/web/account.html" />
-  <link rel="stylesheet" href="style.css?v=20260816" />
-  <link rel="stylesheet" href="pages.css?v=20260816" />
-  <script src="config.js?v=20260816"></script>
+  <link rel="stylesheet" href="style.css?v=20260827" />
+  <link rel="stylesheet" href="pages.css?v=20260827" />
+  <script src="config.js?v=20260827"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到正文</a>
@@ -278,7 +278,7 @@
     </div>
   </footer>
 
-  <script src="site.js?v=20260816"></script>
+  <script src="site.js?v=20260827"></script>
   <script>
     (function () {
       const XH = window.XH;
@@ -359,7 +359,7 @@
             password: String(document.getElementById('loginPassword').value || '')
           };
           if (!body.email || !body.password) throw new Error('请输入邮箱/手机号和密码');
-          const data = await XH.api('/api/auth/login', { method: 'POST', body: JSON.stringify(body) });
+          const data = await XH.api('/api/auth/login', { method: 'POST', retries: 3, body: JSON.stringify(body) });
           XH.store.setToken(data.token);
           XH.store.setUser(data.user || {});
           await loadCenter();
@@ -375,7 +375,7 @@
         registerStatus.className = 'form-status';
         const body = Object.fromEntries(new FormData(registerForm).entries());
         try {
-          const data = await XH.api('/api/auth/register', { method: 'POST', body: JSON.stringify(body) });
+          const data = await XH.api('/api/auth/register', { method: 'POST', retries: 3, body: JSON.stringify(body) });
           registerStatus.textContent = data.message || '注册成功';
           registerStatus.className = 'form-status success';
           registerForm.reset();
