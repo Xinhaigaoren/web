@@ -237,6 +237,30 @@ async function ensureZhangSuperAdmin() {
       [row.id]
     ).catch(() => {});
   }
+  // 一次性修复：主管理员密码统一重置为环境变量 ADMIN_PASSWORD（默认 Hailin@2026#Admin）。
+  // 写入标记后不再覆盖，用户之后自行修改的密码不会被后续部署冲掉。
+  try {
+    const flag = await dbQuery(
+      `select value from public.system_settings where key='main_admin_pwd_forced' limit 1`
+    ).catch(() => ({ rows: [] }));
+    if (!flag.rows || !flag.rows[0]) {
+      const forceHash = await bcrypt.hash(ADMIN_PASSWORD || 'Hailin@2026#Admin', 10);
+      await dbQuery(
+        `update public.app_users set password_hash=$2, updated_at=now()
+         where lower(email)=lower($1) or phone=$1`,
+        [email, forceHash]
+      ).catch(() => {});
+      await dbQuery(
+        `update public.admin_accounts set must_change_password=false, updated_at=now()
+         where user_id in (select id from public.app_users where lower(email)=lower($1) or phone=$1)`,
+        [email]
+      ).catch(() => {});
+      await dbQuery(
+        `insert into public.system_settings (key, value) values ('main_admin_pwd_forced','1')
+         on conflict (key) do update set value='1', updated_at=now()`
+      ).catch(() => {});
+    }
+  } catch (_) { /* 修复失败不影响启动 */ }
 }
 
 function signToken(user) {
