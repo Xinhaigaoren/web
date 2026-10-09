@@ -10,9 +10,10 @@
   <meta property="og:title" content="校友论坛 - 海林市高级中学校友（新海高人）" />
   <meta property="og:description" content="海林市高级中学校友论坛，校友交流互助，分享工作生活。" />
   <meta property="og:url" content="https://xinhaigaoren.github.io/web/forum.html" />
-  <link rel="stylesheet" href="style.css?v=20260828" />
-  <link rel="stylesheet" href="pages.css?v=20260828" />
-  <script src="config.js?v=20260828"></script>
+  <link rel="preconnect" href="https://hailin-alumni-api.onrender.com" crossorigin />
+  <link rel="stylesheet" href="style.css?v=20261009" />
+  <link rel="stylesheet" href="pages.css?v=20261009" />
+  <script src="config.js?v=20261009"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到正文</a>
@@ -72,23 +73,6 @@
           <div class="pagination" id="forumPagination"></div>
         </div>
 
-        <div id="postDetailView" hidden>
-          <button class="article-back" type="button" id="backToListBtn">← 返回帖子列表</button>
-          <article class="article">
-            <header class="article-head" id="postHead"></header>
-            <div class="article-body rich-text" id="postBody"></div>
-          </article>
-          <h3 style="color:var(--deep);margin-top:28px">回复（<span id="replyCount">0</span>）</h3>
-          <div class="forum-replies" id="replyList"></div>
-          <form id="replyForm" class="auth-form" style="margin-top:22px">
-            <div class="field"><label for="replyContent">发表回复</label><textarea id="replyContent" name="content" rows="3" required placeholder="友善交流，文明发言"></textarea></div>
-            <div class="form-actions">
-              <button class="btn primary" type="submit">提交回复</button>
-              <span class="form-tip" id="replyStatus"></span>
-            </div>
-          </form>
-        </div>
-
         <div id="newPostView" hidden>
           <button class="article-back" type="button" id="cancelPostBtn">← 返回帖子列表</button>
           <h2 style="color:var(--deep);margin:16px 0 20px">发布新帖</h2>
@@ -138,12 +122,11 @@
     </div>
   </footer>
 
-  <script src="site.js?v=20260828"></script>
-  <script>
+  <script src="site.js?v=20261009" defer></script>
+  <script defer>
     (function () {
       const XH = window.XH;
       const listView = document.getElementById('forumListView');
-      const detailView = document.getElementById('postDetailView');
       const newPostView = document.getElementById('newPostView');
       const categoryRow = document.getElementById('forumCategoryRow');
       const searchInput = document.getElementById('forumSearch');
@@ -155,11 +138,9 @@
       let currentCategory = 0;
       let page = 1;
       let searchTimer = null;
-      let currentPostId = 0;
 
       function showView(name) {
         listView.hidden = name !== 'list';
-        detailView.hidden = name !== 'detail';
         newPostView.hidden = name !== 'new';
         if (name === 'list') window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -202,7 +183,7 @@
           const data = await XH.api(`/api/forum/posts?${params}`);
           if (!data.items || !data.items.length) { emptyBox.hidden = false; pagination.innerHTML = ''; return; }
           listBox.innerHTML = data.items.map((post) => `
-            <article class="forum-post" data-id="${post.id}">
+            <a class="forum-post" href="post-detail.html?id=${encodeURIComponent(post.id)}" style="display:block">
               <div class="forum-post-main">
                 <h3>${post.is_pinned ? '📌 ' : ''}${XH.escapeHtml(post.title)}</h3>
                 <p class="forum-post-meta">
@@ -213,12 +194,8 @@
                   <span>回复 ${post.reply_count}</span>
                 </p>
               </div>
-            </article>
+            </a>
           `).join('');
-          listBox.onclick = (event) => {
-            const card = event.target.closest('.forum-post');
-            if (card) openPost(Number(card.dataset.id));
-          };
           renderPagination(data.total);
         } catch (error) {
           emptyBox.hidden = false;
@@ -226,39 +203,6 @@
         }
       }
 
-      async function openPost(id) {
-        try {
-          const data = await XH.api(`/api/forum/posts/${id}`);
-          currentPostId = id;
-          document.getElementById('postHead').innerHTML = `
-            <p class="article-meta">
-              ${data.post.category_name ? `<span class="tag">${XH.escapeHtml(data.post.category_name)}</span>` : ''}
-              <span>${XH.escapeHtml(data.post.author_name || '校友')}</span>
-              <span>${XH.formatDate(data.post.created_at, true)}</span>
-              <span>浏览 ${data.post.view_count}</span>
-            </p>
-            <h1>${XH.escapeHtml(data.post.title)}</h1>
-          `;
-          document.getElementById('postBody').innerHTML = `<p style="white-space:pre-wrap">${XH.escapeHtml(data.post.content)}</p>`;
-          const replies = data.replies || [];
-          document.getElementById('replyCount').textContent = replies.length;
-          document.getElementById('replyList').innerHTML = replies.length
-            ? replies.map((r) => `
-                <div class="forum-reply">
-                  <strong>${XH.escapeHtml(r.author_name || '校友')}</strong>
-                  <small>${XH.formatDate(r.created_at, true)}</small>
-                  <p>${XH.escapeHtml(r.content)}</p>
-                </div>`).join('')
-            : '<div class="empty-state" style="padding:16px">还没有回复，来抢沙发～</div>';
-          document.getElementById('replyStatus').textContent = '';
-          document.getElementById('replyContent').value = '';
-          showView('detail');
-        } catch (error) {
-          XH.toast(error.message, 'error');
-        }
-      }
-
-      document.getElementById('backToListBtn').addEventListener('click', () => { showView('list'); });
       document.getElementById('cancelPostBtn').addEventListener('click', () => { showView('list'); });
 
       document.getElementById('newPostBtn').addEventListener('click', () => {
@@ -282,20 +226,6 @@
           showView('list');
           loadPosts();
           XH.toast('发布成功');
-        } catch (error) {
-          status.textContent = error.message;
-        }
-      });
-
-      document.getElementById('replyForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const status = document.getElementById('replyStatus');
-        if (!XH.store.getToken()) { XH.toast('请先登录后回复', 'info'); location.href = 'account.html'; return; }
-        status.textContent = '正在提交……';
-        const body = Object.fromEntries(new FormData(document.getElementById('replyForm')).entries());
-        try {
-          await XH.api(`/api/forum/posts/${currentPostId}/replies`, { method: 'POST', body: JSON.stringify(body) });
-          openPost(currentPostId);
         } catch (error) {
           status.textContent = error.message;
         }

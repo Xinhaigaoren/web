@@ -10,9 +10,10 @@
   <meta property="og:title" content="新海高人招聘 - 海林市高级中学校友（新海高人）" />
   <meta property="og:description" content="海林市高级中学新海高人招聘信息，校友企业职位推荐与简历投递。" />
   <meta property="og:url" content="https://xinhaigaoren.github.io/web/jobs.html" />
-  <link rel="stylesheet" href="style.css?v=20260828" />
-  <link rel="stylesheet" href="pages.css?v=20260828" />
-  <script src="config.js?v=20260828"></script>
+  <link rel="preconnect" href="https://hailin-alumni-api.onrender.com" crossorigin />
+  <link rel="stylesheet" href="style.css?v=20261009" />
+  <link rel="stylesheet" href="pages.css?v=20261009" />
+  <script src="config.js?v=20261009"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到正文</a>
@@ -70,28 +71,6 @@
           <div class="pagination" id="jobPagination"></div>
         </div>
 
-        <div id="jobDetailView" hidden>
-          <button class="article-back" type="button" id="jobBackBtn">← 返回职位列表</button>
-          <article class="article">
-            <header class="article-head" id="jobHead"></header>
-            <div class="article-body rich-text" id="jobBody"></div>
-          </article>
-          <h3 style="color:var(--deep);margin-top:26px">投递简历</h3>
-          <form id="applyForm" class="auth-form">
-            <div class="form-grid">
-              <div class="field"><label for="applyName">姓名 *</label><input id="applyName" name="name" required /></div>
-              <div class="field"><label for="applyPhone">联系电话 *</label><input id="applyPhone" name="phone" type="tel" required /></div>
-              <div class="field"><label for="applyEmail">邮箱</label><input id="applyEmail" name="email" type="email" /></div>
-              <div class="field"><label for="applyResume">简历/作品链接</label><input id="applyResume" name="resume_url" placeholder="选填，可填网盘或在线简历链接" /></div>
-              <div class="field" style="grid-column:1/-1"><label for="applyNote">自我介绍 / 备注</label><textarea id="applyNote" name="note" rows="4" placeholder="选填，简要介绍你的经历与优势"></textarea></div>
-            </div>
-            <div class="form-actions">
-              <button class="btn primary" type="submit">投递简历</button>
-              <span class="form-tip" id="applyStatus"></span>
-            </div>
-          </form>
-        </div>
-
       </div>
     </section>
   </main>
@@ -127,12 +106,10 @@
     </div>
   </footer>
 
-  <script src="site.js?v=20260828"></script>
-  <script>
+  <script src="site.js?v=20261009" defer></script>
+  <script defer>
     (function () {
       const XH = window.XH;
-      const listView = document.getElementById('jobsListView');
-      const detailView = document.getElementById('jobDetailView');
       const listBox = document.getElementById('jobList');
       const emptyBox = document.getElementById('jobEmpty');
       const pagination = document.getElementById('jobPagination');
@@ -140,7 +117,6 @@
       const PAGE_SIZE = 10;
       let page = 1;
       let searchTimer = null;
-      let currentJob = null;
 
       function renderPagination(total) {
         const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -166,7 +142,7 @@
           const data = await XH.api(`/api/jobs?${params}`);
           if (!data.items || !data.items.length) { emptyBox.hidden = false; pagination.innerHTML = ''; return; }
           listBox.innerHTML = data.items.map((job) => `
-            <article class="job-card" data-id="${job.id}">
+            <a class="job-card" href="job-detail.html?id=${encodeURIComponent(job.id)}" style="display:block">
               <div class="job-card-main">
                 <h3>${XH.escapeHtml(job.title)}</h3>
                 <p class="job-card-company">${XH.escapeHtml(job.company)}</p>
@@ -177,67 +153,14 @@
                   <span>${XH.formatDate(job.created_at)} 发布</span>
                 </p>
               </div>
-            </article>
+            </a>
           `).join('');
-          listBox.onclick = (event) => {
-            const card = event.target.closest('.job-card');
-            if (card) openJob(Number(card.dataset.id));
-          };
           renderPagination(data.total);
         } catch (error) {
           emptyBox.hidden = false;
           emptyBox.textContent = error.message;
         }
       }
-
-      async function openJob(id) {
-        try {
-          const data = await XH.api(`/api/jobs/${id}`);
-          currentJob = data.job;
-          document.getElementById('jobHead').innerHTML = `
-            <p class="article-meta">
-              <span>${XH.escapeHtml(data.job.company)}</span>
-              ${data.job.location ? `<span>📍 ${XH.escapeHtml(data.job.location)}</span>` : ''}
-              <span class="tag">${XH.escapeHtml(data.job.type || '全职')}</span>
-              ${data.job.salary ? `<span>💰 ${XH.escapeHtml(data.job.salary)}</span>` : ''}
-              <span>${XH.formatDate(data.job.created_at)} 发布</span>
-            </p>
-            <h1>${XH.escapeHtml(data.job.title)}</h1>
-          `;
-          const body = [];
-          if (data.job.description) body.push(`<h2>职位描述</h2><p style="white-space:pre-wrap">${XH.escapeHtml(data.job.description)}</p>`);
-          if (data.job.requirements) body.push(`<h2>任职要求</h2><p style="white-space:pre-wrap">${XH.escapeHtml(data.job.requirements)}</p>`);
-          if (data.job.contact) body.push(`<h2>联系方式</h2><p style="white-space:pre-wrap">${XH.escapeHtml(data.job.contact)}</p>`);
-          document.getElementById('jobBody').innerHTML = body.join('') || '<p>招聘方暂未填写详情，可通过投递简历联系。</p>';
-          document.getElementById('applyForm').reset();
-          document.getElementById('applyStatus').textContent = '';
-          listView.hidden = true;
-          detailView.hidden = false;
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        } catch (error) {
-          XH.toast(error.message, 'error');
-        }
-      }
-
-      document.getElementById('jobBackBtn').addEventListener('click', () => {
-        detailView.hidden = true;
-        listView.hidden = false;
-      });
-
-      document.getElementById('applyForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const status = document.getElementById('applyStatus');
-        status.textContent = '正在投递……';
-        const body = Object.fromEntries(new FormData(document.getElementById('applyForm')).entries());
-        try {
-          const data = await XH.api(`/api/jobs/${currentJob.id}/apply`, { method: 'POST', body: JSON.stringify(body) });
-          status.textContent = data.message || '投递成功';
-          document.getElementById('applyForm').reset();
-          XH.toast('简历已投递');
-        } catch (error) {
-          status.textContent = error.message;
-        }
-      });
 
       searchInput.addEventListener('input', () => {
         clearTimeout(searchTimer);

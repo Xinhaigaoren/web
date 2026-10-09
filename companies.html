@@ -10,9 +10,10 @@
   <meta property="og:title" content="校友企业 - 海林市高级中学校友（新海高人）" />
   <meta property="og:description" content="海林市高级中学校友企业黄页，校友企业展示与合作对接。" />
   <meta property="og:url" content="https://xinhaigaoren.github.io/web/companies.html" />
-  <link rel="stylesheet" href="style.css?v=20260828" />
-  <link rel="stylesheet" href="pages.css?v=20260828" />
-  <script src="config.js?v=20260828"></script>
+  <link rel="preconnect" href="https://hailin-alumni-api.onrender.com" crossorigin />
+  <link rel="stylesheet" href="style.css?v=20261009" />
+  <link rel="stylesheet" href="pages.css?v=20261009" />
+  <script src="config.js?v=20261009"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到正文</a>
@@ -124,7 +125,7 @@
     </div>
   </footer>
 
-  <script src="site.js?v=20260828"></script>
+  <script src="site.js?v=20261009" defer></script>
   <script>
     (function () {
       const XH = window.XH;
@@ -183,9 +184,9 @@
           renderIndustries();
           if (!data.items || !data.items.length) { emptyBox.hidden = false; pagination.innerHTML = ''; return; }
           grid.innerHTML = data.items.map((c) => `
-            <article class="company-card">
+            <a class="company-card" href="company-detail.html?id=${encodeURIComponent(c.id)}" style="display:block;color:inherit;text-decoration:none">
               <div class="company-card-head">
-                ${c.logo_url ? `<img src="${XH.assetUrl(c.logo_url)}" alt="logo" onerror="this.style.display='none'" />` : '<span class="company-logo-ph">企</span>'}
+                ${c.logo_url ? `<img src="${XH.assetUrl(c.logo_url)}" alt="logo" onerror="this.style.display='none'" loading="lazy" />` : '<span class="company-logo-ph">企</span>'}
                 <h3>${XH.escapeHtml(c.name)}</h3>
               </div>
               <p class="company-tags">
@@ -195,9 +196,9 @@
               <p class="company-intro">${XH.escapeHtml((c.intro || '').slice(0, 90))}</p>
               <div class="company-foot">
                 <span>${XH.formatDate(c.created_at)} 入驻</span>
-                ${c.website ? `<a href="${XH.escapeHtml(c.website)}" target="_blank" rel="noopener">官网 ↗</a>` : ''}
+                ${c.website ? `<span>官网 ↗</span>` : ''}
               </div>
-            </article>`).join('');
+            </a>`).join('');
           renderPagination(data.total);
         } catch (error) {
           emptyBox.hidden = false;
