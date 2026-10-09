@@ -4,8 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>管理员后台 - 海林市高级中学校友（新海高人）</title>
-  <link rel="stylesheet" href="admin.css?v=20260828" />
-  <script src="../config.js?v=20260828"></script>
+  <link rel="preconnect" href="https://hailin-alumni-api.onrender.com" crossorigin />
+  <link rel="stylesheet" href="admin.css?v=20261009" />
+  <script src="../config.js?v=20261009"></script>
 </head>
 <body>
   <header class="admin-header">
@@ -27,7 +28,7 @@
         <label>账号（邮箱 / 手机号）<input id="adminLoginAccount" name="username" autocomplete="username" required placeholder="主管理员：zwxzwx861@qq.com 或 18545372006" /></label>
         <label>密码<input id="adminLoginPassword" name="password" type="password" autocomplete="current-password" required placeholder="请输入密码" /></label>
         <div class="form-actions" style="justify-content:flex-end;margin-top:4px">
-          <a href="account.html#forgot" class="form-link">忘记密码？</a>
+          <a href="../account.html#forgot" class="form-link">忘记密码？</a>
         </div>
         <button type="submit">登录后台</button>
         <p class="status" id="loginStatus"></p>
@@ -973,6 +974,6 @@
     </section>
   </main>
 
-  <script src="admin.js?v=20260828"></script>
+  <script src="admin.js?v=20261009"></script>
 </body>
 </html>
