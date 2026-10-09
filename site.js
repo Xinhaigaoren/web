@@ -134,8 +134,11 @@
     const map = {
       '': 'home', 'index.html': 'home',
       'about.html': 'about', 'news.html': 'news', 'news-detail.html': 'news-detail',
-      'events.html': 'events', 'directory.html': 'directory', 'account.html': 'account',
-      'forum.html': 'forum', 'jobs.html': 'jobs', 'companies.html': 'companies',
+      'events.html': 'events', 'event-detail.html': 'events',
+      'directory.html': 'directory', 'account.html': 'account',
+      'forum.html': 'forum', 'post-detail.html': 'forum',
+      'jobs.html': 'jobs', 'job-detail.html': 'jobs',
+      'companies.html': 'companies', 'company-detail.html': 'companies',
       'map.html': 'map', 'messages.html': 'messages', 'contact.html': 'contact',
       'checkin.html': 'checkin'
     };
@@ -146,7 +149,7 @@
     const slug = detectSiteSlug();
     if (!slug) return;
     try {
-      const data = await api(`/api/site/${slug}?t=${Date.now()}`);
+      const data = await api(`/api/site/${slug}`);
       const page = data.page || {};
       if (page.title) document.title = page.title;
       if (page.description) {
@@ -198,7 +201,7 @@
   // 网站页脚：所有页面统一从接口加载，管理员可后台修改
   async function loadFooter() {
     try {
-      const data = await api('/api/site/sections?page=footer&t=' + Date.now());
+      const data = await api('/api/site/sections?page=footer');
       const sec = (data.sections || []).find((s) => s.section_key === 'footer_info');
       if (!sec) return;
       let c = sec.content;
@@ -220,9 +223,12 @@
   loadFooter();
 
   // 首页动态内容：新闻与活动从接口加载，点击可进入详情页
+  // 仅在首页执行，其他页面不再无谓请求
   async function loadHomeDynamic() {
+    const onHome = (location.pathname === '/' || /(^|\/)index\.html$/.test(location.pathname));
+    if (!onHome) return;
     try {
-      const newsData = await api('/api/news?page=1&pageSize=3&t=' + Date.now());
+      const newsData = await api('/api/news?page=1&pageSize=3');
       const newsItems = newsData.items || [];
       if (newsItems.length) {
         const list = document.getElementById('homeNewsList');
@@ -241,7 +247,7 @@
     } catch (error) { /* 接口不可用时保留静态内容 */ }
 
     try {
-      const eventsData = await api('/api/events?page=1&pageSize=3&t=' + Date.now());
+      const eventsData = await api('/api/events?page=1&pageSize=3');
       const eventItems = eventsData.items || [];
       const box = document.getElementById('homeEvents');
       if (box && eventItems.length) {
@@ -249,7 +255,7 @@
           const d = new Date(item.start_time);
           const month = String(d.getMonth() + 1).padStart(2, '0');
           const day = String(d.getDate()).padStart(2, '0');
-          return `<a class="event-link" href="events.html"><time><strong>${day}</strong><span>${month}月</span></time><div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.summary || '')}</p></div></a>`;
+          return `<a class="event-link" href="event-detail.html?id=${encodeURIComponent(item.id)}"><time><strong>${day}</strong><span>${month}月</span></time><div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.summary || '')}</p></div></a>`;
         }).join('');
       }
     } catch (error) { /* 接口不可用时保留静态内容 */ }
@@ -257,12 +263,19 @@
   loadHomeDynamic();
 
   // 实时同步：后台修改内容后，前台页面自动定时刷新；切回标签页时立即刷新
+  // 1) 间隔从 60s 放宽到 120s，减少后台轮询流量
+  // 2) 静态页（about/contact/map/checkin 等）不再参与全量刷新
+  const dynamicPages = new Set(['home', 'news', 'events', 'forum', 'jobs', 'companies', 'news-detail', 'event-detail', 'post-detail', 'job-detail', 'company-detail']);
   async function syncLive() {
     if (document.visibilityState === 'hidden') return;
-    await Promise.allSettled([loadSiteContent(), loadFooter(), loadHomeDynamic()]);
+    const slug = detectSiteSlug();
+    const onlyFooter = !dynamicPages.has(slug);
+    const tasks = [loadSiteContent(), loadFooter()];
+    if (!onlyFooter) tasks.push(loadHomeDynamic());
+    await Promise.allSettled(tasks);
     document.dispatchEvent(new CustomEvent('xh:live-refresh'));
   }
-  window.setInterval(() => { syncLive().catch(() => {}); }, 60000);
+  window.setInterval(() => { syncLive().catch(() => {}); }, 120000);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') syncLive().catch(() => {});
   });
