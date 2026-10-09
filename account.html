@@ -10,9 +10,10 @@
   <meta property="og:title" content="校友中心 - 海林市高级中学校友（新海高人）" />
   <meta property="og:description" content="海林市高级中学校友登录、注册与校友认证。" />
   <meta property="og:url" content="https://xinhaigaoren.github.io/web/account.html" />
-  <link rel="stylesheet" href="style.css?v=20260828" />
-  <link rel="stylesheet" href="pages.css?v=20260828" />
-  <script src="config.js?v=20260828"></script>
+  <link rel="preconnect" href="https://hailin-alumni-api.onrender.com" crossorigin />
+  <link rel="stylesheet" href="style.css?v=20261009" />
+  <link rel="stylesheet" href="pages.css?v=20261009" />
+  <script src="config.js?v=20261009"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到正文</a>
@@ -61,7 +62,6 @@
     <section class="page-section soft">
       <div class="container">
 
-        <!-- 未登录：登录 / 注册 -->
         <div class="auth-wrap" id="authView">
           <div class="auth-card">
             <div class="auth-tabs">
@@ -95,7 +95,6 @@
           </div>
         </div>
 
-        <!-- 忘记密码：多层级重置 -->
         <div id="resetView" hidden class="auth-wrap">
           <div class="auth-card">
             <h2 style="margin:0 0 6px">找回密码</h2>
@@ -142,7 +141,6 @@
           </div>
         </div>
 
-        <!-- 已登录：个人中心 -->
         <div id="centerView" hidden>
           <div class="account-layout">
             <nav class="account-menu" aria-label="个人中心菜单">
@@ -157,7 +155,6 @@
             </nav>
 
             <div>
-              <!-- 我的认证 -->
               <section class="account-panel" id="certPanel">
                 <h2>校友认证</h2>
                 <div id="certOverview"></div>
@@ -183,7 +180,6 @@
                 </form>
               </section>
 
-              <!-- 我的资料 -->
               <section class="account-panel" id="profilePanel" hidden>
                 <h2>我的资料</h2>
                 <form id="profileForm" class="auth-form">
@@ -206,7 +202,6 @@
                 </form>
               </section>
 
-              <!-- 安全设置 -->
               <section class="account-panel" id="securityPanel" hidden>
                 <h2>安全设置</h2>
                 <p class="form-tip">设置密码与密码重置方式（安全问题 / 备用恢复码），忘记密码时可自助找回，不依赖邮箱或短信。</p>
@@ -234,7 +229,6 @@
                 <p class="form-status" id="securityStatus" role="status" aria-live="polite"></p>
               </section>
 
-              <!-- 我的消息 -->
               <section class="account-panel" id="notifyPanel" hidden>
                 <h2>我的消息</h2>
                 <div id="notifyList"></div>
@@ -278,7 +272,7 @@
     </div>
   </footer>
 
-  <script src="site.js?v=20260828"></script>
+  <script src="site.js?v=20261009"></script>
   <script>
     (function () {
       const XH = window.XH;
@@ -297,48 +291,6 @@
       const profilePanel = document.getElementById('profilePanel');
       const securityPanel = document.getElementById('securityPanel');
       const notifyPanel = document.getElementById('notifyPanel');
-
-      // 认证资料上传
-      function bindUpload(boxSelector, hiddenName) {
-        const box = document.querySelector(boxSelector);
-        const preview = document.querySelector(`[data-preview="${box.dataset.upload}"]`);
-        const hidden = verifyForm.querySelector(`input[name="${hiddenName}"]`);
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/jpeg,image/png,image/webp';
-        box.addEventListener('click', () => fileInput.click());
-        box.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
-        box.addEventListener('dragover', (e) => { e.preventDefault(); box.classList.add('dragover'); });
-        box.addEventListener('dragleave', () => box.classList.remove('dragover'));
-        box.addEventListener('drop', (e) => { e.preventDefault(); box.classList.remove('dragover'); if (e.dataTransfer.files[0]) handle(e.dataTransfer.files[0]); });
-        fileInput.addEventListener('change', () => { if (fileInput.files[0]) handle(fileInput.files[0]); fileInput.value = ''; });
-
-        async function handle(file) {
-          if (!file.type.startsWith('image/')) { XH.toast('请选择图片文件', 'error'); return; }
-          if (file.size > 5 * 1024 * 1024) { XH.toast('图片不能超过 5MB', 'error'); return; }
-          box.textContent = '正在上传……';
-          try {
-            const base64 = await new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(String(reader.result));
-              reader.onerror = reject;
-              reader.readAsDataURL(file);
-            });
-            const data = await XH.api('/api/uploads', {
-              method: 'POST',
-              body: JSON.stringify({ data: base64, filename: file.name, mime_type: file.type, purpose: hiddenName })
-            });
-            const url = data.upload && data.upload.url;
-            hidden.value = url;
-            preview.innerHTML = `<figure><img src="${XH.assetUrl(url)}" alt="上传预览" /><figcaption>已上传</figcaption></figure>`;
-            box.textContent = '已上传，点击可重新选择';
-            XH.toast('上传成功');
-          } catch (error) {
-            box.textContent = '上传失败，点击重试';
-            XH.toast(error.message, 'error');
-          }
-        }
-      }
 
       function switchAuthTab(tab) {
         document.querySelectorAll('[data-auth-tab]').forEach((btn) => btn.classList.toggle('active', btn.dataset.authTab === tab));
@@ -380,7 +332,6 @@
           registerStatus.className = 'form-status success';
           registerForm.reset();
           if (data.token) {
-            // 注册即登录：直接进入个人中心「我的认证」提交认证资料
             XH.store.setToken(data.token);
             XH.store.setUser(data.user || {});
             setTimeout(() => {
@@ -456,7 +407,6 @@
           const latest = (data.verifications || [])[0];
           const rejected = latest && latest.status === 'rejected';
           if (rejected) {
-            // 认证被拒绝：仅显示认证状态，隐藏个人信息编辑
             profileForm.hidden = true;
             profileStatus.textContent = '认证未通过，个人信息已隐藏。如需重新申请，请在上方重新提交认证资料，或联系管理员。';
             profileStatus.className = 'form-status error';
@@ -537,7 +487,6 @@
         location.reload();
       });
 
-            // 微信登录
       const wechatLoginBtn = document.getElementById('wechatLoginBtn');
       if (wechatLoginBtn) {
         wechatLoginBtn.addEventListener('click', async () => {
@@ -570,7 +519,6 @@
         }
       }
 
-      // 个人中心：消息通知
       async function loadNotifications() {
         try {
           const data = await XH.api('/api/notifications?page=1&pageSize=50');
@@ -592,7 +540,6 @@
         }
       }
 
-      // ---------- 忘记密码：多层级重置（L1 安全问题 / L2 恢复码 / L3 人工审核） ----------
       const resetView = document.getElementById('resetView');
       const resetStatus = document.getElementById('resetStatus');
       const forgotLink = document.getElementById('forgotLink');
@@ -767,7 +714,6 @@
         }
       });
 
-      // ---------- 个人中心：安全设置 ----------
       async function loadSecurity() {
         try {
           const data = await XH.api('/api/auth/security/status');
@@ -858,10 +804,8 @@
       });
 
       handleWechatCallback();
-      // 支持首页「加入新海高人」直达注册 / 登录
       if (location.hash === '#register') switchAuthTab('register');
       if (location.hash === '#login') switchAuthTab('login');
-      // 后台登录页「忘记密码」跳转到此，直达多层级重置流程
       if (location.hash === '#forgot') {
         authView.hidden = true;
         resetView.hidden = false;
