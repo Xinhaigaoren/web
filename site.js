@@ -109,10 +109,15 @@
     });
   }
 
-  // 顶栏登录状态
+  // 顶栏快捷链接：公网只展示公开入口，内网展示登录状态与校友中心入口
+  const IS_INTERNAL = /\/internal\//.test(location.pathname);
   function renderAccountLink() {
     const holder = document.querySelector('[data-account]');
     if (!holder) return;
+    if (!IS_INTERNAL) {
+      holder.innerHTML = '<a href="news.html">新闻公告</a><a href="events.html">活动报名</a><a href="companies.html">校友企业</a><a href="contact.html">联系我们</a>';
+      return;
+    }
     const user = store.getUser();
     if (user && user.name) {
       holder.innerHTML = `<span class="account-name">${escapeHtml(user.name)}</span><a href="account.html">个人中心</a><a href="#" data-logout>退出</a>`;
@@ -123,7 +128,7 @@
         location.reload();
       });
     } else {
-      holder.innerHTML = '<a href="account.html">校友登录/注册</a><a href="directory.html">校友名录</a><a href="admin/">管理员入口</a>';
+      holder.innerHTML = '<a href="account.html">校友登录/注册</a><a href="../directory.html">校友名录</a><a href="admin/">管理员入口</a>';
     }
   }
   renderAccountLink();
@@ -240,7 +245,7 @@
         const feature = document.getElementById('homeNewsFeature');
         if (feature) {
           const first = newsItems[0];
-          const cover = first.cover_url ? ` style="background-image:linear-gradient(135deg, rgba(24,48,89,.12), rgba(39,68,114,.12)), url('${assetUrl(first.cover_url)}')"` : '';
+          const cover = first.cover_url ? ` style="background-image:linear-gradient(135deg, rgba(166,27,41,.12), rgba(196,30,58,.12)), url('${assetUrl(first.cover_url)}')"` : '';
           feature.innerHTML = `<div class="feature-img"${cover}></div><div class="feature-body"><time>${formatDate(first.published_at)}</time><h3><a href="news-detail.html?slug=${encodeURIComponent(first.slug)}">${escapeHtml(first.title)}</a></h3><p>${escapeHtml(first.summary || '')}</p></div>`;
         }
       }

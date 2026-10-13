@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://xinhaigaoren.github.io/web/sitemap.xml
+Disallow: /internal/
+Disallow: /admin/
+Disallow: /server/
+Disallow: /.git/
+Disallow: /docs/

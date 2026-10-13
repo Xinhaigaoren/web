@@ -857,12 +857,10 @@ async function currentRole(req) {
   }
 }
 
-// 校友通讯录：已认证校友和管理员可看
-app.get('/api/alumni/directory', requireAuth, requireAlumni, async (req, res) => {
+// 校友公开名录（公网只读公开字段；联系方式仅在本人授权公开时返回）
+app.get('/api/alumni/directory', async (req, res) => {
   try {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    const role = await currentRole(req);
-    if (!['alumni', 'admin', 'super_admin'].includes(role)) return fail(res, 403, '完成校友认证后才可查看通讯录');
     const { province, city, county, year, q } = req.query;
     const params = [];
     const wheres = [`p.status='active'`];
@@ -3126,8 +3124,8 @@ app.post('/api/admin/notifications/send', requireAuth, requireAdmin, async (req,
   }
 });
 
-// ---------- 校友地图 ----------
-app.get('/api/alumni/map', requireAuth, requireAlumni, async (req, res) => {
+// ---------- 校友地图（公网公开聚合数据） ----------
+app.get('/api/alumni/map', async (req, res) => {
   try {
     const r = await dbQuery(
       `select current_province, current_city, count(*)::int as count
