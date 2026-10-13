@@ -109,6 +109,30 @@
     });
   }
 
+  // 毛玻璃导航：滚动后加深背景（清华式）
+  const siteHeader = document.querySelector('.site-header');
+  if (siteHeader) {
+    const onScroll = () => siteHeader.classList.toggle('is-scrolled', window.scrollY > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  // 滚动进入视口淡入动画（15px 上移 / 400ms；清华式克制动效）
+  const revealObserver = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 })
+    : null;
+  document.querySelectorAll('.reveal').forEach((el) => {
+    if (revealObserver) revealObserver.observe(el);
+    else el.classList.add('in-view');
+  });
+
   // 顶栏快捷链接：公网只展示公开入口，内网展示登录状态与校友中心入口
   const IS_INTERNAL = /\/internal\//.test(location.pathname);
   function renderAccountLink() {
@@ -252,15 +276,20 @@
     } catch (error) { /* 接口不可用时保留静态内容 */ }
 
     try {
-      const eventsData = await api('/api/events?page=1&pageSize=3');
+      const eventsData = await api('/api/events?page=1&pageSize=4');
       const eventItems = eventsData.items || [];
       const box = document.getElementById('homeEvents');
       if (box && eventItems.length) {
-        box.innerHTML = eventItems.map((item) => {
+        const tags = ['宣讲', '读书', '展览', '体育', '联谊', '公益'];
+        box.innerHTML = eventItems.map((item, i) => {
           const d = new Date(item.start_time);
           const month = String(d.getMonth() + 1).padStart(2, '0');
           const day = String(d.getDate()).padStart(2, '0');
-          return `<a class="event-link" href="event-detail.html?id=${encodeURIComponent(item.id)}"><time><strong>${day}</strong><span>${month}月</span></time><div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.summary || '')}</p></div></a>`;
+          const tag = tags[i % tags.length];
+          const cover = item.cover_url
+            ? `linear-gradient(135deg, rgba(166,27,41,.3), rgba(196,30,58,.18)), url('${assetUrl(item.cover_url)}')`
+            : `linear-gradient(135deg, rgba(166,27,41,.82), rgba(196,30,58,.5)), radial-gradient(circle at ${28 + (i % 3) * 26}% ${38 + (i % 2) * 30}%, rgba(201,169,97,.32), transparent 42%)`;
+          return `<a class="campus-card" href="event-detail.html?id=${encodeURIComponent(item.id)}"><div class="campus-cover" style="background:${cover};background-size:cover;background-position:center;"><span class="campus-tag">${tag}</span></div><div class="campus-body"><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.summary || '')}</p><div class="campus-meta"><span>${month}月${day}日</span><span class="campus-link">报名 →</span></div></div></a>`;
         }).join('');
       }
     } catch (error) { /* 接口不可用时保留静态内容 */ }
