@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校友卡 - 海林市高级中学校友（新海高人）</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: clamp(12px, 1vw, 18px); }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #f0f0f0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+    }
+
+    /* ==========================================
+       校友卡主容器
+       ========================================== */
+    .alumni-card {
+        width: 100%;
+        max-width: 58rem;
+        height: 36rem;
+        background: linear-gradient(135deg, #8a0609 0%, #a81114 50%, #7a0508 100%);
+        border-radius: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.4);
+        display: flex;
+        padding: 3rem;
+        color: #ffffff;
+    }
+
+    .alumni-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-image: 
+            radial-gradient(circle at 15% 20%, rgba(255, 215, 215, 0.06) 0%, transparent 40%),
+            radial-gradient(circle at 85% 85%, rgba(255, 215, 215, 0.04) 0%, transparent 40%);
+        pointer-events: none;
+    }
+
+    /* ==========================================
+       左侧竖排英文 - Alumni Card
+       ========================================== */
+    .card-left-letters {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        transform: rotate(180deg);
+        font-size: 2rem;
+        letter-spacing: 0.4rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-family: "Arial", sans-serif;
+        font-weight: bold;
+        padding-right: 2rem;
+        border-right: 0.15rem solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+    }
+
+    /* ==========================================
+       中间主内容区
+       ========================================== */
+    .card-main {
+        flex: 1;
+        padding-left: 2.5rem;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 1;
+    }
+
+    .card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 3rem;
+    }
+    .card-brand {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .card-brand .brand-logo {
+        height: 5rem;
+        width: 5rem;
+        object-fit: contain;
+        border-radius: 50%;
+        background-color: rgba(255,255,255,0.1);
+        border: 0.15rem solid rgba(255,255,255,0.3);
+    }
+    .card-brand .brand-text {
+        display: flex;
+        flex-direction: column;
+    }
+    .card-brand .brand-text .zh {
+        font-size: 1.1rem;
+        font-weight: normal;
+        letter-spacing: 0.08rem;
+        line-height: 1.3;
+    }
+    .card-brand .brand-text .en {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        letter-spacing: 0.04rem;
+        margin-top: 0.2rem;
+        font-family: "Arial", sans-serif;
+    }
+
+    /* 校友卡标签，深黄色底 */
+    .card-tag {
+        background-color: #C8A063;
+        color: #7a0508;
+        font-size: 1.1rem;
+        padding: 0.5rem 1.5rem;
+        border-radius: 0.3rem;
+        letter-spacing: 0.15rem;
+        font-weight: normal;
+    }
+
+    /* 中部：信息 + 照片 */
+    .card-body {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex: 1;
+    }
+    .card-info {
+        display: flex;
+        flex-direction: column;
+        gap: 1.8rem;
+        padding-top: 0.5rem;
+    }
+    .card-info .name {
+        font-size: 2.2rem;
+        font-weight: normal;
+        letter-spacing: 0.15rem;
+        margin-bottom: 1rem;
+    }
+    .card-info .info-row {
+        display: flex;
+        align-items: baseline;
+        gap: 1.5rem;
+        font-size: 1.5rem;
+    }
+    .card-info .info-row .label {
+        font-size: 1.4rem;
+        color: rgba(255, 255, 255, 0.9);
+        min-width: 7.5rem;
+        letter-spacing: 0.1rem;
+    }
+    .card-info .info-row .value {
+        font-size: 1.5rem;
+        color: #ffffff;
+        letter-spacing: 0.05rem;
+    }
+
+    /* 照片 */
+    .card-photo {
+        width: 12rem;
+        height: 15rem;
+        background-color: #ffffff;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .card-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* 底部卡号 */
+    .card-bottom {
+        margin-top: auto;
+        padding-top: 2rem;
+    }
+    .card-number {
+        font-size: 2rem;
+        font-family: "Arial", sans-serif;
+        letter-spacing: 0.1rem;
+        color: #ffffff;
+        opacity: 0.95;
+    }
+</style>
+</head>
+<body>
+
+<div class="alumni-card">
+    
+    <!-- 左侧竖排英文 -->
+    <div class="card-left-letters">Alumni Card</div>
+
+    <div class="card-main">
+        
+        <!-- 顶部 -->
+        <div class="card-top">
+            <div class="card-brand">
+                <img src="assets/haigao-logo.jpg" alt="新海高人 Logo" class="brand-logo">
+                <div class="brand-text">
+                    <span class="zh">海林市高级中学校友（新海高人）</span>
+                    <span class="en">Hailin Senior High School Alumni Association</span>
+                </div>
+            </div>
+            <div class="card-tag">校友卡</div>
+        </div>
+
+        <!-- 中部 -->
+        <div class="card-body">
+            <div class="card-info">
+                <div class="name" id="cardName">—</div>
+                <div class="info-row">
+                    <span class="label">毕业时间</span>
+                    <span class="value" id="cardYear">—</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">毕业学校</span>
+                    <span class="value">海林市高级中学</span>
+                </div>
+            </div>
+
+            <div class="card-photo">
+                <img src="" alt="校友照片" id="cardPhoto">
+            </div>
+        </div>
+
+        <!-- 底部卡号 -->
+        <div class="card-bottom">
+            <div class="card-number" id="cardNumber">NO.————</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* 登录用户信息：从本地存储读取（登录/认证流程写入 alumniUser）
+       字段：{ name: 用户姓名, graduateYear: 离校年份, className: 在校期间班级, photoUrl: 照片地址 } */
+    function readUser() {
+        try {
+            const raw = localStorage.getItem('alumniUser');
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+    const alumniData = readUser() || {};
+
+    /* 卡号：NO. + 离校年份 + 班级号 + 4 位随机数（如 NO.2018 1 1234 → NO.201811234） */
+    function buildCardNumber(data) {
+        const year = data.graduateYear || '';
+        let classNum = '';
+        if (data.className) {
+            const m = String(data.className).match(/\d+/);
+            classNum = m ? m[0] : '';
+        }
+        const rand = String(Math.floor(1000 + Math.random() * 9000));
+        return 'NO.' + year + classNum + rand;
+    }
+
+    const nameEl = document.getElementById('cardName');
+    const yearEl = document.getElementById('cardYear');
+    const numberEl = document.getElementById('cardNumber');
+    const photoEl = document.getElementById('cardPhoto');
+
+    if (alumniData && alumniData.name) {
+        nameEl.textContent = alumniData.name;
+        yearEl.textContent = alumniData.graduateYear || '—';
+        numberEl.textContent = buildCardNumber(alumniData);
+        if (alumniData.photoUrl) {
+            photoEl.src = alumniData.photoUrl;
+        }
+    } else {
+        nameEl.textContent = '—';
+        yearEl.textContent = '—';
+        numberEl.textContent = 'NO.————';
+    }
+</script>
+
+</body>
+</html>

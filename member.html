@@ -358,25 +358,25 @@
     </div>
 </div>
 
-<!-- ============================================================
-     ★ 部署时：把下面 userInfo 换成后端返回的用户数据即可 ★
-     例如从 localStorage 或接口获取：
-     userInfo = { name: '王德越' }
-     ============================================================ -->
 <script>
-    // 假设这是后端返回的当前登录用户信息
-    const userInfo = {
-        name: '王德越'   // 换成真实登录用户的姓名
-    };
+    /* 登录用户信息：从本地存储读取（登录/认证流程写入 alumniUser）
+       字段：{ name: 用户姓名, graduateYear: 离校年份, className: 在校期间班级, photoUrl: 照片地址 } */
+    function readUser() {
+        try {
+            const raw = localStorage.getItem('alumniUser');
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+    const userInfo = readUser();
 
     // 自动填充右上角头像（取姓名最后一个字）和用户名
     const avatarEl = document.getElementById('userAvatar');
     const nameEl = document.getElementById('userName');
 
-    if (userInfo.name) {
-        // 头像显示姓名的最后一个字
+    if (userInfo && userInfo.name) {
         avatarEl.textContent = userInfo.name.slice(-1);
-        // 用户名前面加 *，模拟脱敏显示
         nameEl.textContent = '*' + userInfo.name;
     } else {
         avatarEl.textContent = '?';
