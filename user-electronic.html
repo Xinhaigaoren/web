@@ -6,7 +6,8 @@
 <title>用户电子身份服务系统 - 海林市高级中学校友（新海高人）</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: 1.25vw; }
+    /* 1.25vw 等比缩放，超宽屏封顶 26px、手机保底 13px，避免过大/过小 */
+    html { font-size: clamp(13px, 1.25vw, 26px); }
     body {
         font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
         background-color: #94070A;
@@ -178,6 +179,70 @@
         display: flex;
         align-items: center;
         gap: 0.4rem;
+    }
+
+    /* ==========================================
+       响应式适配（平板 / 手机）
+       ========================================== */
+    @media (max-width: 900px) {
+        .top-bar { padding: 0 1.5rem; }
+        .identity-panel { padding: 3rem 2.5rem; }
+        .identity-options { gap: 2.5rem; }
+    }
+
+    @media (max-width: 700px) {
+        body { overflow-y: auto; }
+        .top-bar {
+            height: auto;
+            min-height: 5rem;
+            padding: 0.8rem 1rem;
+            flex-wrap: wrap;
+            gap: 0.6rem 1rem;
+        }
+        .top-bar-left { flex-wrap: wrap; gap: 0.6rem; }
+        .top-bar-left .logo-small { height: 2.6rem; width: 2.6rem; }
+        .top-bar-left .logo-text-area .zh {
+            font-size: 0.95rem;
+            white-space: normal;
+            line-height: 1.25;
+        }
+        .top-bar-left .logo-text-area .system-name-big {
+            font-size: 1.35rem;
+            margin-left: 0;
+            display: block;
+            top: 0;
+        }
+        .top-bar-left .logo-text-area .en { font-size: 0.65rem; }
+        .top-bar-right { gap: 1.2rem; font-size: 0.9rem; }
+        .main-wrapper { padding: 2rem 1rem; justify-content: flex-start; }
+        .identity-panel { padding: 2.5rem 1.2rem; }
+        .welcome-title { font-size: 1.3rem; margin-bottom: 1.5rem; }
+        .select-label { font-size: 1.05rem; margin-bottom: 2rem; }
+        .identity-options {
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .identity-box {
+            width: 100%;
+            max-width: 22rem;
+            height: 8.5rem;
+            font-size: 1.3rem;
+        }
+        .service-info-below {
+            flex-direction: column;
+            gap: 0.8rem;
+            align-items: center;
+            text-align: center;
+            margin-top: 2rem;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .top-bar-left .logo-text-area .zh { font-size: 0.85rem; }
+        .top-bar-left .logo-text-area .system-name-big { font-size: 1.2rem; }
+        .identity-panel { padding: 2rem 1rem; }
+        .welcome-title { font-size: 1.15rem; }
     }
 </style>
 </head>
