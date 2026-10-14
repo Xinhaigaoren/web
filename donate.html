@@ -288,59 +288,6 @@ body { padding-top: 8rem; }
         </div>
     </div>
 </header>
->
-
-
-  <a class="skip-link" href="#main">跳到正文</a>
-
-  
-
-  <main id="main">
-    <section class="page-hero">
-      <div class="container">
-        <p class="eyebrow" data-section="donate_hero" data-field="eyebrow">Donate</p>
-        <h1 data-section="donate_hero" data-field="title">公益捐赠</h1>
-        <p data-section="donate_hero" data-field="subtitle">凝聚校友力量，支持奖助学金、校园建设和教育发展项目。</p>
-        <div class="crumb"><a href="index.html">首页</a> / 公益捐赠</div>
-      </div>
-    </section>
-
-    <section class="page-section soft">
-      <div class="container">
-        <div class="donate-stats" id="donateStats">
-          <div class="stat-box" style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:22px;text-align:center">
-            <strong id="statTotal" style="font-size:30px;color:var(--deep)">0</strong>
-            <span class="form-tip" style="display:block;margin-top:6px">累计捐赠笔数</span>
-          </div>
-          <div class="stat-box" style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:22px;text-align:center">
-            <strong id="statAmount" style="font-size:30px;color:var(--accent)">¥0</strong>
-            <span class="form-tip" style="display:block;margin-top:6px">累计捐赠金额</span>
-          </div>
-        </div>
-
-        <div class="donate-grid">
-          <div>
-            <h2 style="color:var(--deep);margin:0 0 16px">近期捐赠公示</h2>
-            <div id="donateList"></div>
-            <div class="empty-state" id="donateEmpty" hidden>暂无捐赠记录，感谢每一份心意。</div>
-          </div>
-          <div>
-            <div class="auth-card">
-              <h2>捐赠方式</h2>
-              <p>捐赠由校友会秘书处统一受理，资金专项用于奖助学金、校园建设与教育发展项目，并定期公示。</p>
-              <ul style="padding-left:20px;color:#555;line-height:2">
-                <li>银行转账：请联系校友会秘书处获取专用账户</li>
-                <li>邮局汇款：黑龙江省牡丹江市海林市（校友会秘书处）</li>
-                <li>现场捐赠：校友返校日或校友活动期间办理</li>
-              </ul>
-              <p class="form-tip">捐赠意向与合作咨询请发送邮件至 xinhaigaoren@126.com。</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
   <footer class="site-footer" id="contact">
     <!-- 底部页脚（2026-10-14 新版）：白底链接区 + 北大红底品牌区；访问人数由后端实时统计 -->
     <div class="footer-top-white">
@@ -409,38 +356,5 @@ body { padding-top: 8rem; }
 </footer>
 
   <script src="site.js?v=20261017"></script>
-  <script>
-    (function () {
-      const XH = window.XH;
-      const list = document.getElementById('donateList');
-      const empty = document.getElementById('donateEmpty');
-      const statTotal = document.getElementById('statTotal');
-      const statAmount = document.getElementById('statAmount');
-
-      async function loadDonations() {
-        try {
-          const data = await XH.api('/api/donations');
-          const items = data.items || [];
-          if (!items.length) {
-            empty.hidden = false;
-            return;
-          }
-          if (statTotal) statTotal.textContent = data.count !== undefined ? data.count : items.length;
-          if (statAmount) statAmount.textContent = '¥' + Number(data.total || items.reduce((s, d) => s + (Number(d.amount) || 0), 0)).toLocaleString('zh-CN');
-          list.innerHTML = items.map((d) => `
-            <div class="donate-item">
-              <strong>${XH.escapeHtml(d.donor_name || '匿名校友')}</strong>
-              <span class="donate-amount">¥${Number(d.amount || 0).toLocaleString('zh-CN')}</span>
-              <small>${XH.formatDate(d.created_at)}${d.purpose ? ' · ' + XH.escapeHtml(d.purpose) : ''}</small>
-              ${d.message ? `<p>${XH.escapeHtml(d.message)}</p>` : ''}
-            </div>`).join('');
-        } catch (error) {
-          empty.hidden = false;
-          empty.textContent = error.message || '捐赠数据暂不可用';
-        }
-      }
-      loadDonations();
-    })();
-  </script>
 </body>
 </html>

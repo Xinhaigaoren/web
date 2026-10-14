@@ -288,60 +288,6 @@ body { padding-top: 8rem; }
         </div>
     </div>
 </header>
->
-
-
-  <a class="skip-link" href="#main">跳到正文</a>
-
-  
-
-  <main id="main">
-    <section class="page-hero">
-      <div class="container">
-        <p class="eyebrow">Contact</p>
-        <h1 data-section="contact_hero" data-field="title">联系我们</h1>
-        <p data-section="contact_hero" data-field="subtitle">校友会秘书处欢迎校友来信来访。</p>
-        <div class="crumb"><a href="index.html">首页</a> / 联系我们</div>
-      </div>
-    </section>
-
-    <section class="page-section">
-      <div class="container">
-        <div class="contact-grid" data-section="contact_info">
-          <div class="contact-card">
-            <h3>联系邮箱</h3>
-            <p data-field="email">xinhaigaoren@126.com</p>
-          </div>
-          <div class="contact-card">
-            <h3>秘书处地址</h3>
-            <p data-field="address">黑龙江省牡丹江市海林市</p>
-          </div>
-          <div class="contact-card">
-            <h3>校友中心</h3>
-            <p>校友注册、认证与登录入口位于内网，请通过校园网或授权网络访问。</p>
-          </div>
-        </div>
-
-        <div class="auth-wrap" style="margin-top:44px">
-          <div class="auth-card">
-            <h2>给我们留言</h2>
-            <p>内容建议、活动合作、信息更正等均可留言。</p>
-            <form id="contactForm">
-              <div class="field"><label>称呼</label><input name="name" required placeholder="您的姓名" /></div>
-              <div class="field"><label>联系方式</label><input name="contact" placeholder="邮箱或手机号" /></div>
-              <div class="field"><label>留言内容</label><textarea name="message" rows="5" required placeholder="请简要描述您的问题或建议"></textarea></div>
-              <div class="form-actions">
-                <button class="btn primary" type="submit">提交留言</button>
-                <span class="form-tip">提交后我们将尽快回复（目前留言经邮箱联系）。</span>
-              </div>
-              <p class="form-status" id="contactStatus" role="status" aria-live="polite"></p>
-            </form>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
   <footer class="site-footer" id="contact">
     <!-- 底部页脚（2026-10-14 新版）：白底链接区 + 北大红底品牌区；访问人数由后端实时统计 -->
     <div class="footer-top-white">
@@ -410,18 +356,5 @@ body { padding-top: 8rem; }
 </footer>
 
   <script src="site.js?v=20261017"></script>
-  <script>
-    (function () {
-      const XH = window.XH;
-      const form = document.getElementById('contactForm');
-      const status = document.getElementById('contactStatus');
-      form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        status.textContent = '留言已记录，感谢您的来信！';
-        status.className = 'form-status success';
-        form.reset();
-      });
-    })();
-  </script>
 </body>
 </html>

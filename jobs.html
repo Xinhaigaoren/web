@@ -288,39 +288,6 @@ body { padding-top: 8rem; }
         </div>
     </div>
 </header>
->
-
-
-  <a class="skip-link" href="#main">跳到正文</a>
-
-  
-
-  <main id="main">
-    <section class="page-hero">
-      <div class="container">
-        <p class="eyebrow" data-section="jobs_hero" data-field="eyebrow">Jobs</p>
-        <h1 data-section="jobs_hero" data-field="title">新海高人招聘</h1>
-        <p data-section="jobs_hero" data-field="subtitle">校友企业发布职位，校友人才精准对接。</p>
-        <div class="crumb"><a href="index.html">首页</a> / 新海高人招聘</div>
-      </div>
-    </section>
-
-    <section class="page-section soft">
-      <div class="container">
-
-        <div id="jobsListView">
-          <div class="toolbar">
-            <input class="search-input" id="jobSearch" type="search" placeholder="搜索公司 / 职位 / 城市…" aria-label="搜索职位" />
-          </div>
-          <div class="job-list" id="jobList"></div>
-          <div class="empty-state" id="jobEmpty" hidden>暂无招聘信息，敬请期待。</div>
-          <div class="pagination" id="jobPagination"></div>
-        </div>
-
-      </div>
-    </section>
-  </main>
-
   <footer class="site-footer" id="contact">
     <!-- 底部页脚（2026-10-14 新版）：白底链接区 + 北大红底品牌区；访问人数由后端实时统计 -->
     <div class="footer-top-white">
@@ -389,68 +356,5 @@ body { padding-top: 8rem; }
 </footer>
 
   <script src="site.js?v=20261017"></script>
-  <script defer>
-    (function () {
-      const XH = window.XH;
-      const listBox = document.getElementById('jobList');
-      const emptyBox = document.getElementById('jobEmpty');
-      const pagination = document.getElementById('jobPagination');
-      const searchInput = document.getElementById('jobSearch');
-      const PAGE_SIZE = 10;
-      let page = 1;
-      let searchTimer = null;
-
-      function renderPagination(total) {
-        const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-        let html = `<button type="button" data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''}>上一页</button>`;
-        for (let i = 1; i <= totalPages; i++) html += `<button type="button" data-page="${i}" class="${i === page ? 'active' : ''}">${i}</button>`;
-        html += `<button type="button" data-page="${page + 1}" ${page >= totalPages ? 'disabled' : ''}>下一页</button>`;
-        pagination.innerHTML = html;
-        pagination.onclick = (event) => {
-          const btn = event.target.closest('button[data-page]');
-          if (!btn || btn.disabled) return;
-          page = Number(btn.dataset.page);
-          loadJobs();
-        };
-      }
-
-      async function loadJobs() {
-        listBox.innerHTML = '';
-        emptyBox.hidden = true;
-        const params = new URLSearchParams({ page, pageSize: PAGE_SIZE });
-        const q = searchInput.value.trim();
-        if (q) params.set('q', q);
-        try {
-          const data = await XH.api(`/api/jobs?${params}`);
-          if (!data.items || !data.items.length) { emptyBox.hidden = false; pagination.innerHTML = ''; return; }
-          listBox.innerHTML = data.items.map((job) => `
-            <a class="job-card" href="job-detail.html?id=${encodeURIComponent(job.id)}" style="display:block">
-              <div class="job-card-main">
-                <h3>${XH.escapeHtml(job.title)}</h3>
-                <p class="job-card-company">${XH.escapeHtml(job.company)}</p>
-                <p class="forum-post-meta">
-                  ${job.location ? `<span>📍 ${XH.escapeHtml(job.location)}</span>` : ''}
-                  <span class="tag">${XH.escapeHtml(job.type || '全职')}</span>
-                  ${job.salary ? `<span>💰 ${XH.escapeHtml(job.salary)}</span>` : ''}
-                  <span>${XH.formatDate(job.created_at)} 发布</span>
-                </p>
-              </div>
-            </a>
-          `).join('');
-          renderPagination(data.total);
-        } catch (error) {
-          emptyBox.hidden = false;
-          emptyBox.textContent = error.message;
-        }
-      }
-
-      searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => { page = 1; loadJobs(); }, 350);
-      });
-
-      loadJobs();
-    })();
-  </script>
 </body>
 </html>
