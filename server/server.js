@@ -3324,6 +3324,9 @@ async function ensureSitePagesSeed() {
       await dbQuery('insert into public.site_pages (slug, title, description, is_public, sort_order) ' + 'values ($1,$2,$3,true,0) on conflict (slug) do nothing', [p.slug, p.title, p.description]);
     }
   }
+  // 统一旧数据：页面标题/区块名称中的「校友会介绍」全部改为「新海高人概况」
+  await dbQuery(`update public.site_pages set title='新海高人概况', updated_at=now() where slug='about' and (title is null or title like '%校友会%')`).catch(() => {});
+  await dbQuery(`update public.site_sections set section_name='新海高人概况' where section_key='about_intro'`).catch(() => {});
 }
 
 async function ensureSiteSectionsSeed() {
@@ -3433,6 +3436,9 @@ async function ensureHomeRename() {
     if (c.title === '加入海高校友会') c.title = '加入新海高人';
   });
   await patchSection('about_hero', (c) => {
+    if (c.title === '校友会介绍') c.title = '新海高人概况';
+  });
+  await patchSection('about_intro', (c) => {
     if (c.title === '校友会介绍') c.title = '新海高人概况';
   });
   // 概况四宫格改为后台可单独编辑：去掉旧的整段 HTML，回退到四个可编辑字段
