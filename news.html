@@ -137,19 +137,23 @@ body {
   background-color: #ffffff;
   border-top: 0.3rem solid #94070A;
   border-radius: 0 0 0.4rem 0.4rem;
-  padding: 1.5rem 2.5rem 1.5rem;
+  padding: 2rem 3rem 1.75rem;
 }
 .panel.active { display: block; }
 
-/* 区块：左右两栏（国内 / 国外），左标签 + 右侧 Grid */
+/* 区块：左标签 + 右侧 Grid（年级/专委会/兴趣 通用） */
+.region-block { display: flex; align-items: flex-start; gap: 2.5rem; padding: 1.75rem 0; }
+/* 地区联络：国内 / 国外 左右两栏 */
 .region-layout { display: flex; align-items: stretch; }
 .region-layout .region-block { flex: 1; padding: 1.5rem 2.5rem; display: flex; align-items: flex-start; gap: 2rem; }
 .region-layout .region-block + .region-block { border-left: 1px solid #eeeeee; }  /* 区块间浅灰细线 */
 .region-label {
-  flex-shrink: 0; width: 5.5rem;
+  flex-shrink: 0;
+  white-space: nowrap;               /* 标签单行显示，不换行 */
   font-size: 1.1rem; color: #94070A;
   font-weight: normal; font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
 }
+.region-layout .region-label { min-width: 4.5rem; }
 .region-grid {
   flex: 1;
   display: grid; grid-template-columns: repeat(6, 1fr);
@@ -243,6 +247,7 @@ body {
   .region-layout { flex-direction: column; }
   .region-layout .region-block { padding: 1.2rem 0; }
   .region-layout .region-block + .region-block { border-left: none; border-top: 1px solid #eeeeee; }
+  .region-block { flex-direction: column; }
   .region-label { width: auto; }
   .region-grid { grid-template-columns: repeat(3, 1fr); }
   .year-grid { grid-template-columns: repeat(4, 1fr); }
