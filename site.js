@@ -227,7 +227,9 @@
   }
   loadSiteContent();
 
-  // 网站页脚：所有页面统一从接口加载，管理员可后台修改
+  // 网站页脚：品牌名/邮箱/地址以页面静态 HTML 为权威（站方定稿设计，见底部页脚-优化版）
+  // 后端 footer_info 不再覆盖页脚文本，避免刷新后出现与定稿不一致的旧/新内容漂移；
+  // 如需恢复后台可编辑页脚，取消下方 set() 调用即可。
   async function loadFooter() {
     try {
       const data = await api('/api/site/sections?page=footer');
@@ -243,9 +245,10 @@
         const el = footer.querySelector(sel);
         if (el) el.innerHTML = String(val);
       };
-      set('.footer-logo-text .zh', c.name);
-      set('.contact-row:first-child .contact-item:first-child a.value', c.email);
-      set('.contact-row:nth-of-type(2) .contact-item .value', c.address);
+      // 静态 HTML 为权威内容：以下三个字段保持页面定稿，不被后端覆盖
+      // set('.footer-logo-text .zh', c.name);
+      // set('.contact-row:first-child .contact-item:first-child a.value', c.email);
+      // set('.contact-row:nth-of-type(2) .contact-item .value', c.address);
     } catch (error) { /* 保留静态页脚 */ }
   }
   loadFooter();
