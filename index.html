@@ -252,22 +252,14 @@ body { margin: 0; padding: 0; background-color: #111; }
 }
 .slide.active { opacity: 1; }
 
-/* ★★★ 请替换下面 4 行 background-image 的 url 为真实图片（1920×1080 及以上，16:9） ★★★
-   当前为 SVG 占位色块（不会裂图）；替换示例：
-   .slide-1 { background-image: url('assets/slide-1.jpg'); }
-   .slide-2 { background-image: url('https://你的图片地址/2.jpg'); } */
-.slide-1 {
-    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="%238a0609"/><text x="800" y="450" fill="rgba(255,255,255,0.85)" font-size="72" font-family="Microsoft YaHei, sans-serif" text-anchor="middle" dominant-baseline="middle">Slide 1</text></svg>');
-}
-.slide-2 {
-    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="%231a3a5c"/><text x="800" y="450" fill="rgba(255,255,255,0.85)" font-size="72" font-family="Microsoft YaHei, sans-serif" text-anchor="middle" dominant-baseline="middle">Slide 2</text></svg>');
-}
-.slide-3 {
-    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="%234a2c1a"/><text x="800" y="450" fill="rgba(255,255,255,0.85)" font-size="72" font-family="Microsoft YaHei, sans-serif" text-anchor="middle" dominant-baseline="middle">Slide 3</text></svg>');
-}
-.slide-4 {
-    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="%232c1a4a"/><text x="800" y="450" fill="rgba(255,255,255,0.85)" font-size="72" font-family="Microsoft YaHei, sans-serif" text-anchor="middle" dominant-baseline="middle">Slide 4</text></svg>');
-}
+/* 轮播图（真实图片，存放在 assets/slide-1.jpg ~ slide-6.jpg）
+   如需更换图片，直接替换 assets/slide-N.jpg 同名文件即可，无需改代码 */
+.slide-1 { background-image: url('assets/slide-1.jpg'); }
+.slide-2 { background-image: url('assets/slide-2.jpg'); }
+.slide-3 { background-image: url('assets/slide-3.jpg'); }
+.slide-4 { background-image: url('assets/slide-4.jpg'); }
+.slide-5 { background-image: url('assets/slide-5.jpg'); }
+.slide-6 { background-image: url('assets/slide-6.jpg'); }
 
 /* 左下角文字 */
 .bottom-left-text {
@@ -380,11 +372,13 @@ body { margin: 0; padding: 0; background-color: #111; }
     <div class="slide slide-2"></div>
     <div class="slide slide-3"></div>
     <div class="slide slide-4"></div>
+    <div class="slide slide-5"></div>
+    <div class="slide slide-6"></div>
 
     <!-- 左下角文字 -->
     <div class="bottom-left-text">三年风雨同舟 归来仍是少年</div>
 
-    <!-- 右下角 6 个圆点（前 4 点对应 4 张图，第 5/6 点循环回到第 1/2 张） -->
+    <!-- 右下角 6 个圆点（对应 6 张图） -->
     <div class="slider-indicators">
         <button class="dot-btn active" data-index="0" aria-label="第 1 张"></button>
         <button class="dot-btn" data-index="1" aria-label="第 2 张"></button>
@@ -467,17 +461,27 @@ body { margin: 0; padding: 0; background-color: #111; }
     const slides = document.querySelectorAll('.slide');
     const dots = document.querySelectorAll('.dot-btn');
     let currentIndex = 0;
+    let timer = null;
 
     function showSlide(index) {
-        const realIndex = index % slides.length; /* 6 点循环对应 4 图 */
+        const realIndex = index % slides.length;
         slides.forEach((s, i) => s.classList.toggle('active', i === realIndex));
         dots.forEach((d, i) => d.classList.toggle('active', i === realIndex));
         currentIndex = realIndex;
+        restartTimer();
+    }
+
+    /* 自动播放：每 4 秒切到下一张；手动点击圆点后重新计时 */
+    function restartTimer() {
+        clearInterval(timer);
+        timer = setInterval(() => showSlide(currentIndex + 1), 4000);
     }
 
     dots.forEach((dot, i) => {
         dot.addEventListener('click', () => showSlide(i));
     });
+
+    restartTimer();
   </script>
 </body>
 </html>
