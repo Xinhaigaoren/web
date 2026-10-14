@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用户电子身份服务系统 - 海林市高级中学校友（新海高人）</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 1.25vw; }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #94070A;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* ==========================================
+       顶部横栏
+       ========================================== */
+    .top-bar {
+        width: 100%;
+        height: 6.5rem;
+        background-color: #94070A;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 3rem;
+    }
+    .top-bar-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .top-bar-left .logo-small {
+        height: 3.5rem;
+        width: 3.5rem;
+        object-fit: contain;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    .top-bar-left .logo-text-area {
+        display: flex;
+        flex-direction: column;
+        color: #ffffff;
+    }
+    .top-bar-left .logo-text-area .zh {
+        font-size: 1.2rem;
+        font-weight: normal;
+        line-height: 1.3;
+        letter-spacing: 0.03rem;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        white-space: nowrap;
+    }
+    /* 核心：系统名字体再大一点 */
+    .top-bar-left .logo-text-area .system-name-big {
+        font-size: 2rem;
+        margin-left: 1rem;
+        font-weight: normal;
+        letter-spacing: 0.05rem;
+        position: relative;
+        top: 0.8rem;
+    }
+    .top-bar-left .logo-text-area .en {
+        font-size: 0.75rem;
+        opacity: 0.85;
+        line-height: 1.3;
+        margin-top: 0.15rem;
+    }
+    .top-bar-right {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        font-size: 1rem;
+        color: #ffffff;
+    }
+    .top-bar-right a {
+        color: #ffffff;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: opacity 0.3s;
+    }
+    .top-bar-right a:hover { opacity: 0.8; }
+    .top-bar-right svg {
+        width: 0.9rem;
+        height: 0.9rem;
+        fill: #ffffff;
+    }
+
+    /* ==========================================
+       主体区
+       ========================================== */
+    .main-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 2rem;
+    }
+    .identity-panel {
+        width: 100%;
+        max-width: 70rem;
+        background-color: #fbe5e5;
+        border-radius: 0.6rem;
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.2);
+        padding: 4rem 5rem;
+        text-align: center;
+    }
+
+    .welcome-title {
+        font-size: 1.6rem;
+        color: #94070A;
+        font-weight: normal;
+        margin-bottom: 2rem;
+        letter-spacing: 0.05rem;
+    }
+
+    .divider-line {
+        width: 100%;
+        height: 1px;
+        background-color: #e0b0b0;
+        margin-bottom: 2.5rem;
+    }
+
+    .select-label {
+        font-size: 1.2rem;
+        color: #333;
+        margin-bottom: 3rem;
+        letter-spacing: 0.05rem;
+    }
+
+    .identity-options {
+        display: flex;
+        justify-content: center;
+        gap: 4rem;
+        flex-wrap: wrap;
+    }
+
+    .identity-box {
+        width: 18rem;
+        height: 12rem;
+        border-radius: 0.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 1.5rem;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0.5rem 1.5rem rgba(148, 7, 10, 0.15);
+        letter-spacing: 0.1rem;
+    }
+
+    .identity-box:hover {
+        transform: translateY(-0.5rem);
+        box-shadow: 0 1rem 2rem rgba(148, 7, 10, 0.3);
+    }
+
+    .identity-box.alumni { background-color: #94070A; }
+    .identity-box.admin { background-color: #b81c20; }
+
+    .service-info-below {
+        width: 100%;
+        max-width: 70rem;
+        margin-top: 2.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1rem;
+        color: #ffffff;
+        padding: 0 1rem;
+    }
+    .service-info-below .service-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="top-bar-left">
+        <img src="assets/haigao-logo.jpg" alt="Logo" class="logo-small">
+        <div class="logo-text-area">
+            <span class="zh">
+                海林市高级中学校友（新海高人）
+                <span class="system-name-big">用户电子身份服务系统</span>
+            </span>
+            <span class="en">Hailin Senior High School Alumni Association</span>
+        </div>
+    </div>
+    <div class="top-bar-right">
+        <a href="#">
+            中文
+            <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+        </a>
+        <a href="login.html">登录</a>
+    </div>
+</div>
+
+<div class="main-wrapper">
+    <div class="identity-panel">
+        <h1 class="welcome-title">欢迎使用海林市高级中学校友（新海高人）用户电子身份服务系统</h1>
+        <div class="divider-line"></div>
+        <p class="select-label">请选择你的身份：</p>
+
+        <div class="identity-options">
+            <a href="login.html" class="identity-box alumni">已有校友账号</a>
+            <a href="admin.html" class="identity-box admin">管理员</a>
+        </div>
+    </div>
+
+    <div class="service-info-below">
+        <div class="service-item">
+            <span>服务邮箱：xinhaigaoren@126.com</span>
+        </div>
+        <div class="service-item">
+            <span>每天 9:00-20:00（节假日除外）</span>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
