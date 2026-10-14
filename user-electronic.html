@@ -6,14 +6,15 @@
 <title>用户电子身份服务系统 - 海林市高级中学校友（新海高人）</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    /* 1.25vw 等比缩放，超宽屏封顶 26px、手机保底 13px，避免过大/过小 */
-    html { font-size: clamp(13px, 1.25vw, 26px); }
+    /* 等比缩放：系数 1vw，封顶 18px、手机保底 12px —— 适配正常网页观感，超宽屏不再偏大 */
+    html { font-size: clamp(12px, 1vw, 18px); }
     body {
         font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
         background-color: #94070A;
         min-height: 100vh;
         display: flex;
         flex-direction: column;
+        overflow-y: auto;
     }
 
     /* ==========================================
