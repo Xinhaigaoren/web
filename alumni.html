@@ -141,11 +141,12 @@ body {
 }
 .panel.active { display: block; }
 
-/* 区块：左标签 + 右侧 Grid */
-.region-block { display: flex; align-items: flex-start; gap: 2.5rem; padding: 1.5rem 0; }
-.region-block + .region-block { border-top: 1px solid #eeeeee; }  /* 区块间浅灰细线 */
+/* 区块：左右两栏（国内 / 国外），左标签 + 右侧 Grid */
+.region-layout { display: flex; align-items: stretch; }
+.region-layout .region-block { flex: 1; padding: 1.5rem 2.5rem; display: flex; align-items: flex-start; gap: 2rem; }
+.region-layout .region-block + .region-block { border-left: 1px solid #eeeeee; }  /* 区块间浅灰细线 */
 .region-label {
-  flex-shrink: 0; width: 7rem;
+  flex-shrink: 0; width: 5.5rem;
   font-size: 1.1rem; color: #94070A;
   font-weight: normal; font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
 }
@@ -239,7 +240,9 @@ body {
   .tab-bar { flex-wrap: wrap; }
   .tab-btn { padding: 0.7rem 1.2rem; font-size: 0.95rem; }
   .panel { padding: 1.2rem 1.2rem 0.8rem; }
-  .region-block { flex-direction: column; gap: 1rem; }
+  .region-layout { flex-direction: column; }
+  .region-layout .region-block { padding: 1.2rem 0; }
+  .region-layout .region-block + .region-block { border-left: none; border-top: 1px solid #eeeeee; }
   .region-label { width: auto; }
   .region-grid { grid-template-columns: repeat(3, 1fr); }
   .year-grid { grid-template-columns: repeat(4, 1fr); }
@@ -335,28 +338,30 @@ body {
         <button class="tab-btn" data-target="tab-club">兴趣群体</button>
     </div>
 
-    <!-- 1. 地区联络（默认） -->
+    <!-- 1. 地区联络（默认）：国内 / 国外 左右两栏 -->
     <div class="panel active" id="tab-region">
-        <!-- 国内校友 -->
-        <div class="region-block">
-            <div class="region-label">国内校友</div>
-            <div class="region-grid">
-                <a href="#">安徽</a><a href="#">重庆</a><a href="#">福建</a><a href="#">甘肃</a><a href="#">广东</a><a href="#">广西</a>
-                <a href="#">贵州</a><a href="#">海南</a><a href="#">河北</a><a href="#">河南</a><a href="#">黑龙江</a><a href="#">湖北</a>
-                <a href="#">湖南</a><a href="#">吉林</a><a href="#">江苏</a><a href="#">江西</a><a href="#">辽宁</a><a href="#">内蒙古</a>
-                <a href="#">宁夏</a><a href="#">青海</a><a href="#">山东</a><a href="#">山西</a><a href="#">陕西</a><a href="#">上海</a>
-                <a href="#">四川</a><a href="#">天津</a><a href="#">西藏</a><a href="#">新疆</a><a href="#">云南</a><a href="#">浙江</a>
-                <a href="#">香港</a><a href="#">澳门</a><a href="#">台湾</a>
+        <div class="region-layout">
+            <!-- 国内校友 -->
+            <div class="region-block">
+                <div class="region-label">国内校友</div>
+                <div class="region-grid">
+                    <a href="#">安徽</a><a href="#">重庆</a><a href="#">福建</a><a href="#">甘肃</a><a href="#">广东</a><a href="#">广西</a>
+                    <a href="#">贵州</a><a href="#">海南</a><a href="#">河北</a><a href="#">河南</a><a href="#">黑龙江</a><a href="#">湖北</a>
+                    <a href="#">湖南</a><a href="#">吉林</a><a href="#">江苏</a><a href="#">江西</a><a href="#">辽宁</a><a href="#">内蒙古</a>
+                    <a href="#">宁夏</a><a href="#">青海</a><a href="#">山东</a><a href="#">山西</a><a href="#">陕西</a><a href="#">上海</a>
+                    <a href="#">四川</a><a href="#">天津</a><a href="#">西藏</a><a href="#">新疆</a><a href="#">云南</a><a href="#">浙江</a>
+                    <a href="#">香港</a><a href="#">澳门</a><a href="#">台湾</a>
+                </div>
             </div>
-        </div>
-        <!-- 国外校友 -->
-        <div class="region-block">
-            <div class="region-label">国外校友</div>
-            <div class="region-grid">
-                <a href="#">阿联酋</a><a href="#">奥地利</a><a href="#">澳大利亚</a><a href="#">北欧</a><a href="#">德国</a><a href="#">法国</a>
-                <a href="#">韩国</a><a href="#">荷兰</a><a href="#">加拿大</a><a href="#">柬埔寨</a><a href="#">马来西亚</a><a href="#">美国</a>
-                <a href="#">日本</a><a href="#">瑞士</a><a href="#">泰国</a><a href="#">西班牙</a><a href="#">新加坡</a><a href="#">新西兰</a>
-                <a href="#">意大利</a><a href="#">英国</a>
+            <!-- 国外校友 -->
+            <div class="region-block">
+                <div class="region-label">国外校友</div>
+                <div class="region-grid">
+                    <a href="#">阿联酋</a><a href="#">奥地利</a><a href="#">澳大利亚</a><a href="#">北欧</a><a href="#">德国</a><a href="#">法国</a>
+                    <a href="#">韩国</a><a href="#">荷兰</a><a href="#">加拿大</a><a href="#">柬埔寨</a><a href="#">马来西亚</a><a href="#">美国</a>
+                    <a href="#">日本</a><a href="#">瑞士</a><a href="#">泰国</a><a href="#">西班牙</a><a href="#">新加坡</a><a href="#">新西兰</a>
+                    <a href="#">意大利</a><a href="#">英国</a>
+                </div>
             </div>
         </div>
     </div>

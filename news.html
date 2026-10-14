@@ -1,407 +1,272 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>新闻公告 - 海林市高级中学校友（新海高人）</title>
-  <meta name="description" content="海林市高级中学校友（新海高人）新闻公告，记录母校发展，发布校友资讯。" />
-  <link rel="canonical" href="https://xinhaigaoren.github.io/web/news.html" />
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="新闻公告 - 海林市高级中学校友（新海高人）" />
-  <meta property="og:description" content="海林市高级中学校友（新海高人）新闻公告，记录母校发展，发布校友资讯。" />
-  <meta property="og:url" content="https://xinhaigaoren.github.io/web/news.html" />
-  <link rel="preconnect" href="https://hailin-alumni-api.onrender.com" crossorigin />
-  <link rel="stylesheet" href="style.css?v=20261017" />
-  <link rel="stylesheet" href="pages.css?v=20261013" />
-  <script src="config.js?v=20261013"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校友联络 - 海林市高级中学校友（新海高人）</title>
 <style>
 /* =========================================
-   新导航栏样式（北大红水墨渐变版）
-   说明：html 基准字号 1.25vw，全站按比例缩放；
+   全局：html 基准字号 1.25vw，全站按比例缩放；
    body 顶部留白 8rem 给 fixed 导航栏
    ========================================= */
 html { font-size: 1.25vw; }
-body { padding-top: 8rem; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  padding-top: 8rem;
+  background: #f7f6f3;
+  color: #333;
+  font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+  font-weight: normal;
+}
 
+/* =========================================
+   顶部导航栏：北大红渐变，底部透明
+   （与首页 index.html 完全一致）
+   ========================================= */
 .top-navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 8rem;
-    background: linear-gradient(
-        to bottom,
-        rgba(148, 7, 10, 0.95) 0%,
-        rgba(148, 7, 10, 0.7) 40%,
-        rgba(148, 7, 10, 0.2) 80%,
-        rgba(148, 7, 10, 0) 100%
-    );
-    display: flex;
-    justify-content: center;
-    z-index: 1000;
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 8rem;
+  background: linear-gradient(
+      to bottom,
+      rgba(148, 7, 10, 0.95) 0%,
+      rgba(148, 7, 10, 0.7) 40%,
+      rgba(148, 7, 10, 0.2) 80%,
+      rgba(148, 7, 10, 0) 100%
+  );
+  display: flex; justify-content: center;
+  z-index: 1000;
 }
-
 .nav-container {
-    width: 100%;
-    max-width: 95rem;
-    height: 100%;
-    padding: 0 2rem;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    position: relative;
-    z-index: 10;
+  width: 100%; max-width: 95rem;
+  height: 100%; padding: 0 2rem;
+  display: flex; justify-content: flex-start; align-items: center;
+  position: relative; z-index: 10;
 }
-
-/* 左侧 LOGO 与文字 */
 .nav-logo {
-    display: flex;
-    align-items: center;
-    color: #fff;
-    text-decoration: none;
-    white-space: nowrap;
-    flex-shrink: 0;
-    margin-right: 3rem;
+  display: flex; align-items: center;
+  color: #fff; text-decoration: none;
+  white-space: nowrap; flex-shrink: 0;
+  margin-right: 3rem;
 }
 .nav-logo img {
-    height: 4rem;
-    width: auto;
-    margin-right: 0.8rem;
-    border-radius: 50%;
-    object-fit: contain;
-    transition: transform 0.3s;
+  height: 4rem; width: 4rem;
+  margin-right: 0.8rem;
+  border-radius: 50%; object-fit: cover;
+  transition: transform 0.3s;
 }
 .nav-logo:hover img { transform: scale(1.05); }
-
-.logo-text {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
+.logo-text { display: flex; flex-direction: column; justify-content: center; }
 .logo-text .zh {
-    font-size: 1.1rem;
-    font-weight: 500;
-    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-    line-height: 1.4;
-    letter-spacing: 0.03rem;
-    white-space: nowrap;
+  font-size: 1.1rem; font-weight: 500;
+  line-height: 1.4; letter-spacing: 0.03rem;
+  white-space: nowrap;
 }
 .logo-text .en {
-    font-size: 0.7rem;
-    opacity: 0.85;
-    margin-top: 0.1rem;
-    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-    line-height: 1.4;
-    letter-spacing: 0.01rem;
-    white-space: nowrap;
+  font-size: 0.7rem; opacity: 0.85; margin-top: 0.1rem;
+  line-height: 1.4; letter-spacing: 0.01rem;
+  white-space: nowrap;
 }
-
-/* 右侧整体打包，紧贴屏幕右侧 */
-.nav-right-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    margin-left: auto;
-}
-.nav-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.8rem;
-}
-
-/* 右上角工具栏 */
+.nav-right-wrapper { display: flex; align-items: center; gap: 1.5rem; margin-left: auto; }
+.nav-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.8rem; }
 .top-tools {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-    white-space: nowrap;
+  display: flex; align-items: center; gap: 0.8rem;
+  font-size: 0.75rem; color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
 }
-.top-tools a {
-    color: rgba(255, 255, 255, 0.9);
-    text-decoration: none;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-.top-tools a:hover {
-    color: #fff;
-    text-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.5);
-}
-.tool-divider {
-    width: 0.0625rem;
-    height: 0.8rem;
-    background-color: rgba(255, 255, 255, 0.3);
-}
+.top-tools a { color: rgba(255, 255, 255, 0.9); text-decoration: none; transition: all 0.3s; display: flex; align-items: center; gap: 0.25rem; }
+.top-tools a:hover { color: #fff; text-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.5); }
+.tool-divider { width: 0.0625rem; height: 0.8rem; background-color: rgba(255, 255, 255, 0.3); }
 .top-tools a.webvpn { position: relative; }
 .top-tools a.webvpn::after {
-    content: 'VPN';
-    position: absolute;
-    top: -0.4rem;
-    right: -0.8rem;
-    font-size: 0.45rem;
-    background: #4a6cf7;
-    padding: 0.0625rem 0.1875rem;
-    border-radius: 0.125rem;
-    transform: scale(0.8);
-    opacity: 0;
-    transition: opacity 0.3s;
+  content: 'VPN'; position: absolute; top: -0.4rem; right: -0.8rem;
+  font-size: 0.45rem; background: #4a6cf7;
+  padding: 0.0625rem 0.1875rem; border-radius: 0.125rem;
+  transform: scale(0.8); opacity: 0; transition: opacity 0.3s;
 }
 .top-tools a.webvpn:hover::after { opacity: 1; }
-.search-icon {
-    width: 0.9rem;
-    height: 0.9rem;
-    fill: currentColor;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-.search-icon:hover {
-    fill: #fff;
-    transform: scale(1.1);
-}
-
-/* 右下角主菜单 */
-.main-menu {
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-    white-space: nowrap;
-}
+.search-icon { width: 0.9rem; height: 0.9rem; fill: currentColor; cursor: pointer; transition: all 0.3s; }
+.search-icon:hover { fill: #fff; transform: scale(1.1); }
+.main-menu { display: flex; align-items: center; gap: 1.2rem; white-space: nowrap; }
 .main-menu a {
-    color: #fff;
-    text-decoration: none;
-    font-size: 1rem;
-    font-weight: 500;
-    letter-spacing: 0.03rem;
-    transition: all 0.3s ease;
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding-bottom: 0.2rem;
+  color: #fff; text-decoration: none;
+  font-size: 1rem; font-weight: 500; letter-spacing: 0.03rem;
+  transition: all 0.3s ease;
+  position: relative; display: flex; align-items: center; gap: 0.25rem;
+  padding-bottom: 0.2rem;
 }
 .main-menu a::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0;
-    width: 0;
-    height: 0.125rem;
-    background-color: #fff;
-    transition: width 0.3s ease;
-    border-radius: 0.125rem;
+  content: ''; position: absolute; bottom: 0; left: 0;
+  width: 0; height: 0.125rem; background-color: #fff;
+  transition: width 0.3s ease; border-radius: 0.125rem;
 }
 .main-menu a:hover::after { width: 100%; }
-.main-menu a:hover { text-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.3); }
-.arrow-down {
-    width: 0.7rem;
-    height: 0.7rem;
-    fill: rgba(255, 255, 255, 0.7);
-    transition: transform 0.3s;
-}
-.main-menu a:hover .arrow-down {
-    transform: rotate(180deg);
-    fill: #fff;
-}
-
-/* 三条横线（汉堡菜单） */
-.hamburger-menu {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 1.6rem;
-    height: 1rem;
-    cursor: pointer;
-    margin-left: 0.5rem;
-    transition: opacity 0.3s;
-    flex-shrink: 0;
-}
+/* 当前页保持高亮：校友联络 */
+.main-menu a.active { color: #fff; text-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.45); }
+.main-menu a.active::after { width: 100%; }
+.arrow-down { width: 0.7rem; height: 0.7rem; fill: rgba(255, 255, 255, 0.7); transition: transform 0.3s; }
+.main-menu a:hover .arrow-down { transform: rotate(180deg); fill: #fff; }
+.hamburger-menu { display: flex; flex-direction: column; justify-content: space-between; width: 1.6rem; height: 1rem; cursor: pointer; margin-left: 0.5rem; transition: opacity 0.3s; flex-shrink: 0; }
 .hamburger-menu:hover { opacity: 0.8; }
-.hamburger-line {
-    width: 100%;
-    height: 0.16rem;
-    background-color: #fff;
-    border-radius: 0.08rem;
+.hamburger-line { width: 100%; height: 0.16rem; background-color: #fff; border-radius: 0.08rem; }
+
+/* =========================================
+   页面主体：切换标签栏 + 内容面板
+   ========================================= */
+.alumni-page { width: 100%; max-width: 95rem; margin: 0 auto; padding: 0 2rem; }
+
+/* 切换标签栏 */
+.tab-bar {
+  display: flex; justify-content: center; gap: 0.6rem;
+  margin: 2.5rem auto 0; max-width: 62rem;
 }
-    /* ==========================================
-       交互式二级菜单（校友联络下拉面板）
-       白底 + 底部北大红粗线，默认隐藏，激活淡入
-       ========================================== */
-    .sub-nav-section {
-        width: 100%;
-        background-color: #ffffff;
-        padding: 2rem 0;
-        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-        border-bottom: 0.3rem solid #94070A;
-        display: none;
-    }
+.tab-btn {
+  background-color: #f5f5f5; border: none;
+  padding: 0.9rem 2.2rem; font-size: 1.05rem;
+  color: #333; cursor: pointer;
+  border-radius: 0.35rem 0.35rem 0 0;
+  font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+  font-weight: normal;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.tab-btn:hover { background-color: #e8e8e8; }          /* 悬停（未选中）灰 */
+.tab-btn.active { background-color: #94070A; color: #fff; }  /* 选中深红白字 */
 
-    .sub-nav-section.active {
-        display: block;
-        animation: fadeIn 0.3s ease;
-    }
+/* 内容面板：白色容器 + 顶部红色边框 */
+.panel {
+  display: none;
+  background-color: #ffffff;
+  border-top: 0.3rem solid #94070A;
+  border-radius: 0 0 0.4rem 0.4rem;
+  padding: 1.5rem 2.5rem 1.5rem;
+}
+.panel.active { display: block; }
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-0.5rem); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+/* 区块：左右两栏（国内 / 国外），左标签 + 右侧 Grid */
+.region-layout { display: flex; align-items: stretch; }
+.region-layout .region-block { flex: 1; padding: 1.5rem 2.5rem; display: flex; align-items: flex-start; gap: 2rem; }
+.region-layout .region-block + .region-block { border-left: 1px solid #eeeeee; }  /* 区块间浅灰细线 */
+.region-label {
+  flex-shrink: 0; width: 5.5rem;
+  font-size: 1.1rem; color: #94070A;
+  font-weight: normal; font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+}
+.region-grid {
+  flex: 1;
+  display: grid; grid-template-columns: repeat(6, 1fr);
+  column-gap: 1.5rem; row-gap: 1.1rem;
+}
+.region-grid a {
+  font-size: 0.95rem; color: #333; text-decoration: none;
+  font-weight: normal; font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+  transition: color 0.3s; white-space: nowrap;
+}
+.region-grid a:hover { color: #94070A; }
+.region-grid a small { color: #94070A; }
 
-    .sub-nav-tabs {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        padding: 0 2rem 1.5rem 2rem;
-        max-width: 95rem;
-        margin: 0 auto;
-    }
+/* 年级联络：7 列 */
+.year-grid { grid-template-columns: repeat(7, 1fr); }
+/* 专业委员会 / 兴趣群体：4 列等宽，超长省略号 */
+.committee-grid, .club-grid { grid-template-columns: repeat(4, 1fr); column-gap: 2rem; }
+.committee-grid a, .club-grid a {
+  overflow: hidden; text-overflow: ellipsis;
+}
 
-    .tab-btn {
-        background-color: #f0f0f0;
-        border: none;
-        padding: 0.8rem 1.8rem;
-        font-size: 1rem;
-        color: #333;
-        cursor: pointer;
-        border-radius: 0.15rem;
-        transition: all 0.3s ease;
-        font-family: inherit;
-    }
+/* =========================================
+   底部页脚（与首页 index.html 完全一致）
+   ========================================= */
+.site-footer { width: 100%; position: relative; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
+.footer-container {
+  width: 100%; max-width: 95rem;
+  margin: 0 auto; padding: 0 2rem;
+  position: relative; z-index: 1;
+}
+.footer-top-white { background-color: #ffffff; padding: 4rem 0 3rem 0; }
+.footer-top-inner { display: flex; justify-content: space-between; align-items: flex-start; }
+.footer-links-area { flex: 1; max-width: 65%; }
+.footer-title { font-size: 2rem; font-weight: 400; margin-bottom: 2.5rem; color: #333; }
+.links-grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 4rem; row-gap: 1.2rem; }
+.link-item {
+  display: block; color: #666; text-decoration: none;
+  font-size: 0.95rem; padding-bottom: 0.8rem;
+  border-bottom: 1px solid #e0e0e0; transition: all 0.3s;
+}
+.link-item:hover { color: #94070A; border-bottom-color: #94070A; }
+.footer-qr-area { display: flex; flex-direction: column; align-items: center; margin-left: 2rem; }
+.qr-code { width: 12rem; height: 12rem; object-fit: cover; }
+.qr-text {
+  font-size: 0.85rem; color: #666; margin-top: 1rem;
+  text-align: center; white-space: normal; max-width: 14rem; line-height: 1.5;
+}
+.footer-bottom-red { background-color: #94070A; color: #fff; padding: 3rem 0 2rem 0; }
+.footer-bottom-inner { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; }
+.footer-logo-area { display: flex; align-items: center; flex: 0 0 auto; margin-right: 2rem; }
+.footer-logo-img { width: 4.5rem; height: 4.5rem; object-fit: cover; border-radius: 50%; margin-right: 1rem; }
+.footer-logo-text { display: flex; flex-direction: column; white-space: nowrap; }
+.footer-logo-text .zh { font-size: 1.3rem; font-weight: 500; line-height: 1.4; }
+.footer-logo-text .en { font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); margin-top: 0.1rem; }
+.site-footer .contact-grid {
+  display: flex; flex-direction: column;
+  gap: 1rem; font-size: 0.9rem;
+  flex: 1; justify-content: center;
+}
+.contact-row { display: flex; align-items: center; gap: 3rem; }
+.contact-item { display: flex; align-items: center; color: rgba(255, 255, 255, 0.9); white-space: nowrap; }
+.contact-item .icon { width: 1.1rem; height: 1.1rem; fill: #fff; margin-right: 0.6rem; }
+.contact-item a.value { color: rgba(255, 255, 255, 0.9); text-decoration: none; transition: color 0.3s; }
+.contact-item a.value:hover { color: #fff; text-decoration: underline; }
+.pencil-icon-box {
+  width: 1.1rem; height: 1.1rem;
+  background-color: #ffffff; border-radius: 0.15rem;
+  display: flex; align-items: center; justify-content: center;
+  margin-right: 0.6rem; flex-shrink: 0;
+}
+.pencil-icon { width: 0.8rem; height: 0.8rem; fill: #94070A; }
+.copyright-bar {
+  display: flex; justify-content: space-between;
+  align-items: center; font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+.stats { display: flex; align-items: center; gap: 0.4rem; }
+.eye-icon { width: 1rem; height: 1rem; fill: rgba(255, 255, 255, 0.6); }
+.view-count { font-size: 0.8rem; }
 
-    .tab-btn:hover { background-color: #e0e0e0; }
-
-    .tab-btn.active {
-        background-color: #94070A;
-        color: #ffffff;
-        box-shadow: 0 0.2rem 0.6rem rgba(148, 7, 10, 0.4);
-    }
-
-    .sub-nav-divider {
-        width: 100%;
-        max-width: 95rem;
-        margin: 0 auto;
-        border-top: 0.15rem solid #94070A;
-    }
-
-    .sub-nav-content {
-        max-width: 95rem;
-        margin: 0 auto;
-        padding: 2rem 2rem 0 2rem;
-    }
-
-    .tab-pane {
-        display: none;
-        animation: fadeIn 0.4s ease;
-    }
-    .tab-pane.active { display: block; }
-
-    .content-layout {
-        display: flex;
-        align-items: flex-start;
-        gap: 3rem;
-    }
-
-    /* 左侧标签：北大红 */
-    .content-label {
-        width: 10rem;
-        font-size: 1rem;
-        color: #94070A;
-        font-weight: 500;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    /* 地区联络：6列，横向均匀铺满 */
-    .content-grid {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        column-gap: 2rem;
-        row-gap: 1rem;
-        flex: 1;
-    }
-
-    /* 年级联络：7列 */
-    .year-grid {
-        grid-template-columns: repeat(7, 1fr);
-    }
-    .year-grid span { color: #555; }
-    .year-grid span small { color: #94070A; }
-
-    /* 专业委员会 & 兴趣群体：横向铺满，固定列宽保证上下对齐 */
-    .committee-grid, .club-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr); /* 4列等宽，保证上下对齐 */
-        column-gap: 2rem;
-        row-gap: 1.2rem;
-        flex: 1;
-    }
-
-    .committee-grid span, .club-grid span {
-        display: block;
-        font-size: 0.9rem;
-        color: #333;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        transition: color 0.3s;
-    }
-
-    .committee-grid span:hover, .club-grid span:hover {
-        color: #94070A;
-        cursor: pointer;
-    }
-
-    /* 通用 span 悬停 */
-    .content-grid span {
-        font-size: 0.9rem;
-        color: #333;
-        transition: color 0.3s;
-        white-space: nowrap;
-    }
-    .content-grid span:hover { color: #94070A; cursor: pointer; }
-
-    /* 国内/国外校友：左右两栏布局 */
-    .region-layout {
-        display: flex;
-        gap: 4rem;
-        align-items: flex-start;
-    }
-
-    .region-block {
-        flex: 1;
-        display: flex;
-        align-items: flex-start;
-        gap: 2rem;
-    }
-
-    .region-block .content-label {
-        width: 6rem;
-    }
-
-    .region-block .content-grid {
-        flex: 1;
-    }
-
-    /* 手机端自适应 */
-    @media (max-width: 900px) {
-        .sub-nav-tabs { flex-wrap: wrap; padding: 0 2rem 1.5rem 2rem; }
-        .sub-nav-content { padding: 1.5rem 2rem 0 2rem; }
-        .content-layout, .region-layout, .region-block { flex-direction: column; gap: 1rem; }
-        .content-label, .region-block .content-label { width: auto; }
-        .content-grid, .committee-grid, .club-grid, .year-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
+/* =========================================
+   响应式：小屏适配
+   ========================================= */
+@media (max-width: 900px) {
+  .alumni-page { padding: 0 1rem; }
+  .tab-bar { flex-wrap: wrap; }
+  .tab-btn { padding: 0.7rem 1.2rem; font-size: 0.95rem; }
+  .panel { padding: 1.2rem 1.2rem 0.8rem; }
+  .region-layout { flex-direction: column; }
+  .region-layout .region-block { padding: 1.2rem 0; }
+  .region-layout .region-block + .region-block { border-left: none; border-top: 1px solid #eeeeee; }
+  .region-label { width: auto; }
+  .region-grid { grid-template-columns: repeat(3, 1fr); }
+  .year-grid { grid-template-columns: repeat(4, 1fr); }
+  .committee-grid, .club-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .footer-top-inner { flex-direction: column; align-items: center; }
+  .footer-links-area { max-width: 100%; width: 100%; }
+  .footer-title { text-align: center; }
+  .footer-qr-area { margin-left: 0; margin-top: 2rem; }
+  .footer-bottom-inner { flex-direction: column; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
+  .footer-logo-area { margin-right: 0; }
+  .contact-row { flex-wrap: wrap; justify-content: center; gap: 1rem; }
+  .copyright-bar { flex-direction: column; gap: 0.6rem; text-align: center; }
+}
 </style>
 </head>
 <body>
+
+<!-- ============ 顶部导航栏（与首页 index.html 完全一致，校友联络指向本页并高亮） ============ -->
 <header class="top-navbar">
     <div class="nav-container">
         <!-- 左侧 Logo 区域 -->
-        <!-- Logo 图片替换处：当前使用网站原 Logo assets/haigao-logo.jpg，替换时改这里即可 -->
+        <!-- 【可替换接口】Logo 图片地址：当前使用 assets/haigao-logo.jpg，替换时改这里即可 -->
         <a href="index.html" class="nav-logo">
             <img src="assets/haigao-logo.jpg" alt="海林市高级中学校友会 Logo">
             <div class="logo-text">
@@ -418,7 +283,9 @@ body { padding-top: 8rem; }
                     <a href="index.html">访客</a>
                     <a href="donate.html">赞助</a>
                     <a href="jobs.html">招聘</a>
+                    <!-- 【可替换接口】内网地址：当前为占位，替换为真实内网地址 -->
                     <a href="https://webvpn.example.com" target="_blank" class="webvpn">内网</a>
+                    <!-- 【可替换接口】邮箱地址：xinhaigaoren@126.com -->
                     <a href="mailto:xinhaigaoren@126.com">邮箱</a>
                     <div class="tool-divider"></div>
                     <a href="#">🌐 English</a>
@@ -427,14 +294,17 @@ body { padding-top: 8rem; }
                     </svg>
                 </div>
 
-                <!-- 右下角主菜单 -->
+                <!-- 右下角主菜单（校友联络指向当前页面 alumni.html，保持高亮） -->
                 <nav class="main-menu">
                     <a href="news.html">新海高人新闻网</a>
                     <a href="about.html">
                         新海高人概况
                         <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                     </a>
-                    <a href="javascript:void(0)" id="alumniContactBtn">校友联络 <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></a>
+                    <a href="alumni.html" class="active">
+                        校友联络
+                        <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </a>
                     <a href="donate.html">回馈母校</a>
                     <a href="#">
                         媒体平台
@@ -456,136 +326,115 @@ body { padding-top: 8rem; }
         </div>
     </div>
 </header>
-<!-- 校友联络下拉面板 -->
-<div class="sub-nav-section" id="alumniPanel">
-    <div class="sub-nav-tabs">
+
+<!-- ============ 页面主体：校友联络 ============ -->
+<main class="alumni-page">
+
+    <!-- 切换标签栏：地区联络（默认）/ 年级联络 / 专业委员会 / 兴趣群体 -->
+    <div class="tab-bar">
         <button class="tab-btn active" data-target="tab-region">地区联络</button>
         <button class="tab-btn" data-target="tab-year">年级联络</button>
         <button class="tab-btn" data-target="tab-committee">专业委员会</button>
         <button class="tab-btn" data-target="tab-club">兴趣群体</button>
     </div>
 
-    <div class="sub-nav-divider"></div>
-
-    <div class="sub-nav-content">
-        <!-- 1. 地区联络 -->
-        <div class="tab-pane active" id="tab-region">
-            <div class="region-layout">
-                <div class="region-block">
-                    <div class="content-label">国内校友</div>
-                    <div class="content-grid">
-                        <span>安徽</span><span>重庆</span><span>福建</span><span>甘肃</span><span>广东</span><span>广西</span>
-                        <span>贵州</span><span>海南</span><span>河北</span><span>河南</span><span>黑龙江</span><span>湖北</span>
-                        <span>湖南</span><span>吉林</span><span>江苏</span><span>江西</span><span>辽宁</span><span>内蒙古</span>
-                        <span>宁夏</span><span>青海</span><span>山东</span><span>山西</span><span>陕西</span><span>上海</span>
-                        <span>四川</span><span>天津</span><span>西藏</span><span>新疆</span><span>云南</span><span>浙江</span>
-                        <span>香港</span><span>澳门</span><span>台湾</span>
-                    </div>
+    <!-- 1. 地区联络（默认）：国内 / 国外 左右两栏 -->
+    <div class="panel active" id="tab-region">
+        <div class="region-layout">
+            <!-- 国内校友 -->
+            <div class="region-block">
+                <div class="region-label">国内校友</div>
+                <div class="region-grid">
+                    <a href="#">安徽</a><a href="#">重庆</a><a href="#">福建</a><a href="#">甘肃</a><a href="#">广东</a><a href="#">广西</a>
+                    <a href="#">贵州</a><a href="#">海南</a><a href="#">河北</a><a href="#">河南</a><a href="#">黑龙江</a><a href="#">湖北</a>
+                    <a href="#">湖南</a><a href="#">吉林</a><a href="#">江苏</a><a href="#">江西</a><a href="#">辽宁</a><a href="#">内蒙古</a>
+                    <a href="#">宁夏</a><a href="#">青海</a><a href="#">山东</a><a href="#">山西</a><a href="#">陕西</a><a href="#">上海</a>
+                    <a href="#">四川</a><a href="#">天津</a><a href="#">西藏</a><a href="#">新疆</a><a href="#">云南</a><a href="#">浙江</a>
+                    <a href="#">香港</a><a href="#">澳门</a><a href="#">台湾</a>
                 </div>
-                <div class="region-block">
-                    <div class="content-label">国外校友</div>
-                    <div class="content-grid">
-                        <span>阿联酋</span><span>奥地利</span><span>澳大利亚</span><span>北欧</span><span>德国</span><span>法国</span>
-                        <span>韩国</span><span>荷兰</span><span>加拿大</span><span>柬埔寨</span><span>马来西亚</span><span>美国</span>
-                        <span>日本</span><span>瑞士</span><span>泰国</span><span>西班牙</span><span>新加坡</span><span>新西兰</span>
-                        <span>意大利</span><span>英国</span>
-                    </div>
+            </div>
+            <!-- 国外校友 -->
+            <div class="region-block">
+                <div class="region-label">国外校友</div>
+                <div class="region-grid">
+                    <a href="#">阿联酋</a><a href="#">奥地利</a><a href="#">澳大利亚</a><a href="#">北欧</a><a href="#">德国</a><a href="#">法国</a>
+                    <a href="#">韩国</a><a href="#">荷兰</a><a href="#">加拿大</a><a href="#">柬埔寨</a><a href="#">马来西亚</a><a href="#">美国</a>
+                    <a href="#">日本</a><a href="#">瑞士</a><a href="#">泰国</a><a href="#">西班牙</a><a href="#">新加坡</a><a href="#">新西兰</a>
+                    <a href="#">意大利</a><a href="#">英国</a>
                 </div>
             </div>
         </div>
-
-        <!-- 2. 年级联络 -->
-        <div class="tab-pane" id="tab-year">
-            <div class="content-layout">
-                <div class="content-label">海林市高级中学毕业校友</div>
-                <div class="content-grid year-grid">
-                    <span>1984</span><span>1985</span><span>1986</span><span>1987</span><span>1988</span><span>1989</span><span>1990</span>
-                    <span>1991</span><span>1992</span><span>1993</span><span>1994</span><span>1995</span><span>1996</span><span>1997</span>
-                    <span>1998</span><span>1999</span><span>2000</span><span>2001</span><span>2002</span><span>2003</span><span>2004</span>
-                    <span>2005</span><span>2006</span><span>2007</span><span>2008</span><span>2009</span><span>2010</span><span>2011</span>
-                    <span>2012</span><span>2013</span><span>2014</span><span>2015</span><span>2016</span><span>2017</span><span>2018</span>
-                    <span>2019</span><span>2020</span><span>2021</span><span>2022</span><span>2023</span><span>2024</span><span>2025</span>
-                    <span>2026</span><span>2027 <small>(筹)</small></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. 专业委员会 -->
-        <div class="tab-pane" id="tab-committee">
-            <div class="committee-grid">
-                <span>新海高人人工智能专业委员会</span>
-                <span>新海高人航空航天专业委员会</span>
-                <span>新海高人土木工程专业委员会</span>
-                <span>新海高人高等教育专业委员会</span>
-                <span>新海高人基础教育专业委员会</span>
-                <span>新海高人能源专业委员会</span>
-                <span>新海高人具身智能专业委员会</span>
-                <span>新海高人电子信息专业委员会</span>
-                <span>新海高人电气工程专业委员会</span>
-                <span>新海高人自动化专业委员会</span>
-                <span>新海高人工程力学专业委员会</span>
-                <span>新海高人医学专业委员会</span>
-                <span>新海高人生命科学专业委员会</span>
-                <span>新海高人材料科学专业委员会</span>
-                <span>新海高人车辆工程专业委员会</span>
-                <span>新海高人计算机科学专业委员会</span>
-                <span>新海高人软件工程专业委员会</span>
-                <span>新海高人人文社科专业委员会</span>
-                <span>新海高人基础科学专业委员会</span>
-                <span>新海高人机械工程专业委员会</span>
-                <span>新海高人农业科学专业委员会</span>
-            </div>
-        </div>
-
-        <!-- 4. 兴趣群体 -->
-        <div class="tab-pane" id="tab-club">
-            <div class="club-grid">
-                <span>新海高人健身俱乐部</span>
-                <span>新海高人足球俱乐部</span>
-                <span>新海高人排球俱乐部</span>
-                <span>新海高人羽毛球俱乐部</span>
-                <span>新海高人台球俱乐部</span>
-                <span>新海高人游泳俱乐部</span>
-                <span>新海高人骑行俱乐部</span>
-                <span>新海高人乒乓球俱乐部</span>
-                <span>新海高人篮球俱乐部</span>
-                <span>新海高人校友合唱团（筹）</span>
-            </div>
-        </div>
-
     </div>
-</div>
 
-
-  <a class="skip-link" href="#main">跳到正文</a>
-
-  
-
-  <main id="main">
-    <section class="page-hero">
-      <div class="container">
-        <p class="eyebrow" data-section="news_hero" data-field="eyebrow">News</p>
-        <h1 data-section="news_hero" data-field="title">新闻公告</h1>
-        <p data-section="news_hero" data-field="subtitle">记录母校发展，发布校友资讯，传递海高声音。</p>
-        <div class="crumb"><a href="index.html">首页</a> / 新闻公告</div>
-      </div>
-    </section>
-
-    <section class="page-section soft">
-      <div class="container">
-        <div class="toolbar">
-          <div class="chip-row" id="categoryRow"><button class="chip active" data-cat="全部" type="button">全部</button></div>
-          <input class="search-input" id="newsSearch" type="search" placeholder="搜索新闻标题…" aria-label="搜索新闻" />
+    <!-- 2. 年级联络 -->
+    <div class="panel" id="tab-year">
+        <div class="region-block">
+            <div class="region-label">海林市高级中学毕业校友</div>
+            <div class="region-grid year-grid">
+                <a href="#">1984</a><a href="#">1985</a><a href="#">1986</a><a href="#">1987</a><a href="#">1988</a><a href="#">1989</a><a href="#">1990</a>
+                <a href="#">1991</a><a href="#">1992</a><a href="#">1993</a><a href="#">1994</a><a href="#">1995</a><a href="#">1996</a><a href="#">1997</a>
+                <a href="#">1998</a><a href="#">1999</a><a href="#">2000</a><a href="#">2001</a><a href="#">2002</a><a href="#">2003</a><a href="#">2004</a>
+                <a href="#">2005</a><a href="#">2006</a><a href="#">2007</a><a href="#">2008</a><a href="#">2009</a><a href="#">2010</a><a href="#">2011</a>
+                <a href="#">2012</a><a href="#">2013</a><a href="#">2014</a><a href="#">2015</a><a href="#">2016</a><a href="#">2017</a><a href="#">2018</a>
+                <a href="#">2019</a><a href="#">2020</a><a href="#">2021</a><a href="#">2022</a><a href="#">2023</a><a href="#">2024</a><a href="#">2025</a>
+                <a href="#">2026</a><a href="#">2027 <small>(筹)</small></a>
+            </div>
         </div>
-        <div class="news-grid" id="newsGrid"></div>
-        <div class="empty-state" id="newsEmpty" hidden>暂无新闻，敬请期待。</div>
-        <div class="pagination" id="newsPagination"></div>
-      </div>
-    </section>
-  </main>
+    </div>
 
-  <footer class="site-footer" id="contact">
-    <!-- 底部页脚（2026-10-14 新版）：白底链接区 + 北大红底品牌区；访问人数由后端实时统计 -->
+    <!-- 3. 专业委员会 -->
+    <div class="panel" id="tab-committee">
+        <div class="region-block">
+            <div class="region-label">专业委员会</div>
+            <div class="region-grid committee-grid">
+                <a href="#">新海高人人工智能专业委员会</a>
+                <a href="#">新海高人航空航天专业委员会</a>
+                <a href="#">新海高人土木工程专业委员会</a>
+                <a href="#">新海高人高等教育专业委员会</a>
+                <a href="#">新海高人基础教育专业委员会</a>
+                <a href="#">新海高人能源专业委员会</a>
+                <a href="#">新海高人具身智能专业委员会</a>
+                <a href="#">新海高人电子信息专业委员会</a>
+                <a href="#">新海高人电气工程专业委员会</a>
+                <a href="#">新海高人自动化专业委员会</a>
+                <a href="#">新海高人工程力学专业委员会</a>
+                <a href="#">新海高人医学专业委员会</a>
+                <a href="#">新海高人生命科学专业委员会</a>
+                <a href="#">新海高人材料科学专业委员会</a>
+                <a href="#">新海高人车辆工程专业委员会</a>
+                <a href="#">新海高人计算机科学专业委员会</a>
+                <a href="#">新海高人软件工程专业委员会</a>
+                <a href="#">新海高人人文社科专业委员会</a>
+                <a href="#">新海高人基础科学专业委员会</a>
+                <a href="#">新海高人机械工程专业委员会</a>
+                <a href="#">新海高人农业科学专业委员会</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 兴趣群体 -->
+    <div class="panel" id="tab-club">
+        <div class="region-block">
+            <div class="region-label">兴趣群体</div>
+            <div class="region-grid club-grid">
+                <a href="#">新海高人健身俱乐部</a>
+                <a href="#">新海高人足球俱乐部</a>
+                <a href="#">新海高人排球俱乐部</a>
+                <a href="#">新海高人羽毛球俱乐部</a>
+                <a href="#">新海高人台球俱乐部</a>
+                <a href="#">新海高人游泳俱乐部</a>
+                <a href="#">新海高人骑行俱乐部</a>
+                <a href="#">新海高人乒乓球俱乐部</a>
+                <a href="#">新海高人篮球俱乐部</a>
+                <a href="#">新海高人校友合唱团（筹）</a>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- ============ 底部页脚（与首页 index.html 完全一致） ============ -->
+<footer class="site-footer" id="contact">
     <div class="footer-top-white">
         <div class="footer-container">
             <div class="footer-top-inner">
@@ -601,7 +450,7 @@ body { padding-top: 8rem; }
                     </div>
                 </div>
                 <div class="footer-qr-area">
-                    <!-- 二维码图片嵌入处：已嵌入公众号二维码 assets/qr-code.png（如需更换请修改下方 src） -->
+                    <!-- 【可替换接口】二维码图片地址：当前已嵌入公众号二维码 assets/qr-code.png，如需更换请修改下方 src -->
                     <img src="assets/qr-code.png" alt="二维码" class="qr-code">
                     <p class="qr-text">欢迎关注海林市高级中学校友（新海高人）公众号</p>
                 </div>
@@ -612,7 +461,7 @@ body { padding-top: 8rem; }
         <div class="footer-container">
             <div class="footer-bottom-inner">
                 <div class="footer-logo-area">
-                    <!-- 【Logo】使用站内真实校徽 -->
+                    <!-- 【可替换接口】Logo 图片地址：当前使用 assets/haigao-logo.jpg -->
                     <img src="assets/haigao-logo.jpg" alt="Logo" class="footer-logo-img">
                     <div class="footer-logo-text">
                         <span class="zh">海林市高级中学校友（新海高人）</span>
@@ -644,6 +493,7 @@ body { padding-top: 8rem; }
                 <p class="copyright-text">版权所有 © 海林市高级中学校友（新海高人）</p>
                 <div class="stats">
                     <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-3-3-3z"/></svg>
+                    <!-- 浏览量：复用与首页一致的站内实时统计（site.js 自动填充真实数字；如需切换不蒜子统计，替换为 busuanzi 脚本并去掉 site.js 计数即可） -->
                     <span id="site-pv-count" class="view-count">加载中...</span>
                 </div>
             </div>
@@ -651,104 +501,22 @@ body { padding-top: 8rem; }
     </div>
 </footer>
 
-  <script src="site.js?v=20261017"></script>
-  <script>
-    (function () {
-      const XH = window.XH;
-      const grid = document.getElementById('newsGrid');
-      const empty = document.getElementById('newsEmpty');
-      const pagination = document.getElementById('newsPagination');
-      const searchInput = document.getElementById('newsSearch');
-      const categoryRow = document.getElementById('categoryRow');
-      const PAGE_SIZE = 9;
-      let category = '全部';
-      let page = 1;
-      let searchTimer = null;
-
-      function coverStyle(item) {
-        if (!item.cover_url) return '';
-        return ` style="background-image:linear-gradient(135deg, rgba(166,27,41,.12), rgba(196,30,58,.12)), url('${XH.escapeHtml(XH.assetUrl(item.cover_url))}')"`;
-      }
-
-      function renderCategories(categories) {
-        if (!categories || !categories.length) return;
-        const current = categoryRow.querySelector('.chip.active');
-        const names = ['全部'].concat(categories.filter((c) => c && c !== '全部'));
-        categoryRow.innerHTML = names.map((name) =>
-          `<button class="chip ${name === category ? 'active' : ''}" data-cat="${XH.escapeHtml(name)}" type="button">${XH.escapeHtml(name)}</button>`
-        ).join('');
-      }
-
-      function renderPagination(total) {
-        const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-        let html = `<button type="button" data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''}>上一页</button>`;
-        for (let i = 1; i <= totalPages; i++) {
-          html += `<button type="button" data-page="${i}" class="${i === page ? 'active' : ''}">${i}</button>`;
-        }
-        html += `<button type="button" data-page="${page + 1}" ${page >= totalPages ? 'disabled' : ''}>下一页</button>`;
-        pagination.innerHTML = html;
-        pagination.onclick = (event) => {
-          const btn = event.target.closest('button[data-page]');
-          if (!btn || btn.disabled) return;
-          page = Number(btn.dataset.page);
-          loadNews();
-        };
-      }
-
-      async function loadNews() {
-        grid.innerHTML = '';
-        empty.hidden = true;
-        const params = new URLSearchParams({ page, pageSize: PAGE_SIZE });
-        if (category && category !== '全部') params.set('category', category);
-        const q = searchInput.value.trim();
-        if (q) params.set('q', q);
-        try {
-          const data = await XH.api(`/api/news?${params.toString()}`);
-          const items = data.items || [];
-          renderCategories(data.categories);
-          if (!items.length) {
-            empty.hidden = false;
-            pagination.innerHTML = '';
-            return;
-          }
-          grid.innerHTML = items.map((item) => `
-            <a class="news-card" href="news-detail.html?slug=${encodeURIComponent(item.slug)}">
-              <div class="news-card-cover"${coverStyle(item)}></div>
-              <div class="news-card-body">
-                <h3>${XH.escapeHtml(item.title)}</h3>
-                <p>${XH.escapeHtml(item.summary || '')}</p>
-                <div class="news-card-meta">
-                  <span class="tag">${XH.escapeHtml(item.category || '综合')}</span>
-                  <time>${XH.formatDate(item.published_at)}</time>
-                  <span>${item.view_count || 0} 次阅读</span>
-                </div>
-              </div>
-            </a>
-          `).join('');
-          renderPagination(data.total || 0);
-        } catch (error) {
-          empty.textContent = error.message;
-          empty.hidden = false;
-          pagination.innerHTML = '';
-        }
-      }
-
-      categoryRow.addEventListener('click', (event) => {
-        const chip = event.target.closest('.chip');
-        if (!chip || chip.dataset.cat === category) return;
-        category = chip.dataset.cat;
-        page = 1;
-        loadNews();
-      });
-
-      searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => { page = 1; loadNews(); }, 350);
-      });
-
-      document.addEventListener('xh:live-refresh', () => { loadNews(); });
-      loadNews();
-    })();
-  </script>
+<script>
+/* 校友联络：切换标签栏交互 */
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab-bar .tab-btn'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.panel'));
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      panels.forEach(function (p) { p.classList.remove('active'); });
+      var target = document.getElementById(tab.getAttribute('data-target'));
+      if (target) target.classList.add('active');
+    });
+  });
+})();
+</script>
+<script src="site.js?v=20261017"></script>
 </body>
 </html>
