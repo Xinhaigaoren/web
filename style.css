@@ -379,14 +379,14 @@ h1, h2, h3, .serif-title { font-family: var(--font-serif); }
   border-bottom: 1px solid #e0e0e0; transition: all 0.3s;
 }
 .link-item:hover { color: #94070A; border-bottom-color: #94070A; }
-.footer-qr-area { text-align: center; margin-left: 2rem; }
-.qr-code { width: 12rem; height: 12rem; object-fit: contain; }
-.qr-text { font-size: 0.85rem; color: #666; margin-top: 1rem; }
+.footer-qr-area { display: flex; flex-direction: column; align-items: center; margin-left: 2rem; }
+.qr-code { width: 12rem; height: 12rem; object-fit: cover; }
+.qr-text { font-size: 0.85rem; color: #666; margin-top: 1rem; text-align: center; white-space: normal; max-width: 14rem; line-height: 1.5; }
 /* 下半部分：北大红底 */
 .footer-bottom-red { background-color: #94070A; color: #fff; padding: 3rem 0 2rem 0; }
 .footer-bottom-inner { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; }
 .footer-logo-area { display: flex; align-items: center; flex: 0 0 auto; margin-right: 2rem; }
-.footer-logo-img { height: 4.5rem; width: auto; margin-right: 1rem; }
+.footer-logo-img { width: 4.5rem; height: 4.5rem; object-fit: cover; border-radius: 50%; margin-right: 1rem; }
 .footer-logo-text { display: flex; flex-direction: column; white-space: nowrap; }
 .footer-logo-text .zh { font-size: 1.3rem; font-weight: 500; line-height: 1.4; }
 .footer-logo-text .en { font-size: 0.75rem; color: rgba(255,255,255,0.85); margin-top: 0.1rem; }
@@ -430,4 +430,11 @@ h1, h2, h3, .serif-title { font-family: var(--font-serif); }
   .footer-logo-area { margin-right: 0; }
   .contact-row { flex-wrap: wrap; justify-content: center; gap: 1rem; }
   .copyright-bar { flex-direction: column; gap: 0.6rem; text-align: center; }
+}
+
+/* 导航 Logo 强制圆形（覆盖各页面内联样式，保证与页脚 Logo 视觉一致） */
+.top-navbar .nav-logo img {
+  width: 4rem; height: 4rem;
+  border-radius: 50%;
+  object-fit: cover;
 }
