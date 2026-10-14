@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用户首页 - 海林市高级中学校友（新海高人）</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: clamp(12px, 1vw, 18px); }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+    }
+
+    /* ========== 顶部导航栏 ========== */
+    .topbar {
+        width: 100%; height: 5.5rem;
+        background-color: #94070A;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 3rem;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 1rem; white-space: nowrap; }
+    .topbar-left img {
+        height: 3.2rem; width: 3.2rem;
+        border-radius: 50%; object-fit: contain;
+        background-color: rgba(255,255,255,0.08);
+    }
+    .topbar-left .logo-text { display: flex; flex-direction: column; color: #fff; }
+    .topbar-left .logo-text .zh { font-size: 1.1rem; line-height: 1.3; }
+    .topbar-left .logo-text .en { font-size: 0.75rem; opacity: 0.85; line-height: 1.3; }
+    .topbar-left .system-name-big {
+        font-size: 2rem; color: #fff; font-weight: normal;
+        letter-spacing: 0.05rem; margin-left: 1.5rem;
+    }
+
+    /* ★ 右上角用户信息（自动填充） */
+    .topbar-user { display: flex; align-items: center; gap: 0.6rem; color: #fff; font-size: 0.9rem; }
+    .topbar-user .user-avatar {
+        width: 2.2rem; height: 2.2rem; border-radius: 50%;
+        background-color: #fff; display: flex; align-items: center; justify-content: center;
+        color: #94070A; font-weight: bold; font-size: 0.95rem;
+    }
+
+    /* ========== 搜索横幅区 ========== */
+    .banner-wrapper { padding: 1.5rem 3rem 0; }
+    .banner {
+        width: 100%; max-width: 95rem; margin: 0 auto;
+        background: linear-gradient(135deg, #fbe5e5 0%, #f8d5d5 100%);
+        border-radius: 0.5rem; padding: 1.5rem 2rem;
+    }
+    .banner-inner {
+        display: flex; justify-content: space-between;
+        align-items: center; gap: 2rem; flex-wrap: wrap;
+    }
+    .stat-card {
+        background-color: #fff; border-radius: 0.5rem;
+        display: flex; align-items: center;
+        padding: 0.9rem 1.5rem; gap: 2rem;
+        box-shadow: 0 0.3rem 1rem rgba(148,7,10,0.08);
+    }
+    .stat-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: #333; }
+    .stat-item .icon {
+        width: 1.5rem; height: 1.5rem;
+        background-color: #94070A; border-radius: 0.2rem;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .stat-item .icon svg { width: 0.9rem; height: 0.9rem; fill: #fff; }
+    .stat-item .label { color: #666; }
+    .stat-item .num { color: #94070A; font-weight: bold; font-size: 1rem; margin-left: 0.3rem; }
+
+    .search-area { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
+    .search-area .recent { color: #999; font-size: 0.8rem; }
+    .search-box {
+        display: flex; align-items: center;
+        background-color: #fff; border: 1px solid #d9b0a8;
+        border-radius: 0.3rem; padding: 0.6rem 1rem;
+        width: 26rem;
+    }
+    .search-box input {
+        flex: 1; border: none; outline: none;
+        font-size: 0.95rem; font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        color: #333;
+    }
+    .search-box input::placeholder { color: #b0b0b0; }
+    .search-box svg { width: 1.2rem; height: 1.2rem; fill: #94070A; cursor: pointer; }
+
+    /* ========== 主体卡片 ========== */
+    .main-content { max-width: 95rem; margin: 2rem auto 3rem; padding: 0 3rem; }
+    .content-card {
+        background-color: #fff; border-radius: 0.5rem;
+        border: 1px solid #e8e8e8; padding: 2rem 2.5rem;
+    }
+
+    .tabs { display: flex; border-bottom: 1px solid #e8e8e8; margin-bottom: 1.5rem; }
+    .tab {
+        padding: 0.8rem 1.8rem; font-size: 0.95rem; color: #333;
+        cursor: pointer; border: none; background: none;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    }
+    .tab.active {
+        background-color: #94070A; color: #fff;
+        border-radius: 0.2rem 0.2rem 0 0;
+    }
+
+    .filter-row {
+        display: flex; align-items: center; gap: 0.8rem;
+        padding: 0.7rem 0;
+        border-bottom: 1px dashed #e8e8e8;
+        font-size: 0.9rem;
+    }
+    .filter-label { flex: 0 0 5rem; color: #94070A; }
+    .filter-options { flex: 1; display: flex; flex-wrap: wrap; gap: 0.4rem 0.5rem; }
+
+    .square-check-icon {
+        width: 1.6rem; height: 1.6rem;
+        background-color: #94070A; border-radius: 0.25rem;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; flex-shrink: 0;
+    }
+    .square-check-icon svg { width: 1rem; height: 1rem; fill: #fff; }
+
+    .filter-divider {
+        width: 1px; height: 1.2rem;
+        background-color: #d0d0d0; flex-shrink: 0;
+    }
+
+    .filter-options span {
+        padding: 0.25rem 0.6rem;
+        color: #333; cursor: pointer; border-radius: 0.2rem;
+        display: flex; align-items: center;
+    }
+    .filter-options span.active { background-color: #94070A; color: #fff; }
+    .filter-options span:hover:not(.active) { color: #94070A; }
+
+    .letter-options { gap: 0; }
+    .letter-options span {
+        padding: 0.2rem 0.7rem;
+        border-right: 1px solid #e8e8e8;
+        border-radius: 0;
+    }
+    .letter-options span:last-child { border-right: none; }
+    .letter-options span.active { background-color: #94070A; color: #fff; }
+
+    .sort-row {
+        display: inline-flex;
+        border: 1px solid #e8e8e8;
+        border-radius: 0.3rem;
+        margin: 1.5rem 0;
+        overflow: hidden;
+    }
+    .sort-btn {
+        padding: 0.55rem 1.2rem;
+        background-color: #fff; border: none;
+        border-right: 1px solid #e8e8e8;
+        font-size: 0.9rem; color: #333; cursor: pointer;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        display: flex; align-items: center; gap: 0.4rem;
+        transition: all 0.3s;
+    }
+    .sort-btn:last-child { border-right: none; }
+    .sort-btn:hover { background-color: #fafafa; color: #94070A; }
+    .sort-arrow { display: flex; flex-direction: column; gap: 0.05rem; }
+    .sort-arrow .up,
+    .sort-arrow .down {
+        width: 0; height: 0;
+        border-left: 0.28rem solid transparent;
+        border-right: 0.28rem solid transparent;
+        cursor: pointer;
+    }
+    .sort-arrow .up { border-bottom: 0.35rem solid #bbb; }
+    .sort-arrow .down { border-top: 0.35rem solid #bbb; }
+    .sort-btn:hover .sort-arrow .up { border-bottom-color: #94070A; }
+    .sort-btn:hover .sort-arrow .down { border-top-color: #94070A; }
+
+    .cards-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+    .service-card {
+        background-color: #fafafa;
+        border: 1px solid #e8e8e8; border-radius: 0.4rem;
+        padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;
+        cursor: pointer; transition: all 0.3s;
+        position: relative; text-decoration: none; color: inherit;
+    }
+    .service-card:hover {
+        border-color: #94070A;
+        box-shadow: 0 0.5rem 1.5rem rgba(148,7,10,0.1);
+        transform: translateY(-0.2rem);
+    }
+    .fav {
+        position: absolute; top: 0.8rem; right: 0.8rem;
+        width: 1.6rem; height: 1.6rem;
+        background-color: #94070A; border-radius: 0.25rem;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+    }
+    .fav svg { width: 1rem; height: 1rem; fill: #fff; }
+
+    .service-card .card-icon {
+        width: 3rem; height: 3rem;
+        background-color: #fbe5e5; border-radius: 0.3rem;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .service-card .card-icon svg { width: 1.6rem; height: 1.6rem; fill: #94070A; }
+    .service-card .card-title { font-size: 1rem; color: #333; line-height: 1.4; }
+    .service-card .card-dept { font-size: 0.85rem; color: #999; }
+
+    .pagination {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 2rem 0 0; font-size: 0.9rem; color: #333;
+    }
+    .pagination-left { display: flex; align-items: center; gap: 0.6rem; }
+    .pagination-left select {
+        padding: 0.4rem 0.6rem; font-size: 0.9rem;
+        border: 1px solid #d0d0d0; border-radius: 0.2rem;
+        background-color: #fff; outline: none; cursor: pointer;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    }
+    .pagination-right { display: flex; align-items: center; gap: 0.5rem; }
+    .pagination-right .jump-input {
+        width: 3.5rem; padding: 0.4rem 0.5rem; text-align: center;
+        font-size: 0.9rem; border: 1px solid #d0d0d0;
+        border-radius: 0.2rem; outline: none;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    }
+    .page-btn {
+        padding: 0.4rem 0.9rem; font-size: 0.9rem;
+        border: 1px solid #d0d0d0; border-radius: 0.2rem;
+        background-color: #fff; color: #333; cursor: pointer;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        transition: all 0.3s;
+    }
+    .page-btn:hover:not(.disabled):not(.active) { border-color: #94070A; color: #94070A; }
+    .page-btn.active {
+        background-color: #94070A; color: #fff;
+        border-color: #94070A; cursor: default;
+    }
+    .page-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-left">
+        <img src="assets/haigao-logo.jpg" alt="Logo">
+        <div class="logo-text">
+            <span class="zh">海林市高级中学校友（新海高人）</span>
+            <span class="en">Hailin Senior High School Alumni Association</span>
+        </div>
+        <span class="system-name-big">用户电子身份服务系统</span>
+    </div>
+
+    <!-- ★ 右上角用户信息，id 用于 JS 自动填充 -->
+    <div class="topbar-user">
+        <div class="user-avatar" id="userAvatar">—</div>
+        <span id="userName">—</span>
+    </div>
+</header>
+
+<div class="banner-wrapper">
+    <div class="banner">
+        <div class="banner-inner">
+            <div class="stat-card">
+                <div class="stat-item">
+                    <div class="icon"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg></div>
+                    <span class="label">正在办理中的事项</span><span class="num">0</span>
+                </div>
+                <div class="stat-item">
+                    <div class="icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l4.59-4.58L18 11l-6 6z"/></svg></div>
+                    <span class="label">办结事项</span><span class="num">2</span>
+                </div>
+                <div class="stat-item">
+                    <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
+                    <span class="label">待我评价</span><span class="num">2</span>
+                </div>
+            </div>
+            <div class="search-area">
+                <span class="recent">最近搜索：当前没有搜索记录</span>
+                <div class="search-box">
+                    <input type="text" placeholder="搜索您需要的服务 / Search Service">
+                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="content-card">
+
+        <div class="tabs">
+            <button class="tab active">服务列表</button>
+            <button class="tab">我的收藏</button>
+        </div>
+
+        <div class="filter-row">
+            <span class="filter-label">服务分类</span>
+            <div class="filter-options">
+                <span class="active">全部</span>
+                <span>综合办公</span>
+                <span>校友事务</span>
+                <span>信息服务</span>
+                <span>活动报名</span>
+                <span>其它</span>
+            </div>
+        </div>
+
+        <div class="filter-row">
+            <span class="filter-label">项目名称</span>
+            <div class="square-check-icon" title="全部">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <div class="filter-divider"></div>
+            <div class="filter-options letter-options">
+                <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span>
+                <span>G</span><span>H</span><span>I</span><span>J</span><span>K</span><span>L</span>
+                <span>M</span><span>N</span><span>O</span><span>P</span><span>Q</span><span>R</span>
+                <span>S</span><span>T</span><span>U</span><span>V</span><span>W</span><span>X</span>
+                <span>Y</span><span>Z</span>
+            </div>
+        </div>
+
+        <div class="sort-row">
+            <button class="sort-btn">默认排序<span class="sort-arrow"><span class="up"></span><span class="down"></span></span></button>
+            <button class="sort-btn">拼音<span class="sort-arrow"><span class="up"></span><span class="down"></span></span></button>
+            <button class="sort-btn">申请数<span class="sort-arrow"><span class="up"></span><span class="down"></span></span></button>
+        </div>
+
+        <div class="cards-grid">
+            <a href="card.html" class="service-card">
+                <span class="fav" title="收藏">
+                    <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </span>
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                </div>
+                <div class="card-title">电子校友卡申领</div>
+                <div class="card-dept">校友会秘书处</div>
+            </a>
+        </div>
+
+        <div class="pagination">
+            <div class="pagination-left">
+                每页显示
+                <select><option>20</option><option>30</option><option>50</option></select>
+                条　当前第 1 - 20 条 共计 43 条
+            </div>
+            <div class="pagination-right">
+                到第 <input type="text" class="jump-input" value="1"> 页
+                <button class="page-btn">跳转</button>
+                <button class="page-btn disabled">上一页</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">下一页</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ============================================================
+     ★ 部署时：把下面 userInfo 换成后端返回的用户数据即可 ★
+     例如从 localStorage 或接口获取：
+     userInfo = { name: '王德越' }
+     ============================================================ -->
+<script>
+    // 假设这是后端返回的当前登录用户信息
+    const userInfo = {
+        name: '王德越'   // 换成真实登录用户的姓名
+    };
+
+    // 自动填充右上角头像（取姓名最后一个字）和用户名
+    const avatarEl = document.getElementById('userAvatar');
+    const nameEl = document.getElementById('userName');
+
+    if (userInfo.name) {
+        // 头像显示姓名的最后一个字
+        avatarEl.textContent = userInfo.name.slice(-1);
+        // 用户名前面加 *，模拟脱敏显示
+        nameEl.textContent = '*' + userInfo.name;
+    } else {
+        avatarEl.textContent = '?';
+        nameEl.textContent = '未登录';
+    }
+</script>
+
+</body>
+</html>
