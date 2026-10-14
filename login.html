@@ -6,14 +6,14 @@
 <title>校友内网门户 - 海林市高级中学校友（新海高人）</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: 1.25vw; }
+    html { font-size: clamp(12px, 1.25vw, 16px); }
     body {
         font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
         background: linear-gradient(135deg, #94070A 0%, #c41e22 40%, #e85d5d 100%);
         min-height: 100vh;
         display: flex; flex-direction: column;
-        align-items: center; justify-content: center;
-        padding: 3rem; position: relative; overflow: hidden;
+        align-items: center; justify-content: flex-start;
+        padding: 3rem 2rem;
     }
     body::before {
         content: ''; position: absolute; top: 0; left: 0;
@@ -23,7 +23,7 @@
             radial-gradient(circle at 80% 70%, rgba(255,255,255,0.06) 0%, transparent 50%);
         pointer-events: none;
     }
-    .login-header { display: flex; align-items: center; justify-content: center; gap: 1.8rem; margin-bottom: 3rem; position: relative; z-index: 1; }
+    .login-header { display: flex; align-items: center; justify-content: center; gap: 1.8rem; margin: auto 0 3rem 0; position: relative; z-index: 1; }
     .login-header .logo-circle { height: 6rem; width: 6rem; object-fit: contain; border-radius: 50%; filter: drop-shadow(0 0.3rem 0.6rem rgba(0,0,0,0.3)); }
     .login-header .logo-text-area { display: flex; flex-direction: column; justify-content: center; color: #ffffff; white-space: nowrap; }
     .login-header .logo-text-area .zh { font-size: 1.6rem; font-weight: normal; line-height: 1.4; letter-spacing: 0.05rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
@@ -47,7 +47,7 @@
     .trust-browser input[type="checkbox"] { margin-top: 0.25rem; accent-color: #94070A; transform: scale(1.2); }
     .login-btn { width: 100%; padding: 1.2rem; font-size: 1.2rem; font-weight: normal; color: #ffffff; background: linear-gradient(135deg, #94070A 0%, #c41e22 100%); border: none; border-radius: 0.5rem; cursor: pointer; letter-spacing: 0.15rem; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
     .login-btn:hover { background: linear-gradient(135deg, #c41e22 0%, #94070A 100%); box-shadow: 0 0.5rem 1.5rem rgba(148,7,10,0.4); }
-    .login-footer { margin-top: 3rem; display: flex; justify-content: center; align-items: center; font-size: 1rem; color: rgba(255,255,255,0.85); position: relative; z-index: 1; }
+    .login-footer { margin: auto 0 0 0; display: flex; justify-content: center; align-items: center; font-size: 1rem; color: rgba(255,255,255,0.85); position: relative; z-index: 1; }
     .footer-contact { display: flex; align-items: center; gap: 0.5rem; }
     .footer-contact svg { width: 1.1rem; height: 1.1rem; fill: #fff; }
     .footer-contact a { color: rgba(255,255,255,0.85); text-decoration: none; }
@@ -75,14 +75,14 @@
         <svg class="arrow-icon" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
         校友内网门户
     </p>
-    <form>
+    <form autocomplete="off">
         <div class="form-group">
             <label>用户名</label>
-            <input type="text" placeholder="用户名 / 电话号 / 校友电子卡号">
+            <input type="text" placeholder="用户名 / 电话号 / 校友电子卡号" autocomplete="off">
         </div>
         <div class="form-group">
             <label>密码</label>
-            <input type="password" placeholder="密码">
+            <input type="password" placeholder="密码" autocomplete="new-password">
             <div class="form-links">
                 <a href="register.html">校友注册</a>
                 <span class="link-divider">|</span>

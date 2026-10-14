@@ -6,14 +6,14 @@
 <title>校友注册（第二步） - 海林市高级中学校友（新海高人）</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: 1.25vw; }
-    body { font-family: "Microsoft YaHei", "微软雅黑", sans-serif; background: linear-gradient(135deg, #94070A 0%, #c41e22 40%, #e85d5d 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; }
-    .register-header { display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-bottom: 2.5rem; }
+    html { font-size: clamp(12px, 1.25vw, 16px); }
+    body { font-family: "Microsoft YaHei", "微软雅黑", sans-serif; background: linear-gradient(135deg, #94070A 0%, #c41e22 40%, #e85d5d 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 3rem 2rem; }
+    .register-header { display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin: auto 0 2.5rem 0; }
     .register-header .logo-circle { height: 5rem; width: 5rem; object-fit: contain; border-radius: 50%; filter: drop-shadow(0 0.3rem 0.6rem rgba(0,0,0,0.3)); }
     .register-header .logo-text-area { display: flex; flex-direction: column; justify-content: center; color: #ffffff; white-space: nowrap; }
     .register-header .logo-text-area .zh { font-size: 1.5rem; font-weight: normal; line-height: 1.4; letter-spacing: 0.05rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
     .register-header .logo-text-area .en { font-size: 0.9rem; font-weight: normal; line-height: 1.4; margin-top: 0.1rem; opacity: 0.9; letter-spacing: 0.02rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
-    .register-card { width: 100%; max-width: 50rem; background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%); border-radius: 0.5rem; box-shadow: 0 1rem 3rem rgba(0,0,0,0.25); padding: 3rem 4rem 4rem; }
+    .register-card { width: 100%; max-width: 50rem; background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%); border-radius: 0.5rem; box-shadow: 0 1rem 3rem rgba(0,0,0,0.25); padding: 3rem 4rem 4rem; margin-bottom: auto; }
     .form-row { display: flex; align-items: flex-start; margin-bottom: 0.8rem; }
     .form-label { flex: 0 0 8rem; text-align: right; font-size: 1rem; color: #333; padding-top: 0.9rem; padding-right: 1rem; }
     .form-label .required { color: #d8000c; margin-right: 0.2rem; }
@@ -48,17 +48,17 @@
 
     <div class="form-row">
         <div class="form-label"><span class="required">*</span>用户名</div>
-        <div class="form-input-area"><input type="text" id="username" placeholder="请输入用户名"></div>
+        <div class="form-input-area"><input type="text" id="username" placeholder="请输入用户名" autocomplete="off"></div>
     </div>
 
     <div class="form-row">
         <div class="form-label"><span class="required">*</span>密码</div>
-        <div class="form-input-area"><input type="password" id="password" placeholder="请输入密码"></div>
+        <div class="form-input-area"><input type="password" id="password" placeholder="请输入密码" autocomplete="new-password"></div>
     </div>
 
     <div class="form-row">
         <div class="form-label"><span class="required">*</span>确认密码</div>
-        <div class="form-input-area"><input type="password" id="confirmPassword" placeholder="请再次输入密码"></div>
+        <div class="form-input-area"><input type="password" id="confirmPassword" placeholder="请再次输入密码" autocomplete="new-password"></div>
     </div>
 
     <div class="form-row">
