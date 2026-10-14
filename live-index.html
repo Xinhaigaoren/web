@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>海林市高级中学校友（新海高人）官方网站</title>
+  <meta name="description" content="海林市高级中学校友（新海高人）官方网站，连接母校、凝聚校友、服务社会。" />
+  <meta name="keywords" content="海林市高级中学,海高校友会,校友会,海林高中" />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://xinhaigaoren.github.io/web/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="海林市高级中学校友（新海高人）" />
+  <meta property="og:description" content="连接母校、凝聚校友、服务社会的海林市高级中学校友平台。" />
+  <meta property="og:url" content="https://xinhaigaoren.github.io/web/" />
+  <meta property="og:image" content="https://xinhaigaoren.github.io/web/assets/haigao-logo.jpg" />
+  <link rel="preconnect" href="https://hailin-alumni-api.onrender.com" crossorigin />
+  <link rel="stylesheet" href="style.css?v=20261013" />
+  <script src="config.js?v=20261013"></script>
+<style>
+/* =========================================
+   新导航栏样式（北大红水墨渐变版）
+   说明：html 基准字号 1.25vw，全站按比例缩放；
+   body 顶部留白 8rem 给 fixed 导航栏
+   ========================================= */
+html { font-size: 1.25vw; }
+body { padding-top: 8rem; }
+
+.top-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 8rem;
+    background: linear-gradient(
+        to bottom,
+        rgba(148, 7, 10, 0.95) 0%,
+        rgba(148, 7, 10, 0.7) 40%,
+        rgba(148, 7, 10, 0.2) 80%,
+        rgba(148, 7, 10, 0) 100%
+    );
+    display: flex;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.nav-container {
+    width: 100%;
+    max-width: 95rem;
+    height: 100%;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    z-index: 10;
+}
+
+/* 左侧 LOGO 与文字 */
+.nav-logo {
+    display: flex;
+    align-items: center;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-right: 3rem;
+}
+.nav-logo img {
+    height: 4rem;
+    width: auto;
+    margin-right: 0.8rem;
+    border-radius: 50%;
+    object-fit: contain;
+    transition: transform 0.3s;
+}
+.nav-logo:hover img { transform: scale(1.05); }
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.logo-text .zh {
+    font-size: 1.1rem;
+    font-weight: 500;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    line-height: 1.4;
+    letter-spacing: 0.03rem;
+    white-space: nowrap;
+}
+.logo-text .en {
+    font-size: 0.7rem;
+    opacity: 0.85;
+    margin-top: 0.1rem;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    line-height: 1.4;
+    letter-spacing: 0.01rem;
+    white-space: nowrap;
+}
+
+/* 右侧整体打包，紧贴屏幕右侧 */
+.nav-right-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-left: auto;
+}
+.nav-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.8rem;
+}
+
+/* 右上角工具栏 */
+.top-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    white-space: nowrap;
+}
+.top-tools a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.top-tools a:hover {
+    color: #fff;
+    text-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.5);
+}
+.tool-divider {
+    width: 0.0625rem;
+    height: 0.8rem;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+.top-tools a.webvpn { position: relative; }
+.top-tools a.webvpn::after {
+    content: 'VPN';
+    position: absolute;
+    top: -0.4rem;
+    right: -0.8rem;
+    font-size: 0.45rem;
+    background: #4a6cf7;
+    padding: 0.0625rem 0.1875rem;
+    border-radius: 0.125rem;
+    transform: scale(0.8);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.top-tools a.webvpn:hover::after { opacity: 1; }
+.search-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+    fill: currentColor;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.search-icon:hover {
+    fill: #fff;
+    transform: scale(1.1);
+}
+
+/* 右下角主菜单 */
+.main-menu {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    white-space: nowrap;
+}
+.main-menu a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.03rem;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding-bottom: 0.2rem;
+}
+.main-menu a::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0;
+    height: 0.125rem;
+    background-color: #fff;
+    transition: width 0.3s ease;
+    border-radius: 0.125rem;
+}
+.main-menu a:hover::after { width: 100%; }
+.main-menu a:hover { text-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.3); }
+.arrow-down {
+    width: 0.7rem;
+    height: 0.7rem;
+    fill: rgba(255, 255, 255, 0.7);
+    transition: transform 0.3s;
+}
+.main-menu a:hover .arrow-down {
+    transform: rotate(180deg);
+    fill: #fff;
+}
+
+/* 三条横线（汉堡菜单） */
+.hamburger-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 1.6rem;
+    height: 1rem;
+    cursor: pointer;
+    margin-left: 0.5rem;
+    transition: opacity 0.3s;
+    flex-shrink: 0;
+}
+.hamburger-menu:hover { opacity: 0.8; }
+.hamburger-line {
+    width: 100%;
+    height: 0.16rem;
+    background-color: #fff;
+    border-radius: 0.08rem;
+}
+</style>
+</head>
+<body>
+<header class="top-navbar">
+    <div class="nav-container">
+        <!-- 左侧 Logo 区域 -->
+        <!-- Logo 图片替换处：当前使用网站原 Logo assets/haigao-logo.jpg，替换时改这里即可 -->
+        <a href="index.html" class="nav-logo">
+            <img src="assets/haigao-logo.jpg" alt="海林市高级中学校友会 Logo">
+            <div class="logo-text">
+                <span class="zh">海林市高级中学校友（新海高人）</span>
+                <span class="en">Hailin Senior High School Alumni Association</span>
+            </div>
+        </a>
+
+        <!-- 右侧所有内容打包，紧贴屏幕右侧 -->
+        <div class="nav-right-wrapper">
+            <div class="nav-right">
+                <!-- 右上角工具栏 -->
+                <div class="top-tools">
+                    <a href="index.html">访客</a>
+                    <a href="donate.html">赞助</a>
+                    <a href="jobs.html">招聘</a>
+                    <a href="https://webvpn.example.com" target="_blank" class="webvpn">内网</a>
+                    <a href="mailto:xinhaigaoren@126.com">邮箱</a>
+                    <div class="tool-divider"></div>
+                    <a href="#">🌐 English</a>
+                    <svg class="search-icon" viewBox="0 0 24 24">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                </div>
+
+                <!-- 右下角主菜单 -->
+                <nav class="main-menu">
+                    <a href="news.html">新海高人新闻网</a>
+                    <a href="about.html">
+                        新海高人概况
+                        <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </a>
+                    <a href="directory.html">校友联络</a>
+                    <a href="donate.html">回馈母校</a>
+                    <a href="#">
+                        媒体平台
+                        <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </a>
+                    <a href="#services">
+                        校友服务
+                        <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- 三条横线（紧贴主菜单） -->
+            <div class="hamburger-menu">
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+            </div>
+        </div>
+    </div>
+</header>
+
+  <a class="skip-link" href="#main">跳转到正文</a>
+
+  
+
+  <main id="main">
+    <section class="hero" aria-label="网站主视觉">
+      <div class="hero-media" id="heroMedia" role="img" aria-label="海林校园与雪林意象的抽象背景"></div>
+      <div class="hero-overlay"></div>
+      <div class="container hero-content">
+        <p class="eyebrow">连接母校 · 凝聚校友 · 服务社会</p>
+        <h1 data-section="home_hero" data-field="title">三年风雨同舟<br />归来仍是少年</h1>
+        <p class="hero-lead" data-section="home_hero" data-field="subtitle">这里是海林市高级中学校友共同的精神家园，记录母校发展，发布校友资讯，组织返校活动，搭建互助交流平台。</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="about.html">了解新海高人</a>
+          <a class="btn ghost" href="#news">查看最新动态</a>
+        </div>
+      </div>
+      <div class="hero-card" aria-label="校友会数据概览">
+        <div><strong data-section="home_stats" data-field="founded">1954</strong><span>办学积淀</span></div>
+        <div><strong data-section="home_stats" data-field="alumni">30k+</strong><span>校友网络</span></div>
+        <div><strong data-section="home_stats" data-field="regions">12</strong><span>地区联络站</span></div>
+      </div>
+    </section>
+
+    <section class="notice-bar" aria-label="公告">
+      <div class="container notice-inner">
+        <strong>公告</strong>
+        <a href="#events" data-section="home_notice" data-field="text">2026年校友返校日筹备启动，欢迎各届校友报名参与志愿服务。</a>
+      </div>
+    </section>
+
+    <section class="section glory-wall reveal" id="glory" aria-label="数据荣耀墙">
+      <div class="container">
+        <p class="section-kicker">Data Wall</p>
+        <h2 data-section="home_glory" data-field="title">数据荣耀墙</h2>
+        <div class="glory-grid">
+          <div class="glory-item"><strong data-section="home_glory" data-field="stat1_num">1954</strong><span data-section="home_glory" data-field="stat1_label">建校年份 · 薪火相传</span></div>
+          <div class="glory-item"><strong data-section="home_glory" data-field="stat2_num">30k+</strong><span data-section="home_glory" data-field="stat2_label">累计校友注册人数</span></div>
+          <div class="glory-item"><strong data-section="home_glory" data-field="stat3_num">12</strong><span data-section="home_glory" data-field="stat3_label">覆盖全国校友分会</span></div>
+          <div class="glory-item"><strong data-section="home_glory" data-field="stat4_num">100+</strong><span data-section="home_glory" data-field="stat4_label">年度校友活动场次</span></div>
+          <div class="glory-item"><strong data-section="home_glory" data-field="stat5_num">∞</strong><span data-section="home_glory" data-field="stat5_label">校友情谊 · 历久弥新</span></div>
+          <div class="glory-item"><strong data-section="home_glory" data-field="stat6_num">5,000+</strong><span data-section="home_glory" data-field="stat6_label">校友企业带动就业</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section about reveal" id="about">
+      <div class="container two-col">
+        <div>
+          <p class="section-kicker">About Association</p>
+          <h2 data-section="home_about" data-field="title">新海高人概况</h2>
+          <p data-section="home_about" data-field="content">海林市高级中学校友（新海高人）以“联络校友、服务校友、回馈母校、助力家乡”为宗旨，持续建设跨届别、跨行业、跨地域的校友共同体。</p>
+        </div>
+        <div class="about-grid" data-section="home_about_body">
+          <article>
+            <h3 data-field="box1_title">组织联络</h3>
+            <p data-field="box1_content">建设年级、地区、行业联络体系，方便校友快速找到同窗与母校资源。</p>
+          </article>
+          <article>
+            <h3 data-field="box2_title">活动平台</h3>
+            <p data-field="box2_content">发布返校日、论坛、班级聚会、志愿服务等活动信息。</p>
+          </article>
+          <article>
+            <h3 data-field="box3_title">校友互助</h3>
+            <p data-field="box3_content">提供职业交流、创业合作、公益项目与 mentor 计划。</p>
+          </article>
+          <article>
+            <h3 data-field="box4_title">支持母校</h3>
+            <p data-field="box4_content">凝聚校友力量，支持奖助学金、校园建设和教育发展项目。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section news-section reveal" id="news">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">News</p>
+            <h2>新闻动态</h2>
+          </div>
+          <a class="more-link" href="news.html">更多新闻 →</a>
+        </div>
+
+        <div class="news-layout">
+          <article class="feature-news" id="homeNewsFeature">
+            <div class="feature-img"></div>
+            <div class="feature-body">
+              <time datetime="2026-06-17">2026.06.17</time>
+              <h3>海林市高级中学校友（新海高人）官方网站试运行</h3>
+              <p>网站将逐步开放校友认证、活动报名、校友故事投稿和公益项目展示等功能。</p>
+            </div>
+          </article>
+
+          <div class="news-list" id="homeNewsList" aria-label="新闻列表">
+            <a href="news.html">
+              <time>2026.06.10</time>
+              <span>校友会筹备组召开线上工作会议</span>
+            </a>
+            <a href="news.html">
+              <time>2026.05.28</time>
+              <span>“薪火相传”优秀校友访谈计划启动</span>
+            </a>
+            <a href="news.html">
+              <time>2026.05.16</time>
+              <span>毕业二十周年返校活动报名通道开放</span>
+            </a>
+            <a href="news.html">
+              <time>2026.04.30</time>
+              <span>海高校友公益奖学金项目进入征集阶段</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section events reveal" id="events">
+      <div class="container">
+        <div class="campus-head">
+          <div>
+            <p class="section-kicker">Events</p>
+            <h2>校园看点</h2>
+          </div>
+          <a class="more-link" href="events.html">活动日历 →</a>
+        </div>
+        <div class="campus-cards" id="homeEvents">
+          <a class="campus-card" href="events.html">
+            <div class="campus-cover" style="background:linear-gradient(135deg, rgba(166,27,41,.82), rgba(196,30,58,.5)), radial-gradient(circle at 80% 20%, rgba(201,169,97,.35), transparent 40%);"><span class="campus-tag">宣讲</span></div>
+            <div class="campus-body">
+              <h3>新海高人大讲堂：从林海走向星辰</h3>
+              <p>邀请杰出校友讲述从海林走向更大舞台的成长故事。</p>
+              <div class="campus-meta"><span>10 月 · 海林</span><span class="campus-link">报名 →</span></div>
+            </div>
+          </a>
+          <a class="campus-card" href="events.html">
+            <div class="campus-cover" style="background:linear-gradient(135deg, rgba(166,27,41,.82), rgba(196,30,58,.5)), radial-gradient(circle at 20% 80%, rgba(201,169,97,.35), transparent 40%);"><span class="campus-tag">读书</span></div>
+            <div class="campus-body">
+              <h3>真人图书馆：老校友口述校史</h3>
+              <p>聆听老校友讲述海高岁月，让校史在对话中鲜活。</p>
+              <div class="campus-meta"><span>11 月 · 线上</span><span class="campus-link">报名 →</span></div>
+            </div>
+          </a>
+          <a class="campus-card" href="events.html">
+            <div class="campus-cover" style="background:linear-gradient(135deg, rgba(166,27,41,.82), rgba(196,30,58,.5)), radial-gradient(circle at 50% 50%, rgba(201,169,97,.3), transparent 45%);"><span class="campus-tag">展览</span></div>
+            <div class="campus-body">
+              <h3>新海高人百年：校友影像展</h3>
+              <p>跨越时代的校园光影，见证海高百年变迁。</p>
+              <div class="campus-meta"><span>12 月 · 海林</span><span class="campus-link">报名 →</span></div>
+            </div>
+          </a>
+          <a class="campus-card" href="events.html">
+            <div class="campus-cover" style="background:linear-gradient(135deg, rgba(166,27,41,.82), rgba(196,30,58,.5)), radial-gradient(circle at 30% 70%, rgba(201,169,97,.35), transparent 40%);"><span class="campus-tag">体育</span></div>
+            <div class="campus-body">
+              <h3>林海杯校友篮球联赛</h3>
+              <p>以球会友，重温并肩作战的青春热血。</p>
+              <div class="campus-meta"><span>2027 春 · 海林</span><span class="campus-link">报名 →</span></div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section social-feed reveal" id="social" aria-label="社交媒体">
+      <div class="container">
+        <p class="section-kicker">Follow Us @Social Media</p>
+        <h2>关注社交媒体上的我们</h2>
+        <div class="social-grid">
+          <div class="social-card">
+            <div class="social-icon wechat" aria-hidden="true">微</div>
+            <h3>微信公众号</h3>
+            <p>校友资讯、活动预告、母校动态第一时间推送。</p>
+            <span class="social-handle">海林市高级中学校友会</span>
+          </div>
+          <div class="social-card">
+            <div class="social-icon douyin" aria-hidden="true">抖</div>
+            <h3>抖音</h3>
+            <p>校友风采短视频与活动纪实，看见新海高人的故事。</p>
+            <span class="social-handle">新海高人</span>
+          </div>
+          <div class="social-card">
+            <div class="social-icon bilibili" aria-hidden="true">B</div>
+            <h3>哔哩哔哩</h3>
+            <p>校友访谈、校史专题与活动回放视频库。</p>
+            <span class="social-handle">新海高人校友会</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section services reveal" id="services">
+      <div class="container service-wrap">
+        <div>
+          <p class="section-kicker">Services</p>
+          <h2 data-section="home_services" data-field="title">校友服务</h2>
+          <p data-section="home_services" data-field="subtitle">为校友提供认证、联络、活动、合作、公益与母校信息服务。</p>
+        </div>
+        <div class="service-list" data-section="home_services_body">
+          <a href="directory.html"><span>01</span>校友名录查询</a>
+          <a href="events.html"><span>02</span>活动报名与志愿者招募</a>
+          <a href="companies.html"><span>03</span>校友企业黄页</a>
+          <a href="contact.html"><span>04</span>地区联络站和地区联络人</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section join reveal" id="join">
+      <div class="container join-card">
+        <div>
+          <p class="section-kicker">Support Us</p>
+          <h2 data-section="home_join" data-field="title">支持母校，共筑未来</h2>
+          <p>校友可通过公益捐赠支持奖助学金、校园建设和教育发展项目，涓滴成河，凝聚海高力量。</p>
+          <p>有意参与的校友请通过<a href="contact.html" style="color:var(--accent);font-weight:700">联系方式</a>与我们取得联系。</p>
+        </div>
+        <div class="join-actions">
+          <a class="btn primary" href="donate.html">了解捐赠项目 →</a>
+          <a class="btn ghost" href="contact.html">联系我们</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contact">
+    <div class="container footer-grid">
+      <div>
+        <h2>海林市高级中学校友（新海高人）</h2>
+        <p>以校友情谊为纽带，以服务母校为使命。</p>
+      </div>
+      <div>
+        <h3>联系方式</h3>
+        <p>邮箱：xinhaigaoren@126.com</p>
+        <p>地址：黑龙江省牡丹江市海林市</p>
+      </div>
+      <div>
+        <h3>常用入口</h3>
+        <a href="directory.html">校友名录</a>
+        <a href="news.html">新闻公告</a>
+        <a href="events.html">活动报名</a>
+        <a href="jobs.html">新海高人招聘</a>
+        <a href="map.html">校友地图</a>
+        <a href="privacy.html">隐私政策</a>
+        <a href="terms.html">用户协议</a>
+        <a href="companies.html">校友企业</a>
+      </div>
+      <div>
+        <h3>关注我们</h3>
+        <div class="footer-qr">
+          <div class="footer-qr-box"><div class="qr">公众号<br />二维码<br />敬请期待</div><small>微信公众号</small></div>
+          <div class="footer-qr-box"><div class="qr">抖音<br />二维码<br />敬请期待</div><small>抖音号</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="container copyright">
+      <span>© 2026 海林市高级中学校友（新海高人）. All Rights Reserved.</span>
+      <a href="#top">返回顶部 ↑</a>
+    </div>
+  </footer>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":"海林市高级中学校友（新海高人）","url":"https://xinhaigaoren.github.io/web/","logo":"https://xinhaigaoren.github.io/web/assets/haigao-logo.jpg"}
+</script>
+  <script src="site.js?v=20261013"></script>
+</body>
+</html>
