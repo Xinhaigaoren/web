@@ -244,8 +244,8 @@
 </div>
 
 <script>
-    /* 登录用户信息：从本地存储读取（登录/认证流程写入 alumniUser）
-       字段：{ name: 用户姓名, graduateYear: 离校年份, className: 在校期间班级, photoUrl: 照片地址 } */
+    /* 电子校友卡：优先从后端实时获取用户认证资料（需 alumniToken），失败时回退本地存储 */
+    const API_BASE_URL = 'https://hailin-alumni-api.onrender.com';
     function readUser() {
         try {
             const raw = localStorage.getItem('alumniUser');
@@ -254,7 +254,6 @@
             return null;
         }
     }
-    const alumniData = readUser() || {};
 
     /* 卡号：NO. + 离校年份 + 班级号 + 4 位随机数（如 NO.2018 1 1234 → NO.201811234） */
     function buildCardNumber(data) {
@@ -273,18 +272,38 @@
     const numberEl = document.getElementById('cardNumber');
     const photoEl = document.getElementById('cardPhoto');
 
-    if (alumniData && alumniData.name) {
-        nameEl.textContent = alumniData.name;
-        yearEl.textContent = alumniData.graduateYear || '—';
-        numberEl.textContent = buildCardNumber(alumniData);
-        if (alumniData.photoUrl) {
-            photoEl.src = alumniData.photoUrl;
-        }
-    } else {
-        nameEl.textContent = '—';
-        yearEl.textContent = '—';
-        numberEl.textContent = 'NO.————';
+    function applyCard(data) {
+        const has = data && data.name;
+        nameEl.textContent = has ? data.name : '—';
+        yearEl.textContent = has ? (data.graduateYear || '—') : '—';
+        numberEl.textContent = has ? buildCardNumber(data) : 'NO.————';
+        if (has && data.photoUrl) photoEl.src = data.photoUrl;
     }
+
+    (async () => {
+        const token = localStorage.getItem('alumniToken');
+        const local = readUser() || {};
+        if (!token) { applyCard(local); return; }
+        try {
+            const resp = await fetch(API_BASE_URL + '/api/alumni/me', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await resp.json();
+            if (resp.ok && (data.user || data.profile)) {
+                const u = data.user || {};
+                const p = data.profile || {};
+                const merged = {
+                    name: u.display_name || p.name || local.name || '',
+                    graduateYear: p.graduation_year || u.graduation_year || local.graduateYear || '',
+                    className: p.class_name || u.class_name || local.className || ''
+                };
+                localStorage.setItem('alumniUser', JSON.stringify(merged));
+                applyCard(merged);
+                return;
+            }
+        } catch (err) { /* 网络异常时回退本地 */ }
+        applyCard(local);
+    })();
 </script>
 
 </body>

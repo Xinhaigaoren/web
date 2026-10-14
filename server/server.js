@@ -239,16 +239,12 @@ async function ensureZhangSuperAdmin() {
   }
 }
 
-// 一次性修复：主管理员密码统一重置为环境变量 ADMIN_PASSWORD（默认 Hailin@2026#Admin）。
-// 仅在 system_settings 表已存在后执行（在启动链中排在 ensureAdminSecurityTables 之后），
-// 写入标记后不再覆盖，用户之后自行修改的密码不会被后续部署/重启冲掉。
-async function ensureMainAdminPwdOnce() {
+// 主管理员密码同步：每次启动/部署时，将主管理员（zwxzwx861@qq.com / 18545372006）密码重置为环境变量 ADMIN_PASSWORD。
+// 说明：管理员密码只存放在 Render 环境变量中（不在任何页面/代码里显示），
+// 在 Render Dashboard -> Environment 中设置 ADMIN_PASSWORD 即为登录密码。
+async function ensureMainAdminPwd() {
   if (!pool) return;
   try {
-    const flag = await dbQuery(
-      `select value from public.system_settings where key='main_admin_pwd_forced' limit 1`
-    ).catch(() => ({ rows: [] }));
-    if (flag.rows && flag.rows[0]) return;
     const email = 'zwxzwx861@qq.com';
     const forceHash = await bcrypt.hash(ADMIN_PASSWORD || 'Hailin@2026#Admin', 10);
     await dbQuery(
@@ -261,11 +257,7 @@ async function ensureMainAdminPwdOnce() {
        where user_id in (select id from public.app_users where lower(email)=lower($1) or phone=$1)`,
       [email]
     ).catch(() => {});
-    await dbQuery(
-      `insert into public.system_settings (key, value) values ('main_admin_pwd_forced','1')
-       on conflict (key) do update set value='1', updated_at=now()`
-    ).catch(() => {});
-  } catch (_) { /* 修复失败不影响启动 */ }
+  } catch (_) { /* 同步失败不影响启动 */ }
 }
 
 function signToken(user) {
@@ -3312,7 +3304,7 @@ async function ensureSitePagesSeed() {
   if (!pool) return;
   const pages = [
     { slug: 'home', title: '首页', description: '海林市高级中学校友（新海高人）官方网站首页' },
-    { slug: 'about', title: '校友会介绍', description: '海林市高级中学校友（新海高人）简介' },
+    { slug: 'about', title: '新海高人概况', description: '海林市高级中学校友（新海高人）简介' },
     { slug: 'news', title: '新闻公告', description: '校友会新闻与公告' },
     { slug: 'events', title: '活动中心', description: '校友会活动' },
     { slug: 'contact', title: '联系我们', description: '联系我们' },
@@ -3342,7 +3334,7 @@ async function ensureSiteSectionsSeed() {
     { page_slug: 'home', section_key: 'home_stats', section_name: '数据概览', content: { stats: [{ label: '校友会员', value: '0' }, { label: '活动组织', value: '0' }, { label: '服务母校', value: '0' }] } },
     { page_slug: 'home', section_key: 'home_figures', section_name: '校友论坛', content: { title: '校友论坛', subtitle: '校友交流互助，分享工作生活，重逢海高情谊。', items: [] } },
     { page_slug: 'home', section_key: 'home_services', section_name: '校友服务', content: { title: '校友服务', subtitle: '为校友提供更贴心的服务', items: [] } },
-    { page_slug: 'about', section_key: 'about_intro', section_name: '校友会介绍', content: { title: '校友会介绍', content: '' } },
+    { page_slug: 'about', section_key: 'about_intro', section_name: '新海高人概况', content: { title: '新海高人概况', content: '' } },
     { page_slug: 'about', section_key: 'about_contact', section_name: '联系方式', content: { email: 'xinhaigaoren@126.com', address: '黑龙江省牡丹江市海林市', phone: '' } },
     { page_slug: 'about', section_key: 'about_body', section_name: '介绍页正文', content: { html: '' } },
     { page_slug: 'contact', section_key: 'contact_info', section_name: '联系我们', content: { email: 'xinhaigaoren@126.com', address: '黑龙江省牡丹江市海林市', phone: '', wechat: '' } },
@@ -3441,7 +3433,7 @@ async function ensureHomeRename() {
     if (c.title === '加入海高校友会') c.title = '加入新海高人';
   });
   await patchSection('about_hero', (c) => {
-    if (c.title === '校友会介绍') c.title = '新海高人';
+    if (c.title === '校友会介绍') c.title = '新海高人概况';
   });
   // 概况四宫格改为后台可单独编辑：去掉旧的整段 HTML，回退到四个可编辑字段
   await patchSection('home_about_body', (c) => {
@@ -4324,7 +4316,7 @@ bootstrapSchema()
   .then(() => ensureAlumniProfileExtras())
   .then(() => ensureResetTables())
   .then(() => ensureAdminSecurityTables())
-  .then(() => ensureMainAdminPwdOnce())
+  .then(() => ensureMainAdminPwd())
   .then(() => ensurePhase2Tables())
   .then(() => ensureSitePagesSeed())
   .then(() => ensureSiteSectionsSeed())

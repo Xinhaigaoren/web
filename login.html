@@ -78,14 +78,14 @@
         <svg class="arrow-icon" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
         校友内网门户
     </p>
-    <form autocomplete="off">
+    <form autocomplete="off" id="loginForm">
         <div class="form-group">
             <label>用户名</label>
-            <input type="text" placeholder="用户名 / 电话号 / 校友电子卡号" autocomplete="off">
+            <input type="text" id="username" placeholder="用户名 / 电话号 / 校友电子卡号" autocomplete="off">
         </div>
         <div class="form-group">
             <label>密码</label>
-            <input type="password" placeholder="密码" autocomplete="new-password">
+            <input type="password" id="password" placeholder="密码" autocomplete="new-password">
             <div class="form-links">
                 <a href="register.html">校友注册</a>
                 <span class="link-divider">|</span>
@@ -96,7 +96,7 @@
             <input type="checkbox" id="trustBrowser">
             <label for="trustBrowser">本次登录使用信任浏览器访问校友内网门户时不必再输入账号密码（统一登录），为了您的账号安全，使用完请关闭本浏览器。</label>
         </div>
-        <button type="submit" class="login-btn">登 录</button>
+        <button type="submit" class="login-btn" id="loginBtn">登 录</button>
     </form>
 </div>
 
@@ -106,6 +106,43 @@
         <a href="mailto:xinhaigaoren@126.com">xinhaigaoren@126.com</a>
     </div>
 </div>
+
+<script>
+    const API_BASE_URL = 'https://hailin-alumni-api.onrender.com';
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!username || !password) { alert('请输入用户名和密码'); return; }
+        loginBtn.disabled = true;
+        loginBtn.textContent = '登录中...';
+        try {
+            const resp = await fetch(API_BASE_URL + '/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await resp.json();
+            if (!resp.ok) { alert(data.message || '登录失败'); return; }
+            localStorage.setItem('alumniToken', data.token);
+            localStorage.setItem('alumniUser', JSON.stringify({
+                name: data.user.name || '',
+                phone: data.user.phone || '',
+                email: data.user.email || '',
+                role: data.user.role || '',
+                status: data.user.status || ''
+            }));
+            location.href = 'member.html';
+        } catch (err) {
+            alert('网络异常，请稍后重试（' + err.message + '）');
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = '登 录';
+        }
+    });
+</script>
 
 </body>
 </html>

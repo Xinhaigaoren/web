@@ -57,10 +57,10 @@
 <div class="main-wrapper">
     <div class="reset-panel">
         <h1 class="reset-title">重置密码</h1>
-        <form>
+        <form id="resetForm">
             <div class="form-group">
-                <label>请输入证件号或用户名</label>
-                <input type="text" placeholder="用户名/电话号/校友电子卡号" autocomplete="off">
+                <label>请输入注册邮箱</label>
+                <input type="text" id="accountInput" placeholder="用户名/电话号/校友电子卡号（使用注册邮箱重置）" autocomplete="off">
             </div>
             <div class="captcha-row">
                 <input type="text" placeholder="图形验证码" id="captchaInput" autocomplete="off">
@@ -69,7 +69,15 @@
                     <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
                 </button>
             </div>
-            <button type="submit" class="submit-btn">确定</button>
+            <div class="form-group">
+                <label>新密码</label>
+                <input type="password" id="newPassword" placeholder="请输入新密码（至少 8 位）" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label>确认新密码</label>
+                <input type="password" id="confirmPassword" placeholder="请再次输入新密码" autocomplete="new-password">
+            </div>
+            <button type="submit" class="submit-btn" id="submitBtn">确定</button>
         </form>
     </div>
 </div>
@@ -80,18 +88,63 @@
 </div>
 
 <script>
+    const API_BASE_URL = 'https://hailin-alumni-api.onrender.com';
     const captchaImg = document.getElementById('captchaImg');
     const refreshBtn = document.getElementById('refreshBtn');
     const captchaChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let captchaText = '';
     function generateCaptcha() {
-        let captcha = '';
+        captchaText = '';
         for (let i = 0; i < 4; i++) {
-            captcha += captchaChars.charAt(Math.floor(Math.random() * captchaChars.length));
+            captchaText += captchaChars.charAt(Math.floor(Math.random() * captchaChars.length));
         }
-        captchaImg.textContent = captcha;
+        captchaImg.textContent = captchaText;
     }
     refreshBtn.addEventListener('click', generateCaptcha);
     captchaImg.addEventListener('click', generateCaptcha);
+    generateCaptcha();
+
+    document.getElementById('resetForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const account = document.getElementById('accountInput').value.trim();
+        const captcha = document.getElementById('captchaInput').value.trim();
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (captcha.toLowerCase() !== captchaText.toLowerCase()) { alert('图形验证码不正确，请重新输入'); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(account)) { alert('重置密码需使用注册邮箱，请输入您的注册邮箱地址'); return; }
+        if (!newPassword || newPassword.length < 8) { alert('新密码长度至少 8 位'); return; }
+        if (newPassword !== confirmPassword) { alert('两次输入的新密码不一致'); return; }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = '提交中...';
+        try {
+            // 1) 生成重置码（后端返回 8 位激活码）
+            const forgotResp = await fetch(API_BASE_URL + '/api/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: account })
+            });
+            const forgotData = await forgotResp.json();
+            if (!forgotResp.ok) { alert(forgotData.message || '获取重置码失败'); return; }
+            // 2) 使用激活码直接设置新密码
+            const resetResp = await fetch(API_BASE_URL + '/api/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: account, token: forgotData.reset_code, password: newPassword })
+            });
+            const resetData = await resetResp.json();
+            if (!resetResp.ok) { alert(resetData.message || '重置失败'); return; }
+            alert('密码重置成功！请使用新密码登录。');
+            location.href = 'login.html';
+        } catch (err) {
+            alert('网络异常，请稍后重试（' + err.message + '）');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '确定';
+        }
+    });
 </script>
 
 </body>

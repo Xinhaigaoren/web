@@ -222,7 +222,7 @@
                 <td class="value" id="f-graduateYear">-</td>
             </tr>
             <tr>
-                <td class="label">班级</td>
+                <td class="label">毕业班级</td>
                 <td class="value" id="f-major">-</td>
                 <td class="label">班主任老师</td>
                 <td class="value" id="f-teacher">-</td>
@@ -294,142 +294,128 @@
 
 <script>
 /* ============================================================
-   ★ 部署时把 alumniList 换成后端返回的真实数据即可 ★
+   校友审批后台：数据来自后端 API（需管理员登录 token）
    ============================================================ */
-const alumniList = [
-    {
-        name: '王德越', region: '国内', phone: '138****8888', email: 'wangdeyue@example.com',
-        username: 'wangdeyue', password: '************',
-        enrollYear: '2015', graduateYear: '2018',
-        major: '理科', teacher: '张老师',
-        remark: '本人系海林市高级中学 2018 届毕业生，现申请加入校友会。',
-        className: '高三（1）班', applyTime: '2026-10-14', status: '待审批'
-    },
-    {
-        name: '李思远', region: '国内', phone: '139****9999', email: 'lisiyuan@example.com',
-        username: 'lisiyuan', password: '************',
-        enrollYear: '2016', graduateYear: '2019',
-        major: '文科', teacher: '李老师',
-        remark: '本人系海林市高级中学 2019 届毕业生，现申请加入校友会。',
-        className: '高三（2）班', applyTime: '2026-10-13', status: '待审批'
-    },
-    {
-        name: '张小雅', region: '国内', phone: '137****7777', email: 'zhangxiaoya@example.com',
-        username: 'zhangxiaoya', password: '************',
-        enrollYear: '2017', graduateYear: '2020',
-        major: '理科', teacher: '王老师',
-        remark: '本人系海林市高级中学 2020 届毕业生，现申请加入校友会。',
-        className: '高三（3）班', applyTime: '2026-10-12', status: '待审批'
-    }
-];
+const API_BASE_URL = 'https://hailin-alumni-api.onrender.com';
+const adminToken = localStorage.getItem('adminToken');
+if (!adminToken) { location.href = 'admin-login.html'; }
 
-/* ============================================================
-   渲染表格 + 绑定点击事件（点击某行 → 审批表单显示对应信息）
-   ============================================================ */
 const tableBody = document.getElementById('tableBody');
+let applications = [];
 let selectedIndex = 0;
+let pageSize = 20;
 
+/* 从后端加载待审批列表 */
+async function loadApplications() {
+    try {
+        const resp = await fetch(API_BASE_URL + '/api/applications?status=pending', {
+            headers: { 'Authorization': 'Bearer ' + adminToken }
+        });
+        const data = await resp.json();
+        if (!resp.ok) { alert(data.message || '加载审批列表失败，请重新登录'); return; }
+        applications = data.applications || [];
+        renderTable();
+    } catch (err) {
+        alert('网络异常，无法加载审批列表（' + err.message + '）');
+    }
+}
+
+/* 渲染表格 */
 function renderTable() {
     tableBody.innerHTML = '';
-    alumniList.forEach((item, i) => {
+    const pageData = applications.slice(0, pageSize);
+    pageData.forEach((item, i) => {
         const tr = document.createElement('tr');
         tr.dataset.index = i;
+        const statusText = item.status === 'approved' ? '已通过' : (item.status === 'rejected' ? '已拒绝' : '待审批');
         tr.innerHTML = `
             <td>${i + 1}</td>
-            <td>${item.name}</td>
-            <td>${item.graduateYear} 届</td>
-            <td>${item.className}</td>
-            <td>${item.phone}</td>
-            <td>${item.applyTime}</td>
-            <td>${item.status}</td>
+            <td>${item.name || '-'}</td>
+            <td>${item.graduation_year ? item.graduation_year + ' 届' : '-'}</td>
+            <td>${item.class_name || '-'}</td>
+            <td>${item.phone || '-'}</td>
+            <td>${(item.created_at || '').slice(0, 10) || '-'}</td>
+            <td>${statusText}</td>
             <td>
                 <button class="approve-btn pass">通过</button>
                 <button class="approve-btn reject">拒绝</button>
             </td>
         `;
-        // 点击整行 → 审批表单切换为对应校友信息
         tr.addEventListener('click', (e) => {
-            // 如果点的是 通过/拒绝按钮，先不切换
             if (e.target.classList.contains('approve-btn')) return;
             selectRow(i);
         });
         tableBody.appendChild(tr);
     });
-    // 默认选中第一行
-    selectRow(0);
+    const totalCount = document.getElementById('totalCount');
+    totalCount.textContent = applications.length;
+    const pageRange = document.getElementById('pageRange');
+    pageRange.textContent = applications.length ? `1 - ${Math.min(pageSize, applications.length)}` : '0 - 0';
+    if (applications.length) selectRow(0); else clearForm();
 }
 
-/* ============================================================
-   选中某行 → 更新审批表单
-   ============================================================ */
+function clearForm() {
+    ['f-name', 'f-region', 'f-phone', 'f-email', 'f-username', 'f-password', 'f-enrollYear', 'f-graduateYear', 'f-major', 'f-teacher', 'f-remark'].forEach(id => {
+        document.getElementById(id).textContent = '-';
+    });
+}
+
+/* 选中某行 → 填充审批表单 */
 function selectRow(index) {
     selectedIndex = index;
-    const data = alumniList[index];
-
-    // 高亮选中行
+    const data = applications[index];
     document.querySelectorAll('.data-table tbody tr').forEach(tr => {
         tr.classList.toggle('selected', Number(tr.dataset.index) === index);
     });
-
-    // 填充审批表单
-    document.getElementById('f-name').textContent = data.name;
-    document.getElementById('f-region').textContent = data.region;
-    document.getElementById('f-phone').textContent = data.phone;
-    document.getElementById('f-email').textContent = data.email;
-    document.getElementById('f-username').textContent = data.username;
-    document.getElementById('f-password').textContent = data.password;
-    document.getElementById('f-enrollYear').textContent = data.enrollYear;
-    document.getElementById('f-graduateYear').textContent = data.graduateYear;
-    document.getElementById('f-major').textContent = data.major;
-    document.getElementById('f-teacher').textContent = data.teacher;
-    document.getElementById('f-remark').textContent = data.remark;
+    document.getElementById('f-name').textContent = data.name || '-';
+    document.getElementById('f-region').textContent = [data.current_province, data.current_city].filter(Boolean).join(' ') || (data.province || '-');
+    document.getElementById('f-phone').textContent = data.phone || '-';
+    document.getElementById('f-email').textContent = data.account_email || '-';
+    document.getElementById('f-username').textContent = data.account_email || '-';
+    document.getElementById('f-password').textContent = '已加密存储';
+    document.getElementById('f-enrollYear').textContent = data.enrollment_year || '-';
+    document.getElementById('f-graduateYear').textContent = data.graduation_year || '-';
+    document.getElementById('f-major').textContent = data.class_name || '-';
+    document.getElementById('f-teacher').textContent = data.homeroom_teacher || '-';
+    document.getElementById('f-remark').textContent = (data.extra_materials && data.extra_materials !== '[]') ? data.extra_materials : '—';
 }
 
-/* ============================================================
-   通过 / 拒绝按钮（作用于当前选中行）
-   ============================================================ */
-document.getElementById('approveBtn').addEventListener('click', () => {
-    alumniList[selectedIndex].status = '已通过';
-    renderTable();
-    selectRow(selectedIndex);
-});
+/* 通过 / 拒绝（提交到后端） */
+async function reviewApplication(status, rejectReason) {
+    const data = applications[selectedIndex];
+    if (!data) return;
+    if (!confirm((status === 'approved' ? '确认通过 ' : '确认拒绝 ') + (data.name || '') + ' 的认证申请？')) return;
+    try {
+        const resp = await fetch(API_BASE_URL + '/api/applications/' + data.id + '/status', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+            body: JSON.stringify({ status, reject_reason: rejectReason || null })
+        });
+        const result = await resp.json();
+        if (!resp.ok) { alert(result.message || '操作失败'); return; }
+        alert((status === 'approved' ? '已通过 ' : '已拒绝 ') + (data.name || '') + ' 的认证申请');
+        await loadApplications();
+    } catch (err) {
+        alert('网络异常，操作失败（' + err.message + '）');
+    }
+}
+
+document.getElementById('approveBtn').addEventListener('click', () => reviewApplication('approved'));
 document.getElementById('rejectBtn').addEventListener('click', () => {
-    alumniList[selectedIndex].status = '已拒绝';
-    renderTable();
-    selectRow(selectedIndex);
+    const reason = prompt('请输入拒绝原因（可留空）：');
+    if (reason === null) return;
+    reviewApplication('rejected', reason);
 });
 
-/* ============================================================
-   分页：每页显示条数自定义
-   ============================================================ */
+/* 每页条数 */
 const pageSizeSelect = document.getElementById('pageSizeSelect');
-const pageRange = document.getElementById('pageRange');
-const totalCount = document.getElementById('totalCount');
-
-function updatePageInfo() {
-    const pageSize = Number(pageSizeSelect.value);
-    const total = alumniList.length;
-    totalCount.textContent = total;
-    const end = Math.min(pageSize, total);
-    pageRange.textContent = `1 - ${end}`;
-}
-pageSizeSelect.addEventListener('change', updatePageInfo);
-updatePageInfo();
-
-/* 跳转 / 上下页（暂以 3 页示例，部署时按数据量生成） */
-document.getElementById('jumpBtn').addEventListener('click', () => {
-    const page = document.getElementById('jumpInput').value;
-    alert('跳转到第 ' + page + ' 页');
-});
-document.getElementById('prevBtn').addEventListener('click', () => {
-    alert('上一页');
-});
-document.getElementById('nextBtn').addEventListener('click', () => {
-    alert('下一页');
+pageSizeSelect.addEventListener('change', () => {
+    pageSize = Number(pageSizeSelect.value);
+    renderTable();
 });
 
 /* 初始化 */
-renderTable();
+loadApplications();
 </script>
 
 </body>
