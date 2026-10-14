@@ -1,146 +1,483 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>海林市高级中学校友（新海高人）</title>
-    <meta name="description" content="海林市高级中学校友（新海高人）官网首页" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%2394070A'/><text x='50' y='50' fill='white' font-size='52' font-family='Microsoft YaHei' text-anchor='middle' dominant-baseline='central'>海</text></svg>" />
-    <style>
-        /* ==========================================
-           全局等比缩放 + 基础复位
-           ========================================== */
-        html { font-size: 1.25vw; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; }
-        body {
-            font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", sans-serif;
-            background-color: #111;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>海林市高级中学校友（新海高人）</title>
+  <meta name="description" content="海林市高级中学校友（新海高人）官网首页" />
+  <link rel="canonical" href="https://xinhaigaoren.github.io/web/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="海林市高级中学校友（新海高人）" />
+  <meta property="og:description" content="海林市高级中学校友（新海高人）官网首页" />
+  <meta property="og:url" content="https://xinhaigaoren.github.io/web/" />
+  <link rel="preconnect" href="https://hailin-alumni-api.onrender.com" crossorigin />
+  <link rel="stylesheet" href="style.css?v=20261017" />
+  <link rel="stylesheet" href="pages.css?v=20261013" />
+  <script src="config.js?v=20261013"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%2394070A'/><text x='50' y='50' fill='white' font-size='52' font-family='Microsoft YaHei' text-anchor='middle' dominant-baseline='central'>海</text></svg>" />
+<style>
+/* =========================================
+   新导航栏样式（北大红水墨渐变版）
+   说明：html 基准字号 1.25vw，全站按比例缩放
+   ========================================= */
+html { font-size: 1.25vw; }
+body { margin: 0; padding: 0; background-color: #111; }
 
-        /* ==========================================
-           全屏轮播区（仅此部分）
-           ========================================== */
-        .hero-slider {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            min-height: 45rem;
-            overflow: hidden;
-        }
+.top-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 8rem;
+    background: linear-gradient(
+        to bottom,
+        rgba(148, 7, 10, 0.95) 0%,
+        rgba(148, 7, 10, 0.7) 40%,
+        rgba(148, 7, 10, 0.2) 80%,
+        rgba(148, 7, 10, 0) 100%
+    );
+    display: flex;
+    justify-content: center;
+    z-index: 1000;
+}
 
-        .slide {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            opacity: 0;
-            transition: opacity 1s ease;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-        .slide.active { opacity: 1; }
+.nav-container {
+    width: 100%;
+    max-width: 95rem;
+    height: 100%;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    z-index: 10;
+}
 
-        /* ★★★ 请替换下面 4 行 background-image 的 url 为真实图片（1920×1080 及以上，16:9） ★★★
-           当前为 SVG 占位色块（不会裂图）；替换示例：
-           .slide-1 { background-image: url('assets/slide-1.jpg'); }
-           .slide-2 { background-image: url('https://你的图片地址/2.jpg'); } */
-        .slide-1 {
-            background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="%238a0609"/><text x="800" y="450" fill="rgba(255,255,255,0.85)" font-size="72" font-family="Microsoft YaHei, sans-serif" text-anchor="middle" dominant-baseline="middle">Slide 1</text></svg>');
-        }
-        .slide-2 {
-            background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="%231a3a5c"/><text x="800" y="450" fill="rgba(255,255,255,0.85)" font-size="72" font-family="Microsoft YaHei, sans-serif" text-anchor="middle" dominant-baseline="middle">Slide 2</text></svg>');
-        }
-        .slide-3 {
-            background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="%234a2c1a"/><text x="800" y="450" fill="rgba(255,255,255,0.85)" font-size="72" font-family="Microsoft YaHei, sans-serif" text-anchor="middle" dominant-baseline="middle">Slide 3</text></svg>');
-        }
-        .slide-4 {
-            background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="%232c1a4a"/><text x="800" y="450" fill="rgba(255,255,255,0.85)" font-size="72" font-family="Microsoft YaHei, sans-serif" text-anchor="middle" dominant-baseline="middle">Slide 4</text></svg>');
-        }
+/* 左侧 LOGO 与文字 */
+.nav-logo {
+    display: flex;
+    align-items: center;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-right: 3rem;
+}
+.nav-logo img {
+    height: 4rem;
+    width: auto;
+    margin-right: 0.8rem;
+    border-radius: 50%;
+    object-fit: contain;
+    transition: transform 0.3s;
+}
+.nav-logo:hover img { transform: scale(1.05); }
 
-        /* 左下角文字 */
-        .bottom-left-text {
-            position: absolute;
-            bottom: 3rem;
-            left: 5rem;
-            color: #ffffff;
-            font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-            font-size: 1.6rem;
-            font-weight: normal;
-            letter-spacing: 0.15rem;
-            text-shadow: 0 0.3rem 0.6rem rgba(0, 0, 0, 0.7);
-            white-space: nowrap;
-            z-index: 5;
-            pointer-events: none;
-        }
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.logo-text .zh {
+    font-size: 1.1rem;
+    font-weight: 500;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    line-height: 1.4;
+    letter-spacing: 0.03rem;
+    white-space: nowrap;
+}
+.logo-text .en {
+    font-size: 0.7rem;
+    opacity: 0.85;
+    margin-top: 0.1rem;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    line-height: 1.4;
+    letter-spacing: 0.01rem;
+    white-space: nowrap;
+}
 
-        /* 右下角 6 个圆点 */
-        .slider-indicators {
-            position: absolute;
-            bottom: 3rem;
-            right: 5rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            z-index: 5;
-        }
-        .dot-btn {
-            width: 1.2rem;
-            height: 1.2rem;
-            border-radius: 50%;
-            border: 0.15rem solid rgba(255, 255, 255, 0.85);
-            background-color: transparent;
-            cursor: pointer;
-            transition: all 0.3s;
-            padding: 0;
-        }
-        .dot-btn:hover { border-color: #ffffff; }
-        .dot-btn.active {
-            background-color: #ffffff;
-            border-color: #ffffff;
-        }
-    </style>
+/* 右侧整体打包，紧贴屏幕右侧 */
+.nav-right-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-left: auto;
+}
+.nav-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.8rem;
+}
+
+/* 右上角工具栏 */
+.top-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    white-space: nowrap;
+}
+.top-tools a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.top-tools a:hover {
+    color: #fff;
+    text-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.5);
+}
+.tool-divider {
+    width: 0.0625rem;
+    height: 0.8rem;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+.top-tools a.webvpn { position: relative; }
+.top-tools a.webvpn::after {
+    content: 'VPN';
+    position: absolute;
+    top: -0.4rem;
+    right: -0.8rem;
+    font-size: 0.45rem;
+    background: #4a6cf7;
+    padding: 0.0625rem 0.1875rem;
+    border-radius: 0.125rem;
+    transform: scale(0.8);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.top-tools a.webvpn:hover::after { opacity: 1; }
+.search-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+    fill: currentColor;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.search-icon:hover {
+    fill: #fff;
+    transform: scale(1.1);
+}
+
+/* 右下角主菜单 */
+.main-menu {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    white-space: nowrap;
+}
+.main-menu a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.03rem;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding-bottom: 0.2rem;
+}
+.main-menu a::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0;
+    height: 0.125rem;
+    background-color: #fff;
+    transition: width 0.3s ease;
+    border-radius: 0.125rem;
+}
+.main-menu a:hover::after { width: 100%; }
+.main-menu a:hover { text-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.3); }
+.arrow-down {
+    width: 0.7rem;
+    height: 0.7rem;
+    fill: rgba(255, 255, 255, 0.7);
+    transition: transform 0.3s;
+}
+.main-menu a:hover .arrow-down {
+    transform: rotate(180deg);
+    fill: #fff;
+}
+
+/* 三条横线（汉堡菜单） */
+.hamburger-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 1.6rem;
+    height: 1rem;
+    cursor: pointer;
+    margin-left: 0.5rem;
+    transition: opacity 0.3s;
+    flex-shrink: 0;
+}
+.hamburger-menu:hover { opacity: 0.8; }
+.hamburger-line {
+    width: 100%;
+    height: 0.16rem;
+    background-color: #fff;
+    border-radius: 0.08rem;
+}
+
+/* =========================================
+   全屏轮播区
+   ========================================= */
+.hero-slider {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    min-height: 45rem;
+    overflow: hidden;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+}
+
+.slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0;
+    transition: opacity 1s ease;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.slide.active { opacity: 1; }
+
+/* ★★★ 请替换下面 4 行 background-image 的 url 为真实图片（1920×1080 及以上，16:9） ★★★
+   当前为 SVG 占位色块（不会裂图）；替换示例：
+   .slide-1 { background-image: url('assets/slide-1.jpg'); }
+   .slide-2 { background-image: url('https://你的图片地址/2.jpg'); } */
+.slide-1 {
+    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="%238a0609"/><text x="800" y="450" fill="rgba(255,255,255,0.85)" font-size="72" font-family="Microsoft YaHei, sans-serif" text-anchor="middle" dominant-baseline="middle">Slide 1</text></svg>');
+}
+.slide-2 {
+    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="%231a3a5c"/><text x="800" y="450" fill="rgba(255,255,255,0.85)" font-size="72" font-family="Microsoft YaHei, sans-serif" text-anchor="middle" dominant-baseline="middle">Slide 2</text></svg>');
+}
+.slide-3 {
+    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="%234a2c1a"/><text x="800" y="450" fill="rgba(255,255,255,0.85)" font-size="72" font-family="Microsoft YaHei, sans-serif" text-anchor="middle" dominant-baseline="middle">Slide 3</text></svg>');
+}
+.slide-4 {
+    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="%232c1a4a"/><text x="800" y="450" fill="rgba(255,255,255,0.85)" font-size="72" font-family="Microsoft YaHei, sans-serif" text-anchor="middle" dominant-baseline="middle">Slide 4</text></svg>');
+}
+
+/* 左下角文字 */
+.bottom-left-text {
+    position: absolute;
+    bottom: 3rem;
+    left: 5rem;
+    color: #ffffff;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    font-size: 1.6rem;
+    font-weight: normal;
+    letter-spacing: 0.15rem;
+    text-shadow: 0 0.3rem 0.6rem rgba(0, 0, 0, 0.7);
+    white-space: nowrap;
+    z-index: 5;
+    pointer-events: none;
+}
+
+/* 右下角 6 个圆点 */
+.slider-indicators {
+    position: absolute;
+    bottom: 3rem;
+    right: 5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    z-index: 5;
+}
+.dot-btn {
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+    border: 0.15rem solid rgba(255, 255, 255, 0.85);
+    background-color: transparent;
+    cursor: pointer;
+    transition: all 0.3s;
+    padding: 0;
+}
+.dot-btn:hover { border-color: #ffffff; }
+.dot-btn.active {
+    background-color: #ffffff;
+    border-color: #ffffff;
+}
+</style>
 </head>
 <body>
+<header class="top-navbar">
+    <div class="nav-container">
+        <!-- 左侧 Logo 区域 -->
+        <!-- Logo 图片替换处：当前使用网站原 Logo assets/haigao-logo.jpg，替换时改这里即可 -->
+        <a href="index.html" class="nav-logo">
+            <img src="assets/haigao-logo.jpg" alt="海林市高级中学校友会 Logo">
+            <div class="logo-text">
+                <span class="zh">海林市高级中学校友（新海高人）</span>
+                <span class="en">Hailin Senior High School Alumni Association</span>
+            </div>
+        </a>
 
-    <!-- ==========================================
-         全屏轮播区
-         ========================================== -->
-    <section class="hero-slider">
-        <div class="slide slide-1 active"></div>
-        <div class="slide slide-2"></div>
-        <div class="slide slide-3"></div>
-        <div class="slide slide-4"></div>
+        <!-- 右侧所有内容打包，紧贴屏幕右侧 -->
+        <div class="nav-right-wrapper">
+            <div class="nav-right">
+                <!-- 右上角工具栏 -->
+                <div class="top-tools">
+                    <a href="index.html">访客</a>
+                    <a href="donate.html">赞助</a>
+                    <a href="jobs.html">招聘</a>
+                    <a href="login.html" class="webvpn">内网</a>
+                    <a href="mailto:xinhaigaoren@126.com">邮箱</a>
+                    <div class="tool-divider"></div>
+                    <a href="#">🌐 English</a>
+                    <svg class="search-icon" viewBox="0 0 24 24">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                </div>
 
-        <!-- 左下角文字 -->
-        <div class="bottom-left-text">三年风雨同舟 归来仍是少年</div>
+                <!-- 右下角主菜单 -->
+                <nav class="main-menu">
+                    <a href="news.html">新海高人新闻网</a>
+                    <a href="about.html">
+                        新海高人概况
+                        <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </a>
+                    <a href="alumni.html">校友联络</a>
+                    <a href="donate.html">回馈母校</a>
+                    <a href="#">
+                        媒体平台
+                        <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </a>
+                    <a href="#">
+                        校友服务
+                        <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </a>
+                </nav>
+            </div>
 
-        <!-- 右下角 6 个圆点（前 4 点对应 4 张图，第 5/6 点循环回到第 1/2 张） -->
-        <div class="slider-indicators">
-            <button class="dot-btn active" data-index="0" aria-label="第 1 张"></button>
-            <button class="dot-btn" data-index="1" aria-label="第 2 张"></button>
-            <button class="dot-btn" data-index="2" aria-label="第 3 张"></button>
-            <button class="dot-btn" data-index="3" aria-label="第 4 张"></button>
-            <button class="dot-btn" data-index="4" aria-label="第 5 张"></button>
-            <button class="dot-btn" data-index="5" aria-label="第 6 张"></button>
+            <!-- 三条横线（紧贴主菜单） -->
+            <div class="hamburger-menu">
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+            </div>
         </div>
-    </section>
+    </div>
+</header>
 
-    <script>
-        const slides = document.querySelectorAll('.slide');
-        const dots = document.querySelectorAll('.dot-btn');
-        let currentIndex = 0;
+<!-- ==========================================
+     全屏轮播区（首页主体）
+     ========================================== -->
+<section class="hero-slider">
+    <div class="slide slide-1 active"></div>
+    <div class="slide slide-2"></div>
+    <div class="slide slide-3"></div>
+    <div class="slide slide-4"></div>
 
-        function showSlide(index) {
-            const realIndex = index % slides.length; /* 6 点循环对应 4 图 */
-            slides.forEach((s, i) => s.classList.toggle('active', i === realIndex));
-            dots.forEach((d, i) => d.classList.toggle('active', i === realIndex));
-            currentIndex = realIndex;
-        }
+    <!-- 左下角文字 -->
+    <div class="bottom-left-text">三年风雨同舟 归来仍是少年</div>
 
-        dots.forEach((dot, i) => {
-            dot.addEventListener('click', () => showSlide(i));
-        });
-    </script>
+    <!-- 右下角 6 个圆点（前 4 点对应 4 张图，第 5/6 点循环回到第 1/2 张） -->
+    <div class="slider-indicators">
+        <button class="dot-btn active" data-index="0" aria-label="第 1 张"></button>
+        <button class="dot-btn" data-index="1" aria-label="第 2 张"></button>
+        <button class="dot-btn" data-index="2" aria-label="第 3 张"></button>
+        <button class="dot-btn" data-index="3" aria-label="第 4 张"></button>
+        <button class="dot-btn" data-index="4" aria-label="第 5 张"></button>
+        <button class="dot-btn" data-index="5" aria-label="第 6 张"></button>
+    </div>
+</section>
+
+<footer class="site-footer" id="contact">
+    <!-- 底部页脚（2026-10-14 新版）：白底链接区 + 北大红底品牌区；访问人数由后端实时统计 -->
+    <div class="footer-top-white">
+        <div class="footer-container">
+            <div class="footer-top-inner">
+                <div class="footer-links-area">
+                    <h2 class="footer-title">常用链接</h2>
+                    <div class="links-grid">
+                        <a href="#" class="link-item">实用信息</a>
+                        <a href="contact.html" class="link-item">联系我们</a>
+                        <a href="#" class="link-item">宣传资源</a>
+                        <a href="#" class="link-item">校友标志</a>
+                        <a href="#" class="link-item">新海高人标志</a>
+                        <a href="#" class="link-item">新海高青年期刊</a>
+                    </div>
+                </div>
+                <div class="footer-qr-area">
+                    <!-- 二维码图片嵌入处：已嵌入公众号二维码 assets/qr-code.png（如需更换请修改下方 src） -->
+                    <img src="assets/qr-code.png" alt="二维码" class="qr-code">
+                    <p class="qr-text">欢迎关注海林市高级中学校友（新海高人）公众号</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom-red">
+        <div class="footer-container">
+            <div class="footer-bottom-inner">
+                <div class="footer-logo-area">
+                    <!-- 【Logo】使用站内真实校徽 -->
+                    <img src="assets/haigao-logo.jpg" alt="Logo" class="footer-logo-img">
+                    <div class="footer-logo-text">
+                        <span class="zh">海林市高级中学校友（新海高人）</span>
+                        <span class="en">Hailin Senior High School Alumni Association</span>
+                    </div>
+                </div>
+                <div class="contact-grid">
+                    <div class="contact-row">
+                        <div class="contact-item">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                            <a href="mailto:xinhaigaoren@126.com" class="value">xinhaigaoren@126.com</a>
+                        </div>
+                        <div class="contact-item">
+                            <div class="pencil-icon-box">
+                                <svg viewBox="0 0 24 24" class="pencil-icon"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                            </div>
+                            <a href="#" class="value feedback-link">意见反馈</a>
+                        </div>
+                    </div>
+                    <div class="contact-row">
+                        <div class="contact-item">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            <span class="value">北京市海淀区 | 黑龙江省哈尔滨市南岗区 | 吉林省长春市朝阳区</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright-bar">
+                <p class="copyright-text">版权所有 © 海林市高级中学校友（新海高人）</p>
+                <div class="stats">
+                    <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-3-3-3z"/></svg>
+                    <span id="site-pv-count" class="view-count">加载中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+  <script src="site.js?v=20261017"></script>
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot-btn');
+    let currentIndex = 0;
+
+    function showSlide(index) {
+        const realIndex = index % slides.length; /* 6 点循环对应 4 图 */
+        slides.forEach((s, i) => s.classList.toggle('active', i === realIndex));
+        dots.forEach((d, i) => d.classList.toggle('active', i === realIndex));
+        currentIndex = realIndex;
+    }
+
+    dots.forEach((dot, i) => {
+        dot.addEventListener('click', () => showSlide(i));
+    });
+  </script>
 </body>
 </html>
