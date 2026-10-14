@@ -350,5 +350,35 @@
     });
   });
 
+  // 校友联络下拉面板：点击展开/收起，点击外部关闭，四标签切换内容
+  const alumniBtn = document.getElementById('alumniContactBtn');
+  const alumniPanel = document.getElementById('alumniPanel');
+  if (alumniBtn && alumniPanel) {
+    let isPanelOpen = false;
+    const tabs = Array.prototype.slice.call(document.querySelectorAll('.tab-btn'));
+    const panes = Array.prototype.slice.call(document.querySelectorAll('.tab-pane'));
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        panes.forEach((p) => p.classList.remove('active'));
+        const target = document.getElementById(tab.getAttribute('data-target'));
+        if (target) target.classList.add('active');
+      });
+    });
+    alumniBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      isPanelOpen = !isPanelOpen;
+      if (isPanelOpen) alumniPanel.classList.add('active');
+      else alumniPanel.classList.remove('active');
+    });
+    document.addEventListener('click', (e) => {
+      if (!alumniPanel.contains(e.target) && !alumniBtn.contains(e.target)) {
+        alumniPanel.classList.remove('active');
+        isPanelOpen = false;
+      }
+    });
+  }
+
   window.XH = { API_BASE_URL, api, assetUrl, formatDate, escapeHtml, toast, store };
 })();

@@ -227,6 +227,174 @@ body { padding-top: 8rem; }
     background-color: #fff;
     border-radius: 0.08rem;
 }
+    /* ==========================================
+       交互式二级菜单（校友联络下拉面板）
+       白底 + 底部北大红粗线，默认隐藏，激活淡入
+       ========================================== */
+    .sub-nav-section {
+        width: 100%;
+        background-color: #ffffff;
+        padding: 2rem 0;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        border-bottom: 0.3rem solid #94070A;
+        display: none;
+    }
+
+    .sub-nav-section.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-0.5rem); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .sub-nav-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        padding: 0 2rem 1.5rem 2rem;
+        max-width: 95rem;
+        margin: 0 auto;
+    }
+
+    .tab-btn {
+        background-color: #f0f0f0;
+        border: none;
+        padding: 0.8rem 1.8rem;
+        font-size: 1rem;
+        color: #333;
+        cursor: pointer;
+        border-radius: 0.15rem;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .tab-btn:hover { background-color: #e0e0e0; }
+
+    .tab-btn.active {
+        background-color: #94070A;
+        color: #ffffff;
+        box-shadow: 0 0.2rem 0.6rem rgba(148, 7, 10, 0.4);
+    }
+
+    .sub-nav-divider {
+        width: 100%;
+        max-width: 95rem;
+        margin: 0 auto;
+        border-top: 0.15rem solid #94070A;
+    }
+
+    .sub-nav-content {
+        max-width: 95rem;
+        margin: 0 auto;
+        padding: 2rem 2rem 0 2rem;
+    }
+
+    .tab-pane {
+        display: none;
+        animation: fadeIn 0.4s ease;
+    }
+    .tab-pane.active { display: block; }
+
+    .content-layout {
+        display: flex;
+        align-items: flex-start;
+        gap: 3rem;
+    }
+
+    /* 左侧标签：北大红 */
+    .content-label {
+        width: 10rem;
+        font-size: 1rem;
+        color: #94070A;
+        font-weight: 500;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* 地区联络：6列，横向均匀铺满 */
+    .content-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        column-gap: 2rem;
+        row-gap: 1rem;
+        flex: 1;
+    }
+
+    /* 年级联络：7列 */
+    .year-grid {
+        grid-template-columns: repeat(7, 1fr);
+    }
+    .year-grid span { color: #555; }
+    .year-grid span small { color: #94070A; }
+
+    /* 专业委员会 & 兴趣群体：横向铺满，固定列宽保证上下对齐 */
+    .committee-grid, .club-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); /* 4列等宽，保证上下对齐 */
+        column-gap: 2rem;
+        row-gap: 1.2rem;
+        flex: 1;
+    }
+
+    .committee-grid span, .club-grid span {
+        display: block;
+        font-size: 0.9rem;
+        color: #333;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: color 0.3s;
+    }
+
+    .committee-grid span:hover, .club-grid span:hover {
+        color: #94070A;
+        cursor: pointer;
+    }
+
+    /* 通用 span 悬停 */
+    .content-grid span {
+        font-size: 0.9rem;
+        color: #333;
+        transition: color 0.3s;
+        white-space: nowrap;
+    }
+    .content-grid span:hover { color: #94070A; cursor: pointer; }
+
+    /* 国内/国外校友：左右两栏布局 */
+    .region-layout {
+        display: flex;
+        gap: 4rem;
+        align-items: flex-start;
+    }
+
+    .region-block {
+        flex: 1;
+        display: flex;
+        align-items: flex-start;
+        gap: 2rem;
+    }
+
+    .region-block .content-label {
+        width: 6rem;
+    }
+
+    .region-block .content-grid {
+        flex: 1;
+    }
+
+    /* 手机端自适应 */
+    @media (max-width: 900px) {
+        .sub-nav-tabs { flex-wrap: wrap; padding: 0 2rem 1.5rem 2rem; }
+        .sub-nav-content { padding: 1.5rem 2rem 0 2rem; }
+        .content-layout, .region-layout, .region-block { flex-direction: column; gap: 1rem; }
+        .content-label, .region-block .content-label { width: auto; }
+        .content-grid, .committee-grid, .club-grid, .year-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 </style>
 </head>
 <body>
@@ -266,7 +434,7 @@ body { padding-top: 8rem; }
                         新海高人概况
                         <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                     </a>
-                    <a href="directory.html">校友联络</a>
+                    <a href="javascript:void(0)" id="alumniContactBtn">校友联络 <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></a>
                     <a href="donate.html">回馈母校</a>
                     <a href="#">
                         媒体平台
@@ -288,6 +456,106 @@ body { padding-top: 8rem; }
         </div>
     </div>
 </header>
+<!-- 校友联络下拉面板 -->
+<div class="sub-nav-section" id="alumniPanel">
+    <div class="sub-nav-tabs">
+        <button class="tab-btn active" data-target="tab-region">地区联络</button>
+        <button class="tab-btn" data-target="tab-year">年级联络</button>
+        <button class="tab-btn" data-target="tab-committee">专业委员会</button>
+        <button class="tab-btn" data-target="tab-club">兴趣群体</button>
+    </div>
+
+    <div class="sub-nav-divider"></div>
+
+    <div class="sub-nav-content">
+        <!-- 1. 地区联络 -->
+        <div class="tab-pane active" id="tab-region">
+            <div class="region-layout">
+                <div class="region-block">
+                    <div class="content-label">国内校友</div>
+                    <div class="content-grid">
+                        <span>安徽</span><span>重庆</span><span>福建</span><span>甘肃</span><span>广东</span><span>广西</span>
+                        <span>贵州</span><span>海南</span><span>河北</span><span>河南</span><span>黑龙江</span><span>湖北</span>
+                        <span>湖南</span><span>吉林</span><span>江苏</span><span>江西</span><span>辽宁</span><span>内蒙古</span>
+                        <span>宁夏</span><span>青海</span><span>山东</span><span>山西</span><span>陕西</span><span>上海</span>
+                        <span>四川</span><span>天津</span><span>西藏</span><span>新疆</span><span>云南</span><span>浙江</span>
+                        <span>香港</span><span>澳门</span><span>台湾</span>
+                    </div>
+                </div>
+                <div class="region-block">
+                    <div class="content-label">国外校友</div>
+                    <div class="content-grid">
+                        <span>阿联酋</span><span>奥地利</span><span>澳大利亚</span><span>北欧</span><span>德国</span><span>法国</span>
+                        <span>韩国</span><span>荷兰</span><span>加拿大</span><span>柬埔寨</span><span>马来西亚</span><span>美国</span>
+                        <span>日本</span><span>瑞士</span><span>泰国</span><span>西班牙</span><span>新加坡</span><span>新西兰</span>
+                        <span>意大利</span><span>英国</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 年级联络 -->
+        <div class="tab-pane" id="tab-year">
+            <div class="content-layout">
+                <div class="content-label">海林市高级中学毕业校友</div>
+                <div class="content-grid year-grid">
+                    <span>1984</span><span>1985</span><span>1986</span><span>1987</span><span>1988</span><span>1989</span><span>1990</span>
+                    <span>1991</span><span>1992</span><span>1993</span><span>1994</span><span>1995</span><span>1996</span><span>1997</span>
+                    <span>1998</span><span>1999</span><span>2000</span><span>2001</span><span>2002</span><span>2003</span><span>2004</span>
+                    <span>2005</span><span>2006</span><span>2007</span><span>2008</span><span>2009</span><span>2010</span><span>2011</span>
+                    <span>2012</span><span>2013</span><span>2014</span><span>2015</span><span>2016</span><span>2017</span><span>2018</span>
+                    <span>2019</span><span>2020</span><span>2021</span><span>2022</span><span>2023</span><span>2024</span><span>2025</span>
+                    <span>2026</span><span>2027 <small>(筹)</small></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 专业委员会 -->
+        <div class="tab-pane" id="tab-committee">
+            <div class="committee-grid">
+                <span>新海高人人工智能专业委员会</span>
+                <span>新海高人航空航天专业委员会</span>
+                <span>新海高人土木工程专业委员会</span>
+                <span>新海高人高等教育专业委员会</span>
+                <span>新海高人基础教育专业委员会</span>
+                <span>新海高人能源专业委员会</span>
+                <span>新海高人具身智能专业委员会</span>
+                <span>新海高人电子信息专业委员会</span>
+                <span>新海高人电气工程专业委员会</span>
+                <span>新海高人自动化专业委员会</span>
+                <span>新海高人工程力学专业委员会</span>
+                <span>新海高人医学专业委员会</span>
+                <span>新海高人生命科学专业委员会</span>
+                <span>新海高人材料科学专业委员会</span>
+                <span>新海高人车辆工程专业委员会</span>
+                <span>新海高人计算机科学专业委员会</span>
+                <span>新海高人软件工程专业委员会</span>
+                <span>新海高人人文社科专业委员会</span>
+                <span>新海高人基础科学专业委员会</span>
+                <span>新海高人机械工程专业委员会</span>
+                <span>新海高人农业科学专业委员会</span>
+            </div>
+        </div>
+
+        <!-- 4. 兴趣群体 -->
+        <div class="tab-pane" id="tab-club">
+            <div class="club-grid">
+                <span>新海高人健身俱乐部</span>
+                <span>新海高人足球俱乐部</span>
+                <span>新海高人排球俱乐部</span>
+                <span>新海高人羽毛球俱乐部</span>
+                <span>新海高人台球俱乐部</span>
+                <span>新海高人游泳俱乐部</span>
+                <span>新海高人骑行俱乐部</span>
+                <span>新海高人乒乓球俱乐部</span>
+                <span>新海高人篮球俱乐部</span>
+                <span>新海高人校友合唱团（筹）</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 
   <a class="skip-link" href="#main">跳到正文</a>
 
@@ -405,7 +673,7 @@ body { padding-top: 8rem; }
     </div>
   </div>
 
-  <script src="site.js?v=20261016"></script>
+  <script src="site.js?v=20261017"></script>
   <script defer>
     (function () {
       const XH = window.XH;
