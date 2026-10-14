@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校友注册 - 海林市高级中学校友（新海高人）</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 1.25vw; }
+    body { font-family: "Microsoft YaHei", "微软雅黑", sans-serif; background: linear-gradient(135deg, #94070A 0%, #c41e22 40%, #e85d5d 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; }
+    .register-header { display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-bottom: 2.5rem; }
+    .register-header .logo-circle { height: 5rem; width: 5rem; object-fit: contain; border-radius: 50%; filter: drop-shadow(0 0.3rem 0.6rem rgba(0,0,0,0.3)); }
+    .register-header .logo-text-area { display: flex; flex-direction: column; justify-content: center; color: #ffffff; white-space: nowrap; }
+    .register-header .logo-text-area .zh { font-size: 1.5rem; font-weight: normal; line-height: 1.4; letter-spacing: 0.05rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
+    .register-header .logo-text-area .en { font-size: 0.9rem; font-weight: normal; line-height: 1.4; margin-top: 0.1rem; opacity: 0.9; letter-spacing: 0.02rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
+    .register-card { width: 100%; max-width: 50rem; background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%); border-radius: 0.5rem; box-shadow: 0 1rem 3rem rgba(0,0,0,0.25); padding: 3rem 4rem 4rem; }
+    .tip-text { font-size: 1.15rem; color: #333; margin-bottom: 2.5rem; line-height: 1.8; text-align: center; }
+    .form-row { display: flex; align-items: flex-start; margin-bottom: 0.5rem; }
+    .form-label { flex: 0 0 8rem; text-align: right; font-size: 1rem; color: #333; padding-top: 0.9rem; padding-right: 1rem; }
+    .form-label .required { color: #d8000c; margin-right: 0.2rem; }
+    .form-input-area { flex: 1; display: flex; flex-direction: column; }
+    .form-input-area input[type="text"], .form-input-area input[type="tel"], .form-input-area input[type="email"] { width: 100%; max-width: 32rem; padding: 0.85rem 1rem; font-size: 1rem; border: 1px solid #e0c8c0; border-radius: 0.2rem; outline: none; background: #ffffff; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; transition: border-color 0.3s; }
+    .form-input-area input:focus { border-color: #94070A; box-shadow: 0 0 0 0.15rem rgba(148,7,10,0.12); }
+    .error-tip { font-size: 0.85rem; color: #d8000c; margin-top: 0.4rem; margin-bottom: 0.8rem; }
+    .radio-group { display: flex; align-items: center; gap: 2rem; padding-top: 0.9rem; }
+    .radio-group label { display: flex; align-items: center; gap: 0.4rem; font-size: 1rem; color: #333; cursor: pointer; }
+    .radio-group input[type="radio"] { accent-color: #94070A; transform: scale(1.1); cursor: pointer; }
+    .captcha-row { display: flex; align-items: center; gap: 1rem; max-width: 32rem; }
+    .captcha-row input { flex: 1; padding: 0.85rem 1rem; font-size: 1rem; border: 1px solid #e0c8c0; border-radius: 0.2rem; outline: none; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
+    .captcha-row input:focus { border-color: #94070A; }
+    .captcha-img { font-size: 1.6rem; font-weight: bold; color: #94070A; letter-spacing: 0.3rem; font-family: "Courier New", monospace; user-select: none; cursor: pointer; display: flex; align-items: center; }
+    .captcha-refresh { font-size: 0.95rem; color: #94070A; text-decoration: none; cursor: pointer; margin-left: 0.5rem; }
+    .captcha-refresh:hover { text-decoration: underline; }
+    .divider-line { width: 100%; max-width: 32rem; height: 1px; background: #e0c8c0; margin: 2.5rem auto; }
+    .next-btn { display: block; width: 12rem; margin: 0 auto; padding: 1rem; font-size: 1.15rem; font-weight: normal; color: #ffffff; background: linear-gradient(135deg, #94070A 0%, #c41e22 100%); border: none; border-radius: 0.3rem; cursor: pointer; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; transition: background 0.3s, box-shadow 0.3s; }
+    .next-btn:hover { background: linear-gradient(135deg, #c41e22 0%, #94070A 100%); box-shadow: 0 0.4rem 1rem rgba(148,7,10,0.4); }
+</style>
+</head>
+<body>
+
+<div class="register-header">
+    <img src="assets/haigao-logo.jpg" alt="Logo" class="logo-circle">
+    <div class="logo-text-area">
+        <span class="zh">海林市高级中学校友（新海高人）</span>
+        <span class="en">Hailin Senior High School Alumni Association</span>
+    </div>
+</div>
+
+<div class="register-card">
+    <p class="tip-text">温馨提示：为确保本站注册校友的真实性，请您如实填写下面信息以便档案验证。</p>
+
+    <div class="form-row">
+        <div class="form-label"><span class="required">*</span>真实姓名</div>
+        <div class="form-input-area">
+            <input type="text" id="realName">
+            <div class="error-tip">请输入您的真实姓名</div>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-label"><span class="required">*</span>所在地区</div>
+        <div class="form-input-area">
+            <div class="radio-group">
+                <label><input type="radio" name="region" value="domestic" checked> 国内</label>
+                <label><input type="radio" name="region" value="overseas"> 国外</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-label"><span class="required">*</span>手机</div>
+        <div class="form-input-area">
+            <input type="tel" id="phone">
+            <div class="error-tip">请输入正确的手机号码</div>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-label"><span class="required">*</span>邮箱</div>
+        <div class="form-input-area">
+            <input type="email" id="email">
+            <div class="error-tip">请输入正确的邮箱地址</div>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-label">验证码</div>
+        <div class="form-input-area">
+            <div class="captcha-row">
+                <input type="text" id="captchaInput">
+                <span class="captcha-img" id="captchaImg">K5oWh</span>
+                <a href="javascript:void(0);" class="captcha-refresh" id="refreshCaptcha">换一张</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="divider-line"></div>
+
+    <button type="button" class="next-btn" onclick="location.href='register-step2.html'">下一步</button>
+</div>
+
+<script>
+    const captchaImg = document.getElementById('captchaImg');
+    const refreshCaptcha = document.getElementById('refreshCaptcha');
+    const captchaChars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    function generateCaptcha() {
+        let captcha = '';
+        for (let i = 0; i < 5; i++) {
+            captcha += captchaChars.charAt(Math.floor(Math.random() * captchaChars.length));
+        }
+        captchaImg.textContent = captcha;
+    }
+    refreshCaptcha.addEventListener('click', generateCaptcha);
+    captchaImg.addEventListener('click', generateCaptcha);
+</script>
+
+</body>
+</html>

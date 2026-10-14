@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>重置密码 - 海林市高级中学校友（新海高人）</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 1.25vw; }
+    body { font-family: "Microsoft YaHei", "微软雅黑", sans-serif; background: linear-gradient(135deg, #94070A 0%, #c41e22 40%, #e85d5d 100%); min-height: 100vh; display: flex; flex-direction: column; }
+    .top-bar { width: 100%; height: 6rem; background-color: rgba(148,7,10,0.85); display: flex; align-items: center; justify-content: space-between; padding: 0 4rem; box-shadow: 0 0.2rem 0.6rem rgba(0,0,0,0.15); }
+    .top-bar-left { display: flex; align-items: center; gap: 1rem; }
+    .top-bar-left .logo-circle { height: 4rem; width: 4rem; object-fit: contain; border-radius: 50%; filter: drop-shadow(0 0.2rem 0.4rem rgba(0,0,0,0.3)); }
+    .top-bar-left .logo-text-area { display: flex; flex-direction: column; justify-content: center; color: #ffffff; white-space: nowrap; }
+    .top-bar-left .logo-text-area .zh { font-size: 1.3rem; font-weight: normal; line-height: 1.3; letter-spacing: 0.05rem; }
+    .top-bar-left .logo-text-area .en { font-size: 0.8rem; font-weight: normal; line-height: 1.3; opacity: 0.9; letter-spacing: 0.02rem; margin-top: 0.1rem; }
+    .top-bar-right { display: flex; align-items: center; gap: 2rem; font-size: 1rem; color: #ffffff; }
+    .top-bar-right a { color: #ffffff; text-decoration: none; display: flex; align-items: center; gap: 0.3rem; }
+    .top-bar-right svg { width: 0.8rem; height: 0.8rem; fill: #ffffff; }
+    .main-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 4rem 2rem; }
+    .reset-panel { width: 100%; max-width: 75rem; background: linear-gradient(135deg, #ffe8e0 0%, #ffd8d0 100%); border-radius: 0.5rem; box-shadow: 0 0.5rem 2rem rgba(0,0,0,0.15); padding: 4rem 5rem; }
+    .reset-title { font-size: 1.8rem; color: #333; margin-bottom: 2.5rem; font-weight: normal; letter-spacing: 0.1rem; }
+    .form-group { margin-bottom: 1.5rem; max-width: 42rem; }
+    .form-group label { display: block; font-size: 1rem; color: #333; margin-bottom: 0.6rem; }
+    .form-group input { width: 100%; padding: 0.9rem 1rem; font-size: 1rem; border: 1px solid #e0c8c0; border-radius: 0.3rem; outline: none; background-color: #ffffff; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
+    .form-group input:focus { border-color: #94070A; }
+    .form-group input::placeholder { color: #b0b0b0; }
+    .captcha-row { display: flex; align-items: center; gap: 1rem; max-width: 42rem; margin-bottom: 2rem; }
+    .captcha-row input { flex: 1; padding: 0.9rem 1rem; font-size: 1rem; border: 1px solid #e0c8c0; border-radius: 0.3rem; outline: none; background-color: #ffffff; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
+    .captcha-img { width: 8rem; height: 3.2rem; background-color: #f5f5f5; border: 1px solid #e0c8c0; border-radius: 0.3rem; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: bold; color: #4a8c4a; letter-spacing: 0.5rem; font-family: "Courier New", monospace; cursor: pointer; user-select: none; position: relative; overflow: hidden; }
+    .captcha-img::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background-color: #4a8c4a; opacity: 0.3; }
+    .refresh-btn { background: none; border: none; cursor: pointer; padding: 0.3rem; display: flex; align-items: center; justify-content: center; transition: transform 0.3s; }
+    .refresh-btn:hover { transform: rotate(180deg); }
+    .refresh-btn svg { width: 1.4rem; height: 1.4rem; fill: #94070A; }
+    .submit-btn { padding: 0.9rem 3rem; font-size: 1.1rem; font-weight: normal; color: #ffffff; background: #3da8b8; border: none; border-radius: 0.3rem; cursor: pointer; transition: all 0.3s; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; letter-spacing: 0.1rem; }
+    .submit-btn:hover { background: #2d8a98; box-shadow: 0 0.4rem 1rem rgba(61,168,184,0.4); }
+    .service-footer { width: 100%; max-width: 75rem; margin: 0 auto; padding: 2rem 5rem 3rem; display: flex; justify-content: space-between; align-items: center; font-size: 1rem; color: #ffffff; }
+    .service-item { display: flex; align-items: center; gap: 0.4rem; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="top-bar-left">
+        <img src="assets/haigao-logo.jpg" alt="Logo" class="logo-circle">
+        <div class="logo-text-area">
+            <span class="zh">海林市高级中学校友（新海高人）</span>
+            <span class="en">Hailin Senior High School Alumni Association</span>
+        </div>
+    </div>
+    <div class="top-bar-right">
+        <a href="#">中文 <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></a>
+        <a href="login.html">登录</a>
+    </div>
+</div>
+
+<div class="main-wrapper">
+    <div class="reset-panel">
+        <h1 class="reset-title">重置密码</h1>
+        <form>
+            <div class="form-group">
+                <label>请输入证件号或用户名</label>
+                <input type="text" placeholder="学号、工作证号或账号">
+            </div>
+            <div class="captcha-row">
+                <input type="text" placeholder="图形验证码" id="captchaInput">
+                <div class="captcha-img" id="captchaImg">S83X</div>
+                <button type="button" class="refresh-btn" id="refreshBtn" title="刷新验证码">
+                    <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                </button>
+            </div>
+            <button type="submit" class="submit-btn">确定</button>
+        </form>
+    </div>
+</div>
+
+<div class="service-footer">
+    <div class="service-item"><span>服务邮箱：xinhaigaoren@126.com</span></div>
+    <div class="service-item"><span>每天 9:00-20:00（节假日除外）</span></div>
+</div>
+
+<script>
+    const captchaImg = document.getElementById('captchaImg');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const captchaChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    function generateCaptcha() {
+        let captcha = '';
+        for (let i = 0; i < 4; i++) {
+            captcha += captchaChars.charAt(Math.floor(Math.random() * captchaChars.length));
+        }
+        captchaImg.textContent = captcha;
+    }
+    refreshBtn.addEventListener('click', generateCaptcha);
+    captchaImg.addEventListener('click', generateCaptcha);
+</script>
+
+</body>
+</html>
