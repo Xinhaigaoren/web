@@ -288,23 +288,6 @@ body { padding-top: 8rem; }
         </div>
     </div>
 </header>
->
-
-
-  <a class="skip-link" href="#main">跳到正文</a>
-
-  
-
-  <main id="main">
-    <section class="page-section">
-      <div class="container">
-        <article class="article" id="eventBox">
-          <div class="empty-state" id="loadingState">正在加载活动……</div>
-        </article>
-      </div>
-    </section>
-  </main>
-
   <footer class="site-footer" id="contact">
     <!-- 底部页脚（2026-10-14 新版）：白底链接区 + 北大红底品牌区；访问人数由后端实时统计 -->
     <div class="footer-top-white">
@@ -393,100 +376,5 @@ body { padding-top: 8rem; }
   </div>
 
   <script src="site.js?v=20261017"></script>
-  <script defer>
-    (function () {
-      const XH = window.XH;
-      const box = document.getElementById('eventBox');
-      const modal = document.getElementById('registerModal');
-      const registerForm = document.getElementById('registerForm');
-      const registerStatus = document.getElementById('registerStatus');
-      const id = new URLSearchParams(location.search).get('id');
-      let ev = null;
-
-      function absoluteImages(html) {
-        return String(html || '').replace(/(\bsrc|\bposter)=(["'])\/([^"']*)\2/g, (m, attr, q, url) => `${attr}=${q}${XH.assetUrl('/' + url)}${q}`);
-      }
-      function isPast(item) {
-        const end = item.end_time ? new Date(item.end_time).getTime() : NaN;
-        const start = item.start_time ? new Date(item.start_time).getTime() : NaN;
-        const now = Date.now();
-        if (!Number.isNaN(end)) return end < now;
-        if (!Number.isNaN(start)) return start < now;
-        return false;
-      }
-
-      function openRegister() {
-        if (!ev) return;
-        registerForm.eventId.value = ev.id;
-        document.getElementById('modalSub').textContent = ev.title || '';
-        registerStatus.textContent = '';
-        registerStatus.className = 'form-status';
-        registerForm.reset();
-        const me = XH.store.getUser();
-        if (me && me.name) registerForm.name.value = me.name;
-        if (me && me.phone) registerForm.phone.value = me.phone;
-        modal.classList.add('show');
-      }
-
-      async function load() {
-        if (!id) { box.innerHTML = '<div class="empty-state">缺少活动参数。</div>'; return; }
-        try {
-          const data = await XH.api(`/api/events/${encodeURIComponent(id)}`);
-          ev = data.event || {};
-          document.title = `${ev.title || '活动详情'} - 新海高人`;
-          const ended = isPast(ev);
-          const meta = [];
-          if (ev.start_time) meta.push(`时间：${XH.formatDate(ev.start_time, true)}`);
-          if (ev.end_time) meta.push(`结束：${XH.formatDate(ev.end_time, true)}`);
-          if (ev.location) meta.push(`地点：${XH.escapeHtml(ev.location)}`);
-          if (ev.signup_deadline) meta.push(`报名截止：${XH.formatDate(ev.signup_deadline)}`);
-          if (ev.capacity) meta.push(`名额：${ev.registrations_count || 0}/${ev.capacity}`);
-          const cover = ev.cover_url
-            ? `<div class="article-cover" style="background-image:url('${XH.escapeHtml(XH.assetUrl(ev.cover_url))}')"></div>` : '';
-          const action = ended
-            ? '<span class="badge cancelled">该活动已结束</span>'
-            : '<button class="btn primary" id="registerBtn" type="button">报名参加</button>';
-          box.innerHTML = `
-            <a class="article-back" href="events.html">← 返回活动列表</a>
-            <div class="article-head">
-              <h1>${XH.escapeHtml(ev.title)}</h1>
-              <div class="article-meta"><p class="form-tip" style="margin:0">${meta.join('　')}</p></div>
-            </div>
-            ${cover}
-            <div class="rich-text" style="margin:18px 0 0">${absoluteImages(ev.content || ev.summary || '暂无详细介绍')}</div>
-            <div class="form-actions" style="margin-top:24px">${action}</div>
-          `;
-          const btn = document.getElementById('registerBtn');
-          if (btn) btn.addEventListener('click', openRegister);
-        } catch (error) {
-          box.innerHTML = `<div class="empty-state">${XH.escapeHtml(error.message)}</div>`;
-        }
-      }
-
-      document.getElementById('modalClose').addEventListener('click', () => modal.classList.remove('show'));
-      modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
-      registerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        registerStatus.textContent = '正在提交……';
-        registerStatus.className = 'form-status';
-        const submitBtn = registerForm.querySelector('button[type="submit"]');
-        try {
-          const body = Object.fromEntries(new FormData(registerForm).entries());
-          const data = await XH.api(`/api/events/${encodeURIComponent(body.eventId)}/register`, {
-            method: 'POST', body: JSON.stringify(body)
-          });
-          registerStatus.textContent = data.message || '报名成功';
-          registerStatus.className = 'form-status success';
-          submitBtn.disabled = true;
-          setTimeout(() => { modal.classList.remove('show'); submitBtn.disabled = false; }, 1600);
-        } catch (error) {
-          registerStatus.textContent = error.message;
-          registerStatus.className = 'form-status error';
-        }
-      });
-
-      load();
-    })();
-  </script>
-</body>
+  </body>
 </html>

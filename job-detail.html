@@ -288,23 +288,6 @@ body { padding-top: 8rem; }
         </div>
     </div>
 </header>
->
-
-
-  <a class="skip-link" href="#main">跳到正文</a>
-
-  
-
-  <main id="main">
-    <section class="page-section soft">
-      <div class="container">
-        <div id="jobBox">
-          <div class="empty-state">正在加载职位……</div>
-        </div>
-      </div>
-    </section>
-  </main>
-
   <footer class="site-footer" id="contact">
     <!-- 底部页脚（2026-10-14 新版）：白底链接区 + 北大红底品牌区；访问人数由后端实时统计 -->
     <div class="footer-top-white">
@@ -373,74 +356,5 @@ body { padding-top: 8rem; }
 </footer>
 
   <script src="site.js?v=20261017"></script>
-  <script defer>
-    (function () {
-      const XH = window.XH;
-      const box = document.getElementById('jobBox');
-      const id = new URLSearchParams(location.search).get('id');
-      let currentJob = null;
-
-      async function load() {
-        if (!id) { box.innerHTML = '<div class="empty-state">缺少职位参数。</div>'; return; }
-        try {
-          const data = await XH.api(`/api/jobs/${encodeURIComponent(id)}`);
-          currentJob = data.job || {};
-          document.title = `${currentJob.title || '职位详情'} - ${currentJob.company || '新海高人招聘'}`;
-          const body = [];
-          if (currentJob.description) body.push(`<h2>职位描述</h2><p style="white-space:pre-wrap">${XH.escapeHtml(currentJob.description)}</p>`);
-          if (currentJob.requirements) body.push(`<h2>任职要求</h2><p style="white-space:pre-wrap">${XH.escapeHtml(currentJob.requirements)}</p>`);
-          if (currentJob.contact) body.push(`<h2>联系方式</h2><p style="white-space:pre-wrap">${XH.escapeHtml(currentJob.contact)}</p>`);
-          box.innerHTML = `
-            <a class="article-back" href="jobs.html">← 返回职位列表</a>
-            <article class="article">
-              <header class="article-head">
-                <p class="article-meta">
-                  <span>${XH.escapeHtml(currentJob.company)}</span>
-                  ${currentJob.location ? `<span>📍 ${XH.escapeHtml(currentJob.location)}</span>` : ''}
-                  <span class="tag">${XH.escapeHtml(currentJob.type || '全职')}</span>
-                  ${currentJob.salary ? `<span>💰 ${XH.escapeHtml(currentJob.salary)}</span>` : ''}
-                  <span>${XH.formatDate(currentJob.created_at)} 发布</span>
-                </p>
-                <h1>${XH.escapeHtml(currentJob.title)}</h1>
-              </header>
-              <div class="article-body rich-text">${body.join('') || '<p>招聘方暂未填写详情，可通过下方表单投递简历。</p>'}</div>
-            </article>
-            <h3 style="color:var(--deep);margin-top:26px">投递简历</h3>
-            <form id="applyForm" class="auth-form">
-              <div class="form-grid">
-                <div class="field"><label for="applyName">姓名 *</label><input id="applyName" name="name" required /></div>
-                <div class="field"><label for="applyPhone">联系电话 *</label><input id="applyPhone" name="phone" type="tel" required /></div>
-                <div class="field"><label for="applyEmail">邮箱</label><input id="applyEmail" name="email" type="email" /></div>
-                <div class="field"><label for="applyResume">简历/作品链接</label><input id="applyResume" name="resume_url" placeholder="选填，可填网盘或在线简历链接" /></div>
-                <div class="field" style="grid-column:1/-1"><label for="applyNote">自我介绍 / 备注</label><textarea id="applyNote" name="note" rows="4" placeholder="选填，简要介绍你的经历与优势"></textarea></div>
-              </div>
-              <div class="form-actions">
-                <button class="btn primary" type="submit">投递简历</button>
-                <span class="form-tip" id="applyStatus"></span>
-              </div>
-            </form>
-          `;
-          document.getElementById('applyForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const status = document.getElementById('applyStatus');
-            status.textContent = '正在投递……';
-            const form = e.target;
-            const body = Object.fromEntries(new FormData(form).entries());
-            try {
-              const res = await XH.api(`/api/jobs/${currentJob.id}/apply`, { method: 'POST', body: JSON.stringify(body) });
-              status.textContent = res.message || '投递成功';
-              form.reset();
-              XH.toast('简历已投递');
-            } catch (err) {
-              status.textContent = err.message;
-            }
-          });
-        } catch (error) {
-          box.innerHTML = `<div class="empty-state">${XH.escapeHtml(error.message)}</div>`;
-        }
-      }
-      load();
-    })();
-  </script>
-</body>
+  </body>
 </html>

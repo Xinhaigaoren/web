@@ -288,23 +288,6 @@ body { padding-top: 8rem; }
         </div>
     </div>
 </header>
->
-
-
-  <a class="skip-link" href="#main">跳到正文</a>
-
-  
-
-  <main id="main">
-    <section class="page-section">
-      <div class="container">
-        <article class="article" id="articleBox">
-          <div class="empty-state" id="loadingState">正在加载新闻……</div>
-        </article>
-      </div>
-    </section>
-  </main>
-
   <footer class="site-footer" id="contact">
     <!-- 底部页脚（2026-10-14 新版）：白底链接区 + 北大红底品牌区；访问人数由后端实时统计 -->
     <div class="footer-top-white">
@@ -373,52 +356,5 @@ body { padding-top: 8rem; }
 </footer>
 
   <script src="site.js?v=20261017"></script>
-  <script>
-    (function () {
-      const XH = window.XH;
-      const box = document.getElementById('articleBox');
-      const slug = new URLSearchParams(location.search).get('slug');
-
-      function renderBody(content) {
-        const text = String(content || '').trim();
-        if (!text) return '<p>（暂无正文）</p>';
-        const html = text.includes('<')
-          ? text
-          : text.split(/\n{2,}/).map((p) => `<p>${XH.escapeHtml(p).replace(/\n/g, '<br />')}</p>`).join('');
-        return html.replace(/(\bsrc|\bposter|\bhref)=(["'])(\/[^"']*)\2/g, (match, attr, quote, url) => `${attr}=${quote}${XH.assetUrl(url)}${quote}`);
-      }
-
-      async function load() {
-        if (!slug) {
-          box.innerHTML = '<div class="empty-state">缺少新闻参数。</div>';
-          return;
-        }
-        try {
-          const data = await XH.api(`/api/news/${encodeURIComponent(slug)}`);
-          const item = data.article || {};
-          const cover = item.cover_url
-            ? `<div class="article-cover" style="background-image:url('${XH.escapeHtml(XH.assetUrl(item.cover_url))}')"></div>` : '';
-          box.innerHTML = `
-            <a class="article-back" href="news.html">← 返回新闻列表</a>
-            <div class="article-head">
-              <span class="tag">${XH.escapeHtml(item.category || '综合')}</span>
-              <h1>${XH.escapeHtml(item.title)}</h1>
-              <div class="article-meta">
-                <span>${XH.escapeHtml(item.author || '校友会')}</span>
-                <span>${XH.formatDate(item.published_at, true)}</span>
-                <span>${item.view_count || 0} 次阅读</span>
-              </div>
-            </div>
-            ${cover}
-            <div class="article-body">${renderBody(item.content)}</div>
-          `;
-        } catch (error) {
-          box.innerHTML = `<div class="empty-state">${XH.escapeHtml(error.message)}</div>`;
-        }
-      }
-
-      load();
-    })();
-  </script>
-</body>
+  </body>
 </html>

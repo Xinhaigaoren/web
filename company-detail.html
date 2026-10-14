@@ -288,23 +288,6 @@ body { padding-top: 8rem; }
         </div>
     </div>
 </header>
->
-
-
-  <a class="skip-link" href="#main">跳到正文</a>
-
-  
-
-  <main id="main">
-    <section class="page-section soft">
-      <div class="container">
-        <div id="companyBox">
-          <div class="empty-state">正在加载企业信息……</div>
-        </div>
-      </div>
-    </section>
-  </main>
-
   <footer class="site-footer" id="contact">
     <!-- 底部页脚（2026-10-14 新版）：白底链接区 + 北大红底品牌区；访问人数由后端实时统计 -->
     <div class="footer-top-white">
@@ -373,49 +356,5 @@ body { padding-top: 8rem; }
 </footer>
 
   <script src="site.js?v=20261017"></script>
-  <script defer>
-    (function () {
-      const XH = window.XH;
-      const box = document.getElementById('companyBox');
-      const id = new URLSearchParams(location.search).get('id');
-
-      async function load() {
-        if (!id) { box.innerHTML = '<div class="empty-state">缺少企业参数。</div>'; return; }
-        try {
-          const data = await XH.api(`/api/companies/${encodeURIComponent(id)}`);
-          const c = data.company || {};
-          document.title = `${c.name || '企业详情'} - 新海高人`;
-          const logo = c.logo_url
-            ? `<img class="company-logo-img" src="${XH.assetUrl(c.logo_url)}" alt="${XH.escapeHtml(c.name)} logo" onerror="this.style.display='none'" />`
-            : '<span class="company-logo-ph">企</span>';
-          box.innerHTML = `
-            <a class="article-back" href="companies.html">← 返回企业列表</a>
-            <article class="article">
-              <header class="article-head" style="display:flex;align-items:center;gap:16px">
-                ${logo}
-                <div>
-                  <h1 style="margin:0">${XH.escapeHtml(c.name)}</h1>
-                  <p class="article-meta" style="margin:6px 0 0">
-                    ${c.industry ? `<span class="tag">${XH.escapeHtml(c.industry)}</span>` : ''}
-                    ${c.city ? `<span>📍 ${XH.escapeHtml(c.city)}</span>` : ''}
-                    <span>${XH.formatDate(c.created_at)} 入驻</span>
-                  </p>
-                </div>
-              </header>
-              <div class="article-body rich-text">
-                <h2>企业简介</h2>
-                <p style="white-space:pre-wrap">${XH.escapeHtml(c.intro || '（企业暂未填写简介）')}</p>
-                ${c.contact ? `<h2>联系方式</h2><p style="white-space:pre-wrap">${XH.escapeHtml(c.contact)}</p>` : ''}
-                ${c.website ? `<p style="margin-top:14px"><a class="btn ghost" href="${XH.escapeHtml(c.website)}" target="_blank" rel="noopener">访问官网 ↗</a></p>` : ''}
-              </div>
-            </article>
-          `;
-        } catch (error) {
-          box.innerHTML = `<div class="empty-state">${XH.escapeHtml(error.message)}</div>`;
-        }
-      }
-      load();
-    })();
-  </script>
-</body>
+  </body>
 </html>
