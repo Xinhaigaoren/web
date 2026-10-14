@@ -16,6 +16,7 @@ body {
   background: #f7f6f3;
   color: #333;
   font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+  font-weight: normal;
 }
 
 /* =========================================
@@ -41,8 +42,6 @@ body {
   display: flex; justify-content: flex-start; align-items: center;
   position: relative; z-index: 10;
 }
-
-/* 左侧 Logo 与文字 */
 .nav-logo {
   display: flex; align-items: center;
   color: #fff; text-decoration: none;
@@ -67,12 +66,8 @@ body {
   line-height: 1.4; letter-spacing: 0.01rem;
   white-space: nowrap;
 }
-
-/* 右侧整体打包 */
 .nav-right-wrapper { display: flex; align-items: center; gap: 1.5rem; margin-left: auto; }
 .nav-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.8rem; }
-
-/* 右上角工具栏 */
 .top-tools {
   display: flex; align-items: center; gap: 0.8rem;
   font-size: 0.75rem; color: rgba(255, 255, 255, 0.9);
@@ -91,8 +86,6 @@ body {
 .top-tools a.webvpn:hover::after { opacity: 1; }
 .search-icon { width: 0.9rem; height: 0.9rem; fill: currentColor; cursor: pointer; transition: all 0.3s; }
 .search-icon:hover { fill: #fff; transform: scale(1.1); }
-
-/* 右下角主菜单 */
 .main-menu { display: flex; align-items: center; gap: 1.2rem; white-space: nowrap; }
 .main-menu a {
   color: #fff; text-decoration: none;
@@ -107,79 +100,166 @@ body {
   transition: width 0.3s ease; border-radius: 0.125rem;
 }
 .main-menu a:hover::after { width: 100%; }
+/* 当前页保持高亮：校友联络 */
+.main-menu a.active { color: #fff; text-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.45); }
+.main-menu a.active::after { width: 100%; }
 .arrow-down { width: 0.7rem; height: 0.7rem; fill: rgba(255, 255, 255, 0.7); transition: transform 0.3s; }
 .main-menu a:hover .arrow-down { transform: rotate(180deg); fill: #fff; }
-
-/* 三条横线（汉堡菜单） */
 .hamburger-menu { display: flex; flex-direction: column; justify-content: space-between; width: 1.6rem; height: 1rem; cursor: pointer; margin-left: 0.5rem; transition: opacity 0.3s; flex-shrink: 0; }
 .hamburger-menu:hover { opacity: 0.8; }
 .hamburger-line { width: 100%; height: 0.16rem; background-color: #fff; border-radius: 0.08rem; }
 
 /* =========================================
-   页面主体：校友联络
-   （红色顶边 + 白色标题区 + 白色卡片四选项）
+   页面主体：切换标签栏 + 内容面板
    ========================================= */
 .alumni-page { width: 100%; max-width: 95rem; margin: 0 auto; padding: 0 2rem; }
 
-/* 红色顶边 */
-.page-top-bar {
-  width: 100%; height: 0.5rem;
-  background-color: #94070A;
-  border-radius: 0.4rem 0.4rem 0 0;
-  margin-top: 2rem;
+/* 切换标签栏 */
+.tab-bar {
+  display: flex; justify-content: center; gap: 0.6rem;
+  margin: 2.5rem auto 0; max-width: 62rem;
 }
+.tab-btn {
+  background-color: #f5f5f5; border: none;
+  padding: 0.9rem 2.2rem; font-size: 1.05rem;
+  color: #333; cursor: pointer;
+  border-radius: 0.35rem 0.35rem 0 0;
+  font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+  font-weight: normal;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.tab-btn:hover { background-color: #e8e8e8; }          /* 悬停（未选中）灰 */
+.tab-btn.active { background-color: #94070A; color: #fff; }  /* 选中深红白字 */
 
-/* 白色标题区 */
-.page-header {
+/* 内容面板：白色容器 + 顶部红色边框 */
+.panel {
+  display: none;
   background-color: #ffffff;
-  padding: 3.5rem 2rem 3rem;
-  text-align: center;
+  border-top: 0.3rem solid #94070A;
   border-radius: 0 0 0.4rem 0.4rem;
+  padding: 1.5rem 2.5rem 1.5rem;
 }
-.page-header h1 {
-  margin: 0;
-  font-size: 2.75rem;
-  color: #94070A;
-  font-weight: normal;                 /* 不加粗 */
-  font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-  letter-spacing: 0.08em;
+.panel.active { display: block; }
+
+/* 区块：左标签 + 右侧 Grid */
+.region-block { display: flex; align-items: flex-start; gap: 2.5rem; padding: 1.5rem 0; }
+.region-block + .region-block { border-top: 1px solid #eeeeee; }  /* 区块间浅灰细线 */
+.region-label {
+  flex-shrink: 0; width: 7rem;
+  font-size: 1.1rem; color: #94070A;
+  font-weight: normal; font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+}
+.region-grid {
+  flex: 1;
+  display: grid; grid-template-columns: repeat(6, 1fr);
+  column-gap: 1.5rem; row-gap: 1.1rem;
+}
+.region-grid a {
+  font-size: 0.95rem; color: #333; text-decoration: none;
+  font-weight: normal; font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+  transition: color 0.3s; white-space: nowrap;
+}
+.region-grid a:hover { color: #94070A; }
+.region-grid a small { color: #94070A; }
+
+/* 年级联络：7 列 */
+.year-grid { grid-template-columns: repeat(7, 1fr); }
+/* 专业委员会 / 兴趣群体：4 列等宽，超长省略号 */
+.committee-grid, .club-grid { grid-template-columns: repeat(4, 1fr); column-gap: 2rem; }
+.committee-grid a, .club-grid a {
+  overflow: hidden; text-overflow: ellipsis;
 }
 
-/* 白色卡片：居中，垂直排列四个选项 */
-.page-card {
-  background-color: #ffffff;
-  max-width: 62rem;
-  margin: 2.5rem auto 5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 0.6rem 2rem rgba(148, 7, 10, 0.10);
-  padding: 1rem 1.5rem;
+/* =========================================
+   底部页脚（与首页 index.html 完全一致）
+   ========================================= */
+.site-footer { width: 100%; position: relative; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
+.footer-container {
+  width: 100%; max-width: 95rem;
+  margin: 0 auto; padding: 0 2rem;
+  position: relative; z-index: 1;
 }
-.card-option {
+.footer-top-white { background-color: #ffffff; padding: 4rem 0 3rem 0; }
+.footer-top-inner { display: flex; justify-content: space-between; align-items: flex-start; }
+.footer-links-area { flex: 1; max-width: 65%; }
+.footer-title { font-size: 2rem; font-weight: 400; margin-bottom: 2.5rem; color: #333; }
+.links-grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 4rem; row-gap: 1.2rem; }
+.link-item {
+  display: block; color: #666; text-decoration: none;
+  font-size: 0.95rem; padding-bottom: 0.8rem;
+  border-bottom: 1px solid #e0e0e0; transition: all 0.3s;
+}
+.link-item:hover { color: #94070A; border-bottom-color: #94070A; }
+.footer-qr-area { display: flex; flex-direction: column; align-items: center; margin-left: 2rem; }
+.qr-code { width: 12rem; height: 12rem; object-fit: cover; }
+.qr-text {
+  font-size: 0.85rem; color: #666; margin-top: 1rem;
+  text-align: center; white-space: normal; max-width: 14rem; line-height: 1.5;
+}
+.footer-bottom-red { background-color: #94070A; color: #fff; padding: 3rem 0 2rem 0; }
+.footer-bottom-inner { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; }
+.footer-logo-area { display: flex; align-items: center; flex: 0 0 auto; margin-right: 2rem; }
+.footer-logo-img { width: 4.5rem; height: 4.5rem; object-fit: cover; border-radius: 50%; margin-right: 1rem; }
+.footer-logo-text { display: flex; flex-direction: column; white-space: nowrap; }
+.footer-logo-text .zh { font-size: 1.3rem; font-weight: 500; line-height: 1.4; }
+.footer-logo-text .en { font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); margin-top: 0.1rem; }
+.site-footer .contact-grid {
+  display: flex; flex-direction: column;
+  gap: 1rem; font-size: 0.9rem;
+  flex: 1; justify-content: center;
+}
+.contact-row { display: flex; align-items: center; gap: 3rem; }
+.contact-item { display: flex; align-items: center; color: rgba(255, 255, 255, 0.9); white-space: nowrap; }
+.contact-item .icon { width: 1.1rem; height: 1.1rem; fill: #fff; margin-right: 0.6rem; }
+.contact-item a.value { color: rgba(255, 255, 255, 0.9); text-decoration: none; transition: color 0.3s; }
+.contact-item a.value:hover { color: #fff; text-decoration: underline; }
+.pencil-icon-box {
+  width: 1.1rem; height: 1.1rem;
+  background-color: #ffffff; border-radius: 0.15rem;
   display: flex; align-items: center; justify-content: center;
-  min-height: 5.75rem;
-  font-size: 1.6rem;
-  color: #94070A;
-  font-weight: normal;                 /* 不加粗 */
-  text-decoration: none;
-  font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-  border-bottom: 1px solid #f4e6e6;
-  transition: background-color 0.3s ease;
+  margin-right: 0.6rem; flex-shrink: 0;
 }
-.card-option:last-child { border-bottom: none; }
-.card-option:hover { background-color: #fff5f5; }   /* 悬停淡红背景 */
+.pencil-icon { width: 0.8rem; height: 0.8rem; fill: #94070A; }
+.copyright-bar {
+  display: flex; justify-content: space-between;
+  align-items: center; font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+.stats { display: flex; align-items: center; gap: 0.4rem; }
+.eye-icon { width: 1rem; height: 1rem; fill: rgba(255, 255, 255, 0.6); }
+.view-count { font-size: 0.8rem; }
 
-/* 小屏适配：rem 随 1.25vw 自动缩放，这里仅收窄留白 */
+/* =========================================
+   响应式：小屏适配
+   ========================================= */
 @media (max-width: 900px) {
   .alumni-page { padding: 0 1rem; }
-  .page-header { padding: 2.5rem 1rem 2.2rem; }
-  .page-header h1 { font-size: 2.2rem; }
-  .card-option { min-height: 4.75rem; font-size: 1.35rem; }
+  .tab-bar { flex-wrap: wrap; }
+  .tab-btn { padding: 0.7rem 1.2rem; font-size: 0.95rem; }
+  .panel { padding: 1.2rem 1.2rem 0.8rem; }
+  .region-block { flex-direction: column; gap: 1rem; }
+  .region-label { width: auto; }
+  .region-grid { grid-template-columns: repeat(3, 1fr); }
+  .year-grid { grid-template-columns: repeat(4, 1fr); }
+  .committee-grid, .club-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .footer-top-inner { flex-direction: column; align-items: center; }
+  .footer-links-area { max-width: 100%; width: 100%; }
+  .footer-title { text-align: center; }
+  .footer-qr-area { margin-left: 0; margin-top: 2rem; }
+  .footer-bottom-inner { flex-direction: column; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
+  .footer-logo-area { margin-right: 0; }
+  .contact-row { flex-wrap: wrap; justify-content: center; gap: 1rem; }
+  .copyright-bar { flex-direction: column; gap: 0.6rem; text-align: center; }
 }
 </style>
 </head>
 <body>
 
-<!-- ============ 顶部导航栏（与首页 index.html 完全一致） ============ -->
+<!-- ============ 顶部导航栏（与首页 index.html 完全一致，校友联络指向本页并高亮） ============ -->
 <header class="top-navbar">
     <div class="nav-container">
         <!-- 左侧 Logo 区域 -->
@@ -211,14 +291,14 @@ body {
                     </svg>
                 </div>
 
-                <!-- 右下角主菜单（校友联络指向当前页面 alumni.html） -->
+                <!-- 右下角主菜单（校友联络指向当前页面 alumni.html，保持高亮） -->
                 <nav class="main-menu">
                     <a href="news.html">新海高人新闻网</a>
                     <a href="about.html">
                         新海高人概况
                         <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                     </a>
-                    <a href="alumni.html">
+                    <a href="alumni.html" class="active">
                         校友联络
                         <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                     </a>
@@ -247,23 +327,191 @@ body {
 <!-- ============ 页面主体：校友联络 ============ -->
 <main class="alumni-page">
 
-    <!-- 红色顶边 -->
-    <div class="page-top-bar"></div>
-
-    <!-- 白色标题区 -->
-    <div class="page-header">
-        <h1>校友联络</h1>
+    <!-- 切换标签栏：地区联络（默认）/ 年级联络 / 专业委员会 / 兴趣群体 -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-target="tab-region">地区联络</button>
+        <button class="tab-btn" data-target="tab-year">年级联络</button>
+        <button class="tab-btn" data-target="tab-committee">专业委员会</button>
+        <button class="tab-btn" data-target="tab-club">兴趣群体</button>
     </div>
 
-    <!-- 白色卡片：四个选项（【可替换接口】跳转地址暂用 # 占位） -->
-    <div class="page-card">
-        <a class="card-option" href="#">地区联络</a>
-        <a class="card-option" href="#">年级联络</a>
-        <a class="card-option" href="#">专业委员会</a>
-        <a class="card-option" href="#">兴趣群体</a>
+    <!-- 1. 地区联络（默认） -->
+    <div class="panel active" id="tab-region">
+        <!-- 国内校友 -->
+        <div class="region-block">
+            <div class="region-label">国内校友</div>
+            <div class="region-grid">
+                <a href="#">安徽</a><a href="#">重庆</a><a href="#">福建</a><a href="#">甘肃</a><a href="#">广东</a><a href="#">广西</a>
+                <a href="#">贵州</a><a href="#">海南</a><a href="#">河北</a><a href="#">河南</a><a href="#">黑龙江</a><a href="#">湖北</a>
+                <a href="#">湖南</a><a href="#">吉林</a><a href="#">江苏</a><a href="#">江西</a><a href="#">辽宁</a><a href="#">内蒙古</a>
+                <a href="#">宁夏</a><a href="#">青海</a><a href="#">山东</a><a href="#">山西</a><a href="#">陕西</a><a href="#">上海</a>
+                <a href="#">四川</a><a href="#">天津</a><a href="#">西藏</a><a href="#">新疆</a><a href="#">云南</a><a href="#">浙江</a>
+                <a href="#">香港</a><a href="#">澳门</a><a href="#">台湾</a>
+            </div>
+        </div>
+        <!-- 国外校友 -->
+        <div class="region-block">
+            <div class="region-label">国外校友</div>
+            <div class="region-grid">
+                <a href="#">阿联酋</a><a href="#">奥地利</a><a href="#">澳大利亚</a><a href="#">北欧</a><a href="#">德国</a><a href="#">法国</a>
+                <a href="#">韩国</a><a href="#">荷兰</a><a href="#">加拿大</a><a href="#">柬埔寨</a><a href="#">马来西亚</a><a href="#">美国</a>
+                <a href="#">日本</a><a href="#">瑞士</a><a href="#">泰国</a><a href="#">西班牙</a><a href="#">新加坡</a><a href="#">新西兰</a>
+                <a href="#">意大利</a><a href="#">英国</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 年级联络 -->
+    <div class="panel" id="tab-year">
+        <div class="region-block">
+            <div class="region-label">海林市高级中学毕业校友</div>
+            <div class="region-grid year-grid">
+                <a href="#">1984</a><a href="#">1985</a><a href="#">1986</a><a href="#">1987</a><a href="#">1988</a><a href="#">1989</a><a href="#">1990</a>
+                <a href="#">1991</a><a href="#">1992</a><a href="#">1993</a><a href="#">1994</a><a href="#">1995</a><a href="#">1996</a><a href="#">1997</a>
+                <a href="#">1998</a><a href="#">1999</a><a href="#">2000</a><a href="#">2001</a><a href="#">2002</a><a href="#">2003</a><a href="#">2004</a>
+                <a href="#">2005</a><a href="#">2006</a><a href="#">2007</a><a href="#">2008</a><a href="#">2009</a><a href="#">2010</a><a href="#">2011</a>
+                <a href="#">2012</a><a href="#">2013</a><a href="#">2014</a><a href="#">2015</a><a href="#">2016</a><a href="#">2017</a><a href="#">2018</a>
+                <a href="#">2019</a><a href="#">2020</a><a href="#">2021</a><a href="#">2022</a><a href="#">2023</a><a href="#">2024</a><a href="#">2025</a>
+                <a href="#">2026</a><a href="#">2027 <small>(筹)</small></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 专业委员会 -->
+    <div class="panel" id="tab-committee">
+        <div class="region-block">
+            <div class="region-label">专业委员会</div>
+            <div class="region-grid committee-grid">
+                <a href="#">新海高人人工智能专业委员会</a>
+                <a href="#">新海高人航空航天专业委员会</a>
+                <a href="#">新海高人土木工程专业委员会</a>
+                <a href="#">新海高人高等教育专业委员会</a>
+                <a href="#">新海高人基础教育专业委员会</a>
+                <a href="#">新海高人能源专业委员会</a>
+                <a href="#">新海高人具身智能专业委员会</a>
+                <a href="#">新海高人电子信息专业委员会</a>
+                <a href="#">新海高人电气工程专业委员会</a>
+                <a href="#">新海高人自动化专业委员会</a>
+                <a href="#">新海高人工程力学专业委员会</a>
+                <a href="#">新海高人医学专业委员会</a>
+                <a href="#">新海高人生命科学专业委员会</a>
+                <a href="#">新海高人材料科学专业委员会</a>
+                <a href="#">新海高人车辆工程专业委员会</a>
+                <a href="#">新海高人计算机科学专业委员会</a>
+                <a href="#">新海高人软件工程专业委员会</a>
+                <a href="#">新海高人人文社科专业委员会</a>
+                <a href="#">新海高人基础科学专业委员会</a>
+                <a href="#">新海高人机械工程专业委员会</a>
+                <a href="#">新海高人农业科学专业委员会</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 兴趣群体 -->
+    <div class="panel" id="tab-club">
+        <div class="region-block">
+            <div class="region-label">兴趣群体</div>
+            <div class="region-grid club-grid">
+                <a href="#">新海高人健身俱乐部</a>
+                <a href="#">新海高人足球俱乐部</a>
+                <a href="#">新海高人排球俱乐部</a>
+                <a href="#">新海高人羽毛球俱乐部</a>
+                <a href="#">新海高人台球俱乐部</a>
+                <a href="#">新海高人游泳俱乐部</a>
+                <a href="#">新海高人骑行俱乐部</a>
+                <a href="#">新海高人乒乓球俱乐部</a>
+                <a href="#">新海高人篮球俱乐部</a>
+                <a href="#">新海高人校友合唱团（筹）</a>
+            </div>
+        </div>
     </div>
 
 </main>
 
+<!-- ============ 底部页脚（与首页 index.html 完全一致） ============ -->
+<footer class="site-footer" id="contact">
+    <div class="footer-top-white">
+        <div class="footer-container">
+            <div class="footer-top-inner">
+                <div class="footer-links-area">
+                    <h2 class="footer-title">常用链接</h2>
+                    <div class="links-grid">
+                        <a href="#" class="link-item">实用信息</a>
+                        <a href="contact.html" class="link-item">联系我们</a>
+                        <a href="#" class="link-item">宣传资源</a>
+                        <a href="#" class="link-item">校友标志</a>
+                        <a href="#" class="link-item">新海高人标志</a>
+                        <a href="#" class="link-item">新海高青年期刊</a>
+                    </div>
+                </div>
+                <div class="footer-qr-area">
+                    <!-- 【可替换接口】二维码图片地址：当前已嵌入公众号二维码 assets/qr-code.png，如需更换请修改下方 src -->
+                    <img src="assets/qr-code.png" alt="二维码" class="qr-code">
+                    <p class="qr-text">欢迎关注海林市高级中学校友（新海高人）公众号</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom-red">
+        <div class="footer-container">
+            <div class="footer-bottom-inner">
+                <div class="footer-logo-area">
+                    <!-- 【可替换接口】Logo 图片地址：当前使用 assets/haigao-logo.jpg -->
+                    <img src="assets/haigao-logo.jpg" alt="Logo" class="footer-logo-img">
+                    <div class="footer-logo-text">
+                        <span class="zh">海林市高级中学校友（新海高人）</span>
+                        <span class="en">Hailin Senior High School Alumni Association</span>
+                    </div>
+                </div>
+                <div class="contact-grid">
+                    <div class="contact-row">
+                        <div class="contact-item">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                            <a href="mailto:xinhaigaoren@126.com" class="value">xinhaigaoren@126.com</a>
+                        </div>
+                        <div class="contact-item">
+                            <div class="pencil-icon-box">
+                                <svg viewBox="0 0 24 24" class="pencil-icon"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                            </div>
+                            <a href="#" class="value feedback-link">意见反馈</a>
+                        </div>
+                    </div>
+                    <div class="contact-row">
+                        <div class="contact-item">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            <span class="value">北京市海淀区 | 黑龙江省哈尔滨市南岗区 | 吉林省长春市朝阳区</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright-bar">
+                <p class="copyright-text">版权所有 © 海林市高级中学校友（新海高人）</p>
+                <div class="stats">
+                    <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-3-3-3z"/></svg>
+                    <!-- 浏览量：复用与首页一致的站内实时统计（site.js 自动填充真实数字；如需切换不蒜子统计，替换为 busuanzi 脚本并去掉 site.js 计数即可） -->
+                    <span id="site-pv-count" class="view-count">加载中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+/* 校友联络：切换标签栏交互 */
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab-bar .tab-btn'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.panel'));
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      panels.forEach(function (p) { p.classList.remove('active'); });
+      var target = document.getElementById(tab.getAttribute('data-target'));
+      if (target) target.classList.add('active');
+    });
+  });
+})();
+</script>
+<script src="site.js?v=20261017"></script>
 </body>
 </html>
