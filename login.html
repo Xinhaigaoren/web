@@ -6,7 +6,7 @@
 <title>校友内网门户 - 海林市高级中学校友（新海高人）</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: clamp(12px, 1.25vw, 16px); }
+    html { font-size: clamp(11px, 1.05vw, 14px); }
     body {
         font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
         background: linear-gradient(135deg, #94070A 0%, #c41e22 40%, #e85d5d 100%);
@@ -23,31 +23,31 @@
             radial-gradient(circle at 80% 70%, rgba(255,255,255,0.06) 0%, transparent 50%);
         pointer-events: none;
     }
-    .login-header { display: flex; align-items: center; justify-content: center; gap: 1.8rem; margin: auto 0 3rem 0; position: relative; z-index: 1; }
-    .login-header .logo-circle { height: 6rem; width: 6rem; object-fit: contain; border-radius: 50%; filter: drop-shadow(0 0.3rem 0.6rem rgba(0,0,0,0.3)); }
+    .login-header { display: flex; align-items: center; justify-content: center; gap: 1.2rem; margin: auto 0 2rem 0; position: relative; z-index: 1; }
+    .login-header .logo-circle { height: 4.5rem; width: 4.5rem; object-fit: contain; border-radius: 50%; filter: drop-shadow(0 0.3rem 0.6rem rgba(0,0,0,0.3)); }
     .login-header .logo-text-area { display: flex; flex-direction: column; justify-content: center; color: #ffffff; white-space: nowrap; }
-    .login-header .logo-text-area .zh { font-size: 1.6rem; font-weight: normal; line-height: 1.4; letter-spacing: 0.05rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
-    .login-header .logo-text-area .en { font-size: 1rem; font-weight: normal; line-height: 1.4; margin-top: 0.2rem; opacity: 0.9; letter-spacing: 0.02rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
-    .login-card { width: 100%; max-width: 42rem; background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%); border-radius: 1rem; box-shadow: 0 1.5rem 4rem rgba(0,0,0,0.3); padding: 4rem 5rem; position: relative; z-index: 1; }
-    .lang-switch { position: absolute; top: 2rem; right: 2rem; display: flex; align-items: center; gap: 0.4rem; font-size: 1rem; color: #94070A; text-decoration: none; }
+    .login-header .logo-text-area .zh { font-size: 1.35rem; font-weight: normal; line-height: 1.4; letter-spacing: 0.05rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
+    .login-header .logo-text-area .en { font-size: 0.9rem; font-weight: normal; line-height: 1.4; margin-top: 0.2rem; opacity: 0.9; letter-spacing: 0.02rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
+    .login-card { width: 100%; max-width: 36rem; background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%); border-radius: 1rem; box-shadow: 0 1.5rem 4rem rgba(0,0,0,0.3); padding: 2.5rem 3rem; position: relative; z-index: 1; }
+    .lang-switch { position: absolute; top: 1rem; right: 1.2rem; display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; color: #94070A; text-decoration: none; }
     .lang-switch svg { width: 1.1rem; height: 1.1rem; fill: #94070A; }
-    .login-title { text-align: center; font-size: 1.8rem; font-weight: normal; color: #94070A; margin-bottom: 1rem; }
-    .login-subtitle { text-align: center; font-size: 1.3rem; color: #94070A; margin-bottom: 3rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; font-weight: normal; }
+    .login-title { text-align: center; font-size: 1.5rem; font-weight: normal; color: #94070A; margin-bottom: 0.8rem; }
+    .login-subtitle { text-align: center; font-size: 1.15rem; color: #94070A; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; font-weight: normal; }
     .login-subtitle .arrow-icon { width: 1.6rem; height: 1.6rem; fill: #94070A; }
-    .form-group { margin-bottom: 2rem; }
-    .form-group label { display: block; font-size: 1.05rem; color: #333; margin-bottom: 0.6rem; }
-    .form-group input { width: 100%; padding: 1.1rem 1.2rem; font-size: 1.05rem; border: 1px solid #d0d0d0; border-radius: 0.5rem; outline: none; background-color: #ffffff; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label { display: block; font-size: 0.95rem; color: #333; margin-bottom: 0.5rem; }
+    .form-group input { width: 100%; padding: 0.85rem 1rem; font-size: 0.95rem; border: 1px solid #d0d0d0; border-radius: 0.5rem; outline: none; background-color: #ffffff; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
     .form-group input:focus { border-color: #94070A; box-shadow: 0 0 0 0.2rem rgba(148,7,10,0.15); }
     .form-group input::placeholder { color: #b0b0b0; }
     .form-links { text-align: right; margin-top: 0.6rem; display: flex; justify-content: flex-end; align-items: center; gap: 0.6rem; }
     .form-links a { font-size: 0.95rem; color: #94070A; text-decoration: none; cursor: pointer; }
     .form-links a:hover { text-decoration: underline; }
     .form-links .link-divider { font-size: 0.85rem; color: #ccc; user-select: none; }
-    .trust-browser { display: flex; align-items: flex-start; gap: 0.6rem; margin: 2rem 0; font-size: 0.9rem; color: #666; line-height: 1.6; }
+    .trust-browser { display: flex; align-items: flex-start; gap: 0.6rem; margin: 1rem 0; font-size: 0.85rem; color: #666; line-height: 1.6; }
     .trust-browser input[type="checkbox"] { margin-top: 0.25rem; accent-color: #94070A; transform: scale(1.2); }
-    .login-btn { width: 100%; padding: 1.2rem; font-size: 1.2rem; font-weight: normal; color: #ffffff; background: linear-gradient(135deg, #94070A 0%, #c41e22 100%); border: none; border-radius: 0.5rem; cursor: pointer; letter-spacing: 0.15rem; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
+    .login-btn { width: 100%; padding: 0.9rem; font-size: 1.05rem; font-weight: normal; color: #ffffff; background: linear-gradient(135deg, #94070A 0%, #c41e22 100%); border: none; border-radius: 0.5rem; cursor: pointer; letter-spacing: 0.15rem; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
     .login-btn:hover { background: linear-gradient(135deg, #c41e22 0%, #94070A 100%); box-shadow: 0 0.5rem 1.5rem rgba(148,7,10,0.4); }
-    .login-footer { margin: auto 0 0 0; display: flex; justify-content: center; align-items: center; font-size: 1rem; color: rgba(255,255,255,0.85); position: relative; z-index: 1; }
+    .login-footer { margin: auto 0 0 0; display: flex; justify-content: center; align-items: center; font-size: 0.9rem; color: rgba(255,255,255,0.85); position: relative; z-index: 1; }
     .footer-contact { display: flex; align-items: center; gap: 0.5rem; }
     .footer-contact svg { width: 1.1rem; height: 1.1rem; fill: #fff; }
     .footer-contact a { color: rgba(255,255,255,0.85); text-decoration: none; }

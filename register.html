@@ -6,33 +6,33 @@
 <title>校友注册 - 海林市高级中学校友（新海高人）</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: clamp(12px, 1.25vw, 16px); }
+    html { font-size: clamp(11px, 1.05vw, 14px); }
     body { font-family: "Microsoft YaHei", "微软雅黑", sans-serif; background: linear-gradient(135deg, #94070A 0%, #c41e22 40%, #e85d5d 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 3rem 2rem; }
-    .register-header { display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin: auto 0 2.5rem 0; }
-    .register-header .logo-circle { height: 5rem; width: 5rem; object-fit: contain; border-radius: 50%; filter: drop-shadow(0 0.3rem 0.6rem rgba(0,0,0,0.3)); }
+    .register-header { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: auto 0 1.5rem 0; }
+    .register-header .logo-circle { height: 4rem; width: 4rem; object-fit: contain; border-radius: 50%; filter: drop-shadow(0 0.3rem 0.6rem rgba(0,0,0,0.3)); }
     .register-header .logo-text-area { display: flex; flex-direction: column; justify-content: center; color: #ffffff; white-space: nowrap; }
-    .register-header .logo-text-area .zh { font-size: 1.5rem; font-weight: normal; line-height: 1.4; letter-spacing: 0.05rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
-    .register-header .logo-text-area .en { font-size: 0.9rem; font-weight: normal; line-height: 1.4; margin-top: 0.1rem; opacity: 0.9; letter-spacing: 0.02rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
-    .register-card { width: 100%; max-width: 50rem; background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%); border-radius: 0.5rem; box-shadow: 0 1rem 3rem rgba(0,0,0,0.25); padding: 3rem 4rem 4rem; margin-bottom: auto; }
-    .tip-text { font-size: 1.15rem; color: #333; margin-bottom: 2.5rem; line-height: 1.8; text-align: center; }
+    .register-header .logo-text-area .zh { font-size: 1.3rem; font-weight: normal; line-height: 1.4; letter-spacing: 0.05rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
+    .register-header .logo-text-area .en { font-size: 0.85rem; font-weight: normal; line-height: 1.4; margin-top: 0.1rem; opacity: 0.9; letter-spacing: 0.02rem; text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.3); }
+    .register-card { width: 100%; max-width: 46rem; background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%); border-radius: 0.5rem; box-shadow: 0 1rem 3rem rgba(0,0,0,0.25); padding: 2rem 3rem 2.5rem; margin-bottom: auto; }
+    .tip-text { font-size: 1rem; color: #333; margin-bottom: 1.5rem; line-height: 1.8; text-align: center; }
     .form-row { display: flex; align-items: flex-start; margin-bottom: 0.5rem; }
-    .form-label { flex: 0 0 8rem; text-align: right; font-size: 1rem; color: #333; padding-top: 0.9rem; padding-right: 1rem; }
+    .form-label { flex: 0 0 8rem; text-align: right; font-size: 0.95rem; color: #333; padding-top: 0.7rem; padding-right: 1rem; }
     .form-label .required { color: #d8000c; margin-right: 0.2rem; }
     .form-input-area { flex: 1; display: flex; flex-direction: column; }
-    .form-input-area input[type="text"], .form-input-area input[type="tel"], .form-input-area input[type="email"] { width: 100%; max-width: 32rem; padding: 0.85rem 1rem; font-size: 1rem; border: 1px solid #e0c8c0; border-radius: 0.2rem; outline: none; background: #ffffff; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; transition: border-color 0.3s; }
+    .form-input-area input[type="text"], .form-input-area input[type="tel"], .form-input-area input[type="email"] { width: 100%; max-width: 32rem; padding: 0.7rem 0.9rem; font-size: 0.95rem; border: 1px solid #e0c8c0; border-radius: 0.2rem; outline: none; background: #ffffff; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; transition: border-color 0.3s; }
     .form-input-area input:focus { border-color: #94070A; box-shadow: 0 0 0 0.15rem rgba(148,7,10,0.12); }
-    .error-tip { font-size: 0.85rem; color: #d8000c; margin-top: 0.4rem; margin-bottom: 0.8rem; }
-    .radio-group { display: flex; align-items: center; gap: 2rem; padding-top: 0.9rem; }
-    .radio-group label { display: flex; align-items: center; gap: 0.4rem; font-size: 1rem; color: #333; cursor: pointer; }
+    .error-tip { font-size: 0.85rem; color: #d8000c; margin-top: 0.3rem; margin-bottom: 0.5rem; }
+    .radio-group { display: flex; align-items: center; gap: 2rem; padding-top: 0.7rem; }
+    .radio-group label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.95rem; color: #333; cursor: pointer; }
     .radio-group input[type="radio"] { accent-color: #94070A; transform: scale(1.1); cursor: pointer; }
     .captcha-row { display: flex; align-items: center; gap: 1rem; max-width: 32rem; }
-    .captcha-row input { flex: 1; padding: 0.85rem 1rem; font-size: 1rem; border: 1px solid #e0c8c0; border-radius: 0.2rem; outline: none; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
+    .captcha-row input { flex: 1; padding: 0.7rem 0.9rem; font-size: 0.95rem; border: 1px solid #e0c8c0; border-radius: 0.2rem; outline: none; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
     .captcha-row input:focus { border-color: #94070A; }
     .captcha-img { font-size: 1.6rem; font-weight: bold; color: #94070A; letter-spacing: 0.3rem; font-family: "Courier New", monospace; user-select: none; cursor: pointer; display: flex; align-items: center; }
     .captcha-refresh { font-size: 0.95rem; color: #94070A; text-decoration: none; cursor: pointer; margin-left: 0.5rem; }
     .captcha-refresh:hover { text-decoration: underline; }
-    .divider-line { width: 100%; max-width: 32rem; height: 1px; background: #e0c8c0; margin: 2.5rem auto; }
-    .next-btn { display: block; width: 12rem; margin: 0 auto; padding: 1rem; font-size: 1.15rem; font-weight: normal; color: #ffffff; background: linear-gradient(135deg, #94070A 0%, #c41e22 100%); border: none; border-radius: 0.3rem; cursor: pointer; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; transition: background 0.3s, box-shadow 0.3s; }
+    .divider-line { width: 100%; max-width: 32rem; height: 1px; background: #e0c8c0; margin: 1.5rem auto; }
+    .next-btn { display: block; width: 11rem; margin: 0 auto; padding: 0.8rem; font-size: 1.05rem; font-weight: normal; color: #ffffff; background: linear-gradient(135deg, #94070A 0%, #c41e22 100%); border: none; border-radius: 0.3rem; cursor: pointer; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; transition: background 0.3s, box-shadow 0.3s; }
     .next-btn:hover { background: linear-gradient(135deg, #c41e22 0%, #94070A 100%); box-shadow: 0 0.4rem 1rem rgba(148,7,10,0.4); }
 </style>
 </head>
