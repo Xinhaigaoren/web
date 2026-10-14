@@ -421,6 +421,33 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// 访问统计：官网页脚「访问人数」实时数据（公开接口）
+app.get('/api/stats/pv', async (req, res) => {
+  try {
+    if (!pool) return fail(res, 503, '统计服务未配置数据库');
+    const r = await dbQuery(`select stat_value from public.site_stats where stat_key = 'site_visits' limit 1`);
+    return ok(res, { pv: Number(r.rows[0] ? r.rows[0].stat_value : 0) });
+  } catch (e) {
+    return fail(res, 500, '读取访问量失败', { error: e.message });
+  }
+});
+
+// 访问统计：记录一次访问（前端按会话去重调用，同一浏览器会话只计一次）
+app.post('/api/stats/visit', async (req, res) => {
+  try {
+    if (!pool) return fail(res, 503, '统计服务未配置数据库');
+    const r = await dbQuery(
+      `insert into public.site_stats (stat_key, stat_value)
+       values ('site_visits', 1)
+       on conflict (stat_key) do update set stat_value = public.site_stats.stat_value + 1, updated_at = now()
+       returning stat_value`
+    );
+    return ok(res, { pv: Number(r.rows[0] ? r.rows[0].stat_value : 0) });
+  } catch (e) {
+    return fail(res, 500, '记录访问失败', { error: e.message });
+  }
+});
+
 app.get('/', (req, res) => {
   res.json({ message: '接口不存在，请访问 /api/health' });
 });

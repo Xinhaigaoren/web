@@ -243,13 +243,37 @@
         const el = footer.querySelector(sel);
         if (el) el.innerHTML = String(val);
       };
-      set('.footer-grid > div:first-child h2', c.name);
-      set('.footer-grid > div:first-child p', c.about);
-      set('.footer-grid > div:nth-child(2) p:nth-of-type(1)', c.email);
-      set('.footer-grid > div:nth-child(2) p:nth-of-type(2)', c.address);
+      set('.footer-logo-text .zh', c.name);
+      set('.contact-row:first-child .contact-item:first-child a.value', c.email);
+      set('.contact-row:nth-of-type(2) .contact-item .value', c.address);
     } catch (error) { /* 保留静态页脚 */ }
   }
   loadFooter();
+
+  // 访问人数：后端实时统计（会话去重计一次；定时刷新保持数字实时）
+  async function refreshSitePv() {
+    const el = document.getElementById('site-pv-count');
+    if (!el) return;
+    try {
+      let counted = false;
+      try { counted = sessionStorage.getItem('xh_site_visited') === '1'; } catch (_) { counted = false; }
+      let pv = null;
+      if (!counted) {
+        const r = await api('/api/stats/visit', { method: 'POST' });
+        if (r && typeof r.pv === 'number') pv = r.pv;
+        try { sessionStorage.setItem('xh_site_visited', '1'); } catch (_) {}
+      }
+      if (pv === null) {
+        const g = await api('/api/stats/pv');
+        if (g && typeof g.pv === 'number') pv = g.pv;
+      }
+      if (pv !== null) el.textContent = Number(pv).toLocaleString('zh-CN');
+    } catch (error) {
+      if (el.textContent === '加载中...') el.textContent = '—';
+      console.warn('[site] pv refresh skipped:', error.message);
+    }
+  }
+  refreshSitePv();
 
   // 首页动态内容：新闻与活动从接口加载，点击可进入详情页
   // 仅在首页执行，其他页面不再无谓请求
@@ -304,7 +328,7 @@
     if (document.visibilityState === 'hidden') return;
     const slug = detectSiteSlug();
     const onlyFooter = !dynamicPages.has(slug);
-    const tasks = [loadSiteContent(), loadFooter()];
+    const tasks = [loadSiteContent(), loadFooter(), refreshSitePv()];
     if (!onlyFooter) tasks.push(loadHomeDynamic());
     await Promise.allSettled(tasks);
     document.dispatchEvent(new CustomEvent('xh:live-refresh'));

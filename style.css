@@ -152,12 +152,7 @@ time { color: var(--accent); font-weight: 700; font-size: 14px; }
 .donate h2 { color: #fff; }
 .donate p { margin: 0 auto 28px; max-width: 690px; color: rgba(255,255,255,.84); }
 
-.site-footer { background: #430810; color: rgba(255,255,255,.78); padding: 56px 0 24px; }
-.footer-grid { display: grid; grid-template-columns: 1.3fr 1fr .7fr; gap: 46px; padding-bottom: 36px; border-bottom: 1px solid rgba(255,255,255,.12); }
-.site-footer h2, .site-footer h3 { color: #fff; margin-top: 0; }
-.site-footer a { display: block; margin: 6px 0; }
-.site-footer a:hover { color: #fff; }
-.copyright { display: flex; justify-content: space-between; gap: 18px; padding-top: 22px; font-size: 14px; }
+/* 页脚样式已整体迁移至文件末尾「底部页脚（新版）」区块 */
 
 @media (max-width: 980px) {
   .top-inner { justify-content: center; }
@@ -175,7 +170,6 @@ time { color: var(--accent); font-weight: 700; font-size: 14px; }
   .two-col, .news-layout, .service-wrap, .join-card { grid-template-columns: 1fr; }
   .event-cards, .story-grid, .about-grid, .service-list { grid-template-columns: 1fr; }
   .join-form { grid-template-columns: 1fr; }
-  .footer-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
@@ -193,7 +187,6 @@ time { color: var(--accent); font-weight: 700; font-size: 14px; }
   .news-list a { grid-template-columns: 1fr; }
   .event-cards article, .event-cards a.event-link { flex-direction: column; }
   .join-card { padding: 28px; border-radius: 12px; }
-  .copyright { flex-direction: column; }
 }
 
 /* 品牌 Logo 与表单追加样式 */
@@ -347,12 +340,7 @@ h1, h2, h3, .serif-title { font-family: var(--font-serif); }
 .reveal.in-view { opacity: 1; transform: translateY(0); }
 @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
 
-/* 页脚：深红底 + 二维码占位 */
-.site-footer { background: linear-gradient(180deg, #430810 0%, #2b050a 100%); }
-.footer-qr { display: flex; gap: 18px; margin-top: 18px; }
-.footer-qr-box { width: 96px; text-align: center; }
-.footer-qr-box .qr { width: 96px; height: 96px; border: 1px dashed rgba(255,255,255,.35); border-radius: 8px; display: grid; place-items: center; color: rgba(255,255,255,.5); font-size: 11px; }
-.footer-qr-box small { display: block; margin-top: 6px; color: rgba(255,255,255,.6); font-size: 11px; }
+/* 页脚：新版样式见文件末尾「底部页脚（新版）」区块 */
 
 /* 响应式：工具条与数据墙 */
 @media (max-width: 980px) {
@@ -364,4 +352,82 @@ h1, h2, h3, .serif-title { font-family: var(--font-serif); }
 @media (max-width: 640px) {
   .glory-grid { grid-template-columns: 1fr; }
   .campus-cards { grid-template-columns: 1fr; }
+}
+
+/* ==========================================
+   底部页脚（新版：白底链接区 + 北大红底品牌区）
+   2026-10-14 由站方设计稿集成；访问人数由后端实时统计
+   ========================================== */
+.site-footer {
+  width: 100%; position: relative;
+  font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+}
+.footer-container {
+  width: 100%; max-width: 95rem;
+  margin: 0 auto; padding: 0 2rem;
+  position: relative; z-index: 1;
+}
+/* 上半部分：白底 */
+.footer-top-white { background-color: #ffffff; padding: 4rem 0 3rem 0; }
+.footer-top-inner { display: flex; justify-content: space-between; align-items: flex-start; }
+.footer-links-area { flex: 1; max-width: 65%; }
+.footer-title { font-size: 2rem; font-weight: 400; margin-bottom: 2.5rem; color: #333; }
+.links-grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 4rem; row-gap: 1.2rem; }
+.link-item {
+  display: block; color: #666; text-decoration: none;
+  font-size: 0.95rem; padding-bottom: 0.8rem;
+  border-bottom: 1px solid #e0e0e0; transition: all 0.3s;
+}
+.link-item:hover { color: #94070A; border-bottom-color: #94070A; }
+.footer-qr-area { text-align: center; margin-left: 2rem; }
+.qr-code { width: 12rem; height: 12rem; object-fit: contain; }
+.qr-text { font-size: 0.85rem; color: #666; margin-top: 1rem; }
+/* 下半部分：北大红底 */
+.footer-bottom-red { background-color: #94070A; color: #fff; padding: 3rem 0 2rem 0; }
+.footer-bottom-inner { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; }
+.footer-logo-area { display: flex; align-items: center; flex: 0 0 auto; margin-right: 2rem; }
+.footer-logo-img { height: 4.5rem; width: auto; margin-right: 1rem; }
+.footer-logo-text { display: flex; flex-direction: column; white-space: nowrap; }
+.footer-logo-text .zh { font-size: 1.3rem; font-weight: 500; line-height: 1.4; }
+.footer-logo-text .en { font-size: 0.75rem; color: rgba(255,255,255,0.85); margin-top: 0.1rem; }
+/* 右侧联系方式（作用域限定，避免影响联系页 contact-grid 卡片布局） */
+.site-footer .contact-grid {
+  display: flex; flex-direction: column;
+  gap: 1rem; font-size: 0.9rem;
+  flex: 1; justify-content: center;
+}
+.contact-row { display: flex; align-items: center; gap: 3rem; }
+.contact-item { display: flex; align-items: center; color: rgba(255, 255, 255, 0.9); white-space: nowrap; }
+.contact-item .icon { width: 1.1rem; height: 1.1rem; fill: #fff; margin-right: 0.6rem; }
+.contact-item a.value { color: rgba(255, 255, 255, 0.9); text-decoration: none; transition: color 0.3s; }
+.contact-item a.value:hover { color: #fff; text-decoration: underline; }
+/* 意见反馈图标（白底紫铅笔） */
+.pencil-icon-box {
+  width: 1.1rem; height: 1.1rem;
+  background-color: #ffffff; border-radius: 0.15rem;
+  display: flex; align-items: center; justify-content: center;
+  margin-right: 0.6rem; flex-shrink: 0;
+}
+.pencil-icon { width: 0.8rem; height: 0.8rem; fill: #94070A; }
+/* 底部版权栏 */
+.copyright-bar {
+  display: flex; justify-content: space-between;
+  align-items: center; font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+.stats { display: flex; align-items: center; gap: 0.4rem; }
+.eye-icon { width: 1rem; height: 1rem; fill: rgba(255, 255, 255, 0.6); }
+.view-count { font-size: 0.8rem; }
+/* 页脚移动端适配 */
+@media (max-width: 768px) {
+  .footer-top-inner { flex-direction: column; align-items: center; }
+  .footer-links-area { max-width: 100%; width: 100%; }
+  .footer-title { text-align: center; }
+  .footer-qr-area { margin-left: 0; margin-top: 2rem; }
+  .footer-bottom-inner { flex-direction: column; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
+  .footer-logo-area { margin-right: 0; }
+  .contact-row { flex-wrap: wrap; justify-content: center; gap: 1rem; }
+  .copyright-bar { flex-direction: column; gap: 0.6rem; text-align: center; }
 }

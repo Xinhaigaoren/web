@@ -268,3 +268,12 @@ create index if not exists idx_audit_logs_created on public.audit_logs(created_a
 -- 微信登录补充列（对已存在的表执行）
 alter table public.app_users add column if not exists wechat_openid text;
 create unique index if not exists idx_app_users_wechat_openid on public.app_users(wechat_openid) where wechat_openid is not null;
+
+-- ---------- 访问统计（页脚实时访问人数） ----------
+create table if not exists public.site_stats (
+  stat_key text primary key,
+  stat_value bigint not null default 0,
+  updated_at timestamptz default now()
+);
+insert into public.site_stats (stat_key, stat_value) values ('site_visits', 0)
+  on conflict (stat_key) do nothing;
