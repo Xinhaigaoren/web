@@ -161,6 +161,15 @@
         color: #ffffff;
         letter-spacing: 0.05rem;
     }
+    .card-info .info-row .value.editable {
+        cursor: pointer;
+        border-bottom: 0.1rem dashed rgba(255,255,255,0.45);
+        padding-bottom: 0.1rem;
+    }
+    .card-info .info-row .value.editable:hover {
+        border-bottom-style: solid;
+        border-bottom-color: #ffffff;
+    }
 
     /* 照片 */
     .card-photo {
@@ -272,7 +281,7 @@
                 </div>
                 <div class="info-row">
                     <span class="label">所在地区</span>
-                    <span class="value" id="cardRegion">—</span>
+                    <span class="value editable" id="cardRegion" title="点击修改所在地区">—</span>
                 </div>
                 <div class="info-row">
                     <span class="label">毕业学校</span>
@@ -394,6 +403,36 @@
             return;
         }
         photoInput.click();
+    });
+
+    /* 所在地区：校友本人可点击修改（同步后端与本地缓存） */
+    regionEl.addEventListener('click', async () => {
+        const token = localStorage.getItem('alumniToken');
+        if (!token) { alert('请先登录'); location.href = 'login.html'; return; }
+        const cur = regionEl.textContent === '—' ? '' : regionEl.textContent;
+        const input = prompt('修改所在地区', cur);
+        if (input === null) return;
+        const v = String(input).trim();
+        if (!v) { alert('所在地区不能为空'); return; }
+        try {
+            const resp = await fetch(API_BASE_URL + '/api/alumni/me', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ current_city: v })
+            });
+            const r = await resp.json();
+            if (resp.ok && r.profile) {
+                regionEl.textContent = v;
+                const local = readUser() || {};
+                local.region = v;
+                localStorage.setItem('alumniUser', JSON.stringify(local));
+                alert('所在地区已更新');
+            } else {
+                alert(r.message || '更新失败，请重试');
+            }
+        } catch (err) {
+            alert('网络异常，更新失败');
+        }
     });
 
     photoInput.addEventListener('change', async () => {
