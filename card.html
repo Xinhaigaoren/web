@@ -489,7 +489,7 @@
                 backgroundColor: null,
                 logging: false,
                 onclone: (d) => {
-                    /* 左侧竖排文字：逐字竖排（字母朝向正常），规避 html2canvas 对 writing-mode/rotate 的渲染偏差 */
+                    /* 左侧竖排文字：逐字竖排、字母向左倾斜 90 度（横躺阅读），与页面视觉一致且更美观 */
                     const el = d.querySelector('.card-left-letters');
                     if (el) {
                         el.style.writingMode = 'horizontal-tb';
@@ -498,7 +498,7 @@
                         el.style.flexDirection = 'column';
                         el.style.alignItems = 'center';
                         el.style.justifyContent = 'center';
-                        el.style.gap = '0.4rem';
+                        el.style.gap = '0.35rem';
                         const txt = el.textContent || '';
                         el.textContent = '';
                         const frag = d.createDocumentFragment();
@@ -507,6 +507,8 @@
                             const s = d.createElement('span');
                             s.textContent = ch;
                             s.style.display = 'block';
+                            s.style.transform = 'rotate(-90deg)';
+                            s.style.transformOrigin = 'center';
                             s.style.lineHeight = '1.2';
                             frag.appendChild(s);
                         }
