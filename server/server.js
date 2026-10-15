@@ -613,7 +613,7 @@ app.post('/api/auth/login', async (req, res) => {
     const r = await dbQuery(
       `select id as user_id, display_name, email, phone, role, status, password_hash
        from public.app_users
-       where lower(email)=lower($1) or phone=$1 or card_number=$1
+       where lower(email)=lower($1) or phone=$1 or lower(display_name)=lower($1) or card_number=$1
           or card_number = regexp_replace($1, '^[Nn][Oo]\.', '', 'g')
        order by (email is not null) desc, (password_hash is not null) desc, id asc`,
       [loginName]
