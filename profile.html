@@ -10,107 +10,179 @@
     html { font-size: clamp(11px, 1.05vw, 14px); }
     body {
         font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
-        background: linear-gradient(135deg, #a21217 0%, #c41e22 50%, #e85d5d 100%);
+        background-color: #f5f0f0;
         min-height: 100vh;
         display: flex; flex-direction: column;
-        align-items: center; justify-content: center;
-        padding: 2rem;
     }
-    .page-card {
-        width: 100%; max-width: 42rem;
-        background-color: #ffffff;
-        border-radius: 0.8rem;
-        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.25);
-        overflow: hidden;
-    }
-    .page-head {
+    /* ===== 顶部导航（与内网一致） ===== */
+    .topbar {
+        width: 100%;
         background-color: #94070A;
-        color: #ffffff;
-        padding: 1.4rem 2rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        padding: 0.8rem 2.5rem;
+        box-shadow: 0 0.2rem 0.6rem rgba(0,0,0,0.2);
     }
-    .page-head .title { font-size: 1.4rem; letter-spacing: 0.1rem; }
-    .page-head .back-link { color: #ffffff; text-decoration: none; font-size: 0.95rem; opacity: 0.9; }
-    .page-head .back-link:hover { text-decoration: underline; opacity: 1; }
-    .form-body { padding: 2rem 2.5rem 2.5rem; }
+    .topbar-left { display: flex; align-items: center; gap: 0.9rem; min-width: 0; }
+    .topbar-left img {
+        height: 3rem; width: 3rem; object-fit: contain;
+        border-radius: 50%; background-color: rgba(255,255,255,0.1);
+        border: 0.1rem solid rgba(255,255,255,0.3);
+    }
+    .topbar-left .logo-text { display: flex; flex-direction: column; color: #fff; min-width: 0; }
+    .topbar-left .logo-text .zh { font-size: 1.05rem; line-height: 1.25; white-space: nowrap; }
+    .topbar-left .logo-text .en { font-size: 0.65rem; opacity: 0.85; line-height: 1.3; }
+    .topbar-left .system-name-big { font-size: 1.5rem; margin-left: 0.8rem; color: #fff; white-space: nowrap; }
+    .topbar-right { display: flex; align-items: center; gap: 1.5rem; }
+    .topbar-right a {
+        color: #fff; text-decoration: none; font-size: 0.95rem;
+        display: flex; align-items: center; gap: 0.25rem;
+        cursor: pointer; transition: opacity 0.2s;
+    }
+    .topbar-right a:hover { opacity: 0.8; }
+    .topbar-right svg { width: 0.85rem; height: 0.85rem; fill: #fff; }
+
+    /* ===== 主体 ===== */
+    .main-wrap {
+        flex: 1;
+        display: flex; flex-direction: column;
+        align-items: center;
+        padding: 2.5rem 2rem 3rem;
+    }
+    .content-panel {
+        width: 100%; max-width: 62rem;
+        background-color: #ffffff;
+        border-radius: 0.6rem;
+        box-shadow: 0 0.8rem 2.4rem rgba(0,0,0,0.12);
+        padding: 2.8rem 3.5rem 3rem;
+    }
+    .page-title {
+        font-size: 1.7rem; color: #222;
+        font-weight: normal; letter-spacing: 0.08rem;
+        margin-bottom: 2.2rem;
+    }
     .form-section-title {
         font-size: 1.15rem; color: #94070A;
-        font-weight: normal; margin-bottom: 1.5rem; letter-spacing: 0.05rem;
+        font-weight: normal; letter-spacing: 0.05rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 0.1rem solid #f0dddd;
+        margin-bottom: 2rem;
     }
-    .info-table { width: 100%; border-collapse: collapse; }
-    .info-table tr { border-bottom: 1px solid #f0e0e0; }
-    .info-table tr:last-child { border-bottom: none; }
-    .info-table td { padding: 0.9rem 0.5rem; vertical-align: middle; }
-    .info-table .label { width: 32%; color: #555; font-size: 1rem; }
-    .info-table .value { color: #222; font-size: 1rem; }
-    .info-table .value.placeholder { color: #b0b0b0; }
-    .info-table input {
-        width: 100%; max-width: 26rem;
-        padding: 0.55rem 0.8rem;
+    /* 两列信息表单（与参考一致：成对出现） */
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 3rem;
+    }
+    .info-row {
+        display: flex;
+        align-items: center;
+        padding: 1.05rem 0.3rem;
+        border-bottom: 0.1rem solid #f6eeee;
+        min-width: 0;
+    }
+    .info-row .label { width: 8.5rem; color: #555; font-size: 1rem; flex-shrink: 0; }
+    .info-row .value { color: #222; font-size: 1rem; flex: 1; min-width: 0; }
+    .info-row .value.placeholder { color: #b0b0b0; }
+    .info-row input {
+        width: 100%;
+        padding: 0.5rem 0.8rem;
         font-size: 1rem; border: 1px solid #d9b0a8;
         border-radius: 0.3rem; outline: none; background-color: #fff7f7;
-        color: #333;
-        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        color: #333; font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
     }
-    .info-table input:focus { border-color: #94070A; }
-    .actions {
-        display: flex; justify-content: center;
-        gap: 2rem; margin-top: 2.2rem;
-    }
+    .info-row input:focus { border-color: #94070A; }
+    .row-full { grid-column: 1 / -1; }
+
+    /* 按钮 */
+    .actions { display: flex; justify-content: center; gap: 2.5rem; margin-top: 2.6rem; }
     .act-btn {
-        min-width: 11rem;
-        padding: 0.85rem 1.5rem;
+        min-width: 10.5rem;
+        padding: 0.9rem 1.6rem;
         font-size: 1.05rem;
         border-radius: 0.35rem;
         cursor: pointer;
-        letter-spacing: 0.15rem;
+        letter-spacing: 0.12rem;
         font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
         transition: all 0.2s;
     }
-    .act-btn.confirm {
-        color: #ffffff; background-color: #94070A; border: none;
-    }
+    .act-btn svg { width: 1.1rem; height: 1.1rem; }
+    .act-btn.confirm { color: #fff; background-color: #94070A; border: none; }
     .act-btn.confirm:hover { background-color: #b81c20; }
-    .act-btn.edit {
-        color: #94070A; background-color: #ffffff;
-        border: 1.5px solid #94070A;
-    }
-    .act-btn.edit:hover { background-color: #fdf0f0; }
-    .tip { text-align: center; color: #999; font-size: 0.85rem; margin-top: 1.2rem; }
+    .act-btn.edit { color: #94070A; background-color: #fff; border: 0.12rem solid #94070A; }
+    .act-btn.edit:hover { background-color: #fdf1f1; }
+    .act-btn.edit svg { fill: #94070A; }
+    .act-btn.confirm svg { fill: #fff; }
+    .tip { text-align: center; color: #999; font-size: 0.85rem; margin-top: 1.4rem; }
     .loading { text-align: center; color: #888; font-size: 1.05rem; padding: 3rem 0; }
+
+    @media (max-width: 700px) {
+        .topbar { padding: 0.8rem 1.2rem; }
+        .topbar-left { flex-wrap: wrap; gap: 0.5rem; }
+        .topbar-left .system-name-big { font-size: 1.2rem; margin-left: 0; }
+        .topbar-left .logo-text .zh { white-space: normal; font-size: 0.9rem; }
+        .main-wrap { padding: 1.6rem 0.9rem 2rem; }
+        .content-panel { padding: 1.8rem 1.2rem 2rem; }
+        .page-title { font-size: 1.4rem; }
+        .info-grid { grid-template-columns: 1fr; gap: 0; }
+        .row-full { grid-column: auto; }
+        .actions { flex-direction: column; align-items: center; gap: 1.2rem; }
+        .act-btn { width: 100%; max-width: 20rem; }
+    }
 </style>
 </head>
 <body>
 
-<div class="page-card">
-    <div class="page-head">
-        <span class="title">校友个人信息</span>
-        <a class="back-link" href="member.html">← 返回内网</a>
+<header class="topbar">
+    <div class="topbar-left">
+        <img src="assets/haigao-logo.jpg" alt="Logo">
+        <div class="logo-text">
+            <span class="zh">海林市高级中学校友（新海高人）</span>
+            <span class="en">Hailin Senior High School Alumni Association</span>
+        </div>
+        <span class="system-name-big">用户电子身份服务系统</span>
     </div>
+    <div class="topbar-right">
+        <a id="langSwitch">
+            中文
+            <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+        </a>
+        <a id="logoutBtn">退出登录</a>
+    </div>
+</header>
 
-    <div class="form-body">
+<div class="main-wrap">
+    <div class="content-panel">
+        <h1 class="page-title">校友个人信息</h1>
         <h3 class="form-section-title">个人信息</h3>
+
         <div id="loading" class="loading">正在加载个人信息…</div>
 
-        <table class="info-table" id="infoTable" style="display:none">
-            <tr><td class="label">真实姓名</td><td class="value" id="vName">—</td></tr>
-            <tr><td class="label">所在地区</td><td class="value" id="vRegion">—</td></tr>
-            <tr><td class="label">手机</td><td class="value" id="vPhone">—</td></tr>
-            <tr><td class="label">邮箱</td><td class="value" id="vEmail">—</td></tr>
-            <tr><td class="label">用户名</td><td class="value" id="vUsername">—</td></tr>
-            <tr><td class="label">密码</td><td class="value" id="vPassword">••••••</td></tr>
-            <tr><td class="label">入学年份</td><td class="value" id="vEnroll">—</td></tr>
-            <tr><td class="label">离校年份</td><td class="value" id="vGraduate">—</td></tr>
-            <tr><td class="label">毕业班级</td><td class="value" id="vClass">—</td></tr>
-            <tr><td class="label">班主任老师</td><td class="value" id="vTeacher">—</td></tr>
-            <tr><td class="label">注册说明</td><td class="value" id="vStatus">—</td></tr>
-        </table>
+        <div class="info-grid" id="infoGrid" style="display:none">
+            <div class="info-row"><span class="label">真实姓名</span><span class="value" id="vName">—</span></div>
+            <div class="info-row"><span class="label">所在地区</span><span class="value" id="vRegion">—</span></div>
+            <div class="info-row"><span class="label">手机</span><span class="value" id="vPhone">—</span></div>
+            <div class="info-row"><span class="label">邮箱</span><span class="value" id="vEmail">—</span></div>
+            <div class="info-row"><span class="label">用户名</span><span class="value" id="vUsername">—</span></div>
+            <div class="info-row"><span class="label">密码</span><span class="value" id="vPassword">••••••</span></div>
+            <div class="info-row"><span class="label">入学年份</span><span class="value" id="vEnroll">—</span></div>
+            <div class="info-row"><span class="label">离校年份</span><span class="value" id="vGraduate">—</span></div>
+            <div class="info-row"><span class="label">毕业班级</span><span class="value" id="vClass">—</span></div>
+            <div class="info-row"><span class="label">班主任老师</span><span class="value" id="vTeacher">—</span></div>
+            <div class="info-row row-full"><span class="label">注册说明</span><span class="value" id="vStatus">—</span></div>
+        </div>
 
         <div class="actions" id="actions" style="display:none">
-            <button class="act-btn confirm" id="btnConfirm">✓ 确认填写</button>
-            <button class="act-btn edit" id="btnEdit">✎ 修改信息</button>
+            <button class="act-btn confirm" id="btnConfirm">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                确认填写
+            </button>
+            <button class="act-btn edit" id="btnEdit">
+                <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                修改信息
+            </button>
         </div>
         <p class="tip" id="tip" style="display:none">填写完成后点击「确认填写」保存；信息有误可点「修改信息」编辑。</p>
     </div>
@@ -121,13 +193,17 @@
     const token = localStorage.getItem('alumniToken') || '';
     if (!token) { location.href = 'login.html'; }
 
-    let profile = null;
     let user = null;
+    let profile = null;
     let editing = false;
 
-    function field(id, el) {
-        const data = (editing ? profile : (profile || {}));
-        return data;
+    function mkInput(td, val) {
+        td.innerHTML = '';
+        const input = document.createElement('input');
+        input.value = val === '—' ? '' : val;
+        input.maxLength = 40;
+        td.appendChild(input);
+        return input;
     }
 
     async function loadProfile() {
@@ -139,30 +215,19 @@
             if (!resp.ok) { alert(data.message || '获取信息失败'); location.href = 'login.html'; return; }
             user = data.user || {};
             profile = data.profile || {};
-            const v = {
-                name: user.display_name || profile.name || '—',
-                region: profile.current_city || profile.city || '—',
-                phone: user.phone || profile.phone || '—',
-                email: user.email || '—',
-                username: user.phone || '—',
-                enroll: profile.enrollment_year || '—',
-                graduate: profile.graduation_year || '—',
-                cls: profile.class_name || '—',
-                teacher: profile.homeroom_teacher || '—',
-                status: (user.status === 'active' ? '已通过校友认证' : (user.status || '—'))
-            };
-            document.getElementById('vName').textContent = v.name;
-            document.getElementById('vRegion').textContent = v.region;
-            document.getElementById('vPhone').textContent = v.phone;
-            document.getElementById('vEmail').textContent = v.email;
-            document.getElementById('vUsername').textContent = v.username;
-            document.getElementById('vEnroll').textContent = v.enroll;
-            document.getElementById('vGraduate').textContent = v.graduate;
-            document.getElementById('vClass').textContent = v.cls;
-            document.getElementById('vTeacher').textContent = v.teacher;
-            document.getElementById('vStatus').textContent = v.status;
+            const set = (id, v) => { document.getElementById(id).textContent = v || '—'; };
+            set('vName', user.display_name || profile.name);
+            set('vRegion', profile.current_city || profile.city);
+            set('vPhone', user.phone || profile.phone);
+            set('vEmail', user.email);
+            set('vUsername', user.phone);
+            set('vEnroll', profile.enrollment_year);
+            set('vGraduate', profile.graduation_year);
+            set('vClass', profile.class_name);
+            set('vTeacher', profile.homeroom_teacher);
+            set('vStatus', user.status === 'active' ? '已通过校友认证' : (user.status || '—'));
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('infoTable').style.display = '';
+            document.getElementById('infoGrid').style.display = '';
             document.getElementById('actions').style.display = '';
             document.getElementById('tip').style.display = '';
         } catch (e) {
@@ -172,36 +237,23 @@
 
     function enterEdit() {
         editing = true;
-        const mkInput = (id, val) => {
-            const td = document.getElementById(id);
-            td.innerHTML = '';
-            const input = document.createElement('input');
-            input.value = val === '—' ? '' : val;
-            input.id = 'input_' + id;
-            input.maxLength = 40;
-            td.appendChild(input);
-            return input;
-        };
-        mkInput('vName', document.getElementById('vName').textContent);
-        mkInput('vRegion', document.getElementById('vRegion').textContent);
-        mkInput('vEmail', document.getElementById('vEmail').textContent);
-        mkInput('vEnroll', document.getElementById('vEnroll').textContent);
-        mkInput('vGraduate', document.getElementById('vGraduate').textContent);
-        mkInput('vClass', document.getElementById('vClass').textContent);
-        mkInput('vTeacher', document.getElementById('vTeacher').textContent);
-        document.getElementById('btnConfirm').textContent = '✓ 保存信息';
+        mkInput(document.getElementById('vName'), document.getElementById('vName').textContent);
+        mkInput(document.getElementById('vRegion'), document.getElementById('vRegion').textContent);
+        mkInput(document.getElementById('vEmail'), document.getElementById('vEmail').textContent);
+        mkInput(document.getElementById('vEnroll'), document.getElementById('vEnroll').textContent);
+        mkInput(document.getElementById('vGraduate'), document.getElementById('vGraduate').textContent);
+        mkInput(document.getElementById('vClass'), document.getElementById('vClass').textContent);
+        mkInput(document.getElementById('vTeacher'), document.getElementById('vTeacher').textContent);
+        document.getElementById('btnConfirm').textContent = '保存信息';
         document.getElementById('btnEdit').textContent = '取消修改';
         document.getElementById('tip').textContent = '修改后点击「保存信息」更新；「取消修改」放弃本次改动。';
     }
 
-    function exitEdit() {
-        editing = false;
-        location.reload();
-    }
+    function exitEdit() { location.reload(); }
 
     async function saveInfo() {
         const g = (id, def) => {
-            const input = document.getElementById('input_' + id);
+            const input = document.getElementById('input_' + id) || document.querySelector('#' + id + ' input');
             const v = input ? input.value.trim() : '';
             return v || def;
         };
@@ -215,8 +267,7 @@
             homeroom_teacher: g('vTeacher', profile.homeroom_teacher) || null
         };
         if (!payload.display_name || !payload.current_city) { alert('真实姓名和所在地区不能为空'); return; }
-        const emailV = payload.email;
-        if (emailV && emailV.indexOf('@') < 0) { alert('邮箱格式需包含 @'); return; }
+        if (payload.email && payload.email.indexOf('@') < 0) { alert('邮箱格式需包含 @'); return; }
         const btn = document.getElementById('btnConfirm');
         btn.disabled = true; btn.textContent = '保存中…';
         try {
@@ -229,21 +280,26 @@
             if (resp.ok) { alert('个人信息已保存'); location.reload(); }
             else { alert(data.message || '保存失败'); }
         } catch (e) { alert('网络异常，保存失败'); }
-        btn.disabled = false; btn.textContent = '✓ 保存信息';
+        btn.disabled = false; btn.textContent = '保存信息';
     }
 
     document.getElementById('btnConfirm').addEventListener('click', () => {
         if (editing) { saveInfo(); }
-        else {
-            if (confirm('确认当前个人信息填写无误？')) {
-                alert('个人信息已确认，与校友电子卡信息一致');
-                location.href = 'member.html';
-            }
+        else if (confirm('确认当前个人信息填写无误？')) {
+            alert('个人信息已确认，与校友电子卡信息一致');
+            location.href = 'member.html';
         }
     });
     document.getElementById('btnEdit').addEventListener('click', () => {
-        if (editing) { exitEdit(); }
-        else { enterEdit(); }
+        if (editing) { exitEdit(); } else { enterEdit(); }
+    });
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('alumniToken');
+        localStorage.removeItem('alumniUser');
+        location.href = 'login.html';
+    });
+    document.getElementById('langSwitch').addEventListener('click', () => {
+        alert('当前已为简体中文');
     });
 
     loadProfile();
