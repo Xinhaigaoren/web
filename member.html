@@ -341,13 +341,22 @@
                 </div>
                 <div class="card-title">电子校友卡申领</div>
             </a>
+            <a href="journal.html" class="service-card" data-service="journal">
+                <span class="fav" id="favJournal" title="收藏">
+                    <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </span>
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24"><path d="M14 3h-4a1 1 0 0 0-1 1v1H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4V4a1 1 0 0 0-1-1zm-4 2h4v1h-4V5zm7 15H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V9h10v3z"/></svg>
+                </div>
+                <div class="card-title">新海高青年期刊</div>
+            </a>
         </div>
 
         <div class="pagination">
             <div class="pagination-left">
                 每页显示
                 <select><option>20</option><option>30</option><option>50</option></select>
-                条　当前第 1 - 1 条 共计 1 条
+                条　当前第 1 - 2 条 共计 2 条
             </div>
             <div class="pagination-right">
                 到第 <input type="text" class="jump-input" value="1"> 页
@@ -491,20 +500,28 @@
         avatarInput.value = '';
     });
 
-    /* 收藏：真实持久化 */
-    favCard.addEventListener('click', async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!alumniToken()) { alert('请先登录'); location.href = 'login.html'; return; }
-        const on = !favCard.classList.contains('on');
-        let r;
-        if (on) r = await apiCall('POST', '/api/favorites', { service_key: 'card' });
-        else r = await apiCall('DELETE', '/api/favorites/card');
-        if (r && r.ok) {
-            favCard.classList.toggle('on', on);
-            const isFavTab = document.querySelector('.tab.active')?.dataset.tab === 'favorites';
-            if (!on && isFavTab) document.querySelector('.service-card').style.display = 'none';
-        }
+    /* 收藏：真实持久化（支持多个服务卡片） */
+    const serviceCards = Array.from(document.querySelectorAll('.service-card'));
+    const favMap = {};
+    serviceCards.forEach((card) => {
+        const key = card.dataset.service;
+        const favEl = card.querySelector('.fav');
+        if (!favEl || !key) return;
+        favMap[key] = favEl;
+        favEl.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!alumniToken()) { alert('请先登录'); location.href = 'login.html'; return; }
+            const on = !favEl.classList.contains('on');
+            let r;
+            if (on) r = await apiCall('POST', '/api/favorites', { service_key: key });
+            else r = await apiCall('DELETE', '/api/favorites/' + key);
+            if (r && r.ok) {
+                favEl.classList.toggle('on', on);
+                const isFavTab = document.querySelector('.tab.active')?.dataset.tab === 'favorites';
+                if (!on && isFavTab) card.style.display = 'none';
+            }
+        });
     });
 
     /* Tab 切换：我的收藏只显示已收藏服务 */
@@ -513,10 +530,12 @@
             document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
             t.classList.add('active');
             const mode = t.dataset.tab;
-            const card = document.querySelector('.service-card');
-            const favOn = favCard.classList.contains('on');
-            if (mode === 'favorites') card.style.display = favOn ? '' : 'none';
-            else card.style.display = '';
+            serviceCards.forEach((card) => {
+                const favEl = card.querySelector('.fav');
+                const favOn = favEl && favEl.classList.contains('on');
+                if (mode === 'favorites') card.style.display = favOn ? '' : 'none';
+                else card.style.display = '';
+            });
         });
     });
 
@@ -539,7 +558,12 @@
             }
         }
         const fav = await apiCall('GET', '/api/favorites');
-        if (fav && fav.favorites && fav.favorites.indexOf('card') !== -1) favCard.classList.add('on');
+        if (fav && fav.favorites) {
+            serviceCards.forEach((card) => {
+                const key = card.dataset.service;
+                if (fav.favorites.indexOf(key) !== -1 && favMap[key]) favMap[key].classList.add('on');
+            });
+        }
     })();
 </script>
 

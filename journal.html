@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新海高青年期刊电子服务系统 - 海林市高级中学校友（新海高人）</title>
+<link rel="icon" href="assets/favicon.png" />
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 1.25vw; }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #94070A;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 顶部横栏（与用户电子身份服务系统统一规格） */
+    .topbar {
+        width: 100%;
+        height: 6.5rem;
+        background-color: #94070A;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 3rem;
+        gap: 1.5rem;
+    }
+    .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .topbar-left .logo {
+        height: 3.5rem;
+        width: 3.5rem;
+        object-fit: contain;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
+    }
+    .logo-text { display: flex; flex-direction: column; color: #fff; }
+    .logo-text .zh {
+        font-size: 1.2rem;
+        font-weight: normal;
+        line-height: 1.3;
+        letter-spacing: 0.03rem;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        white-space: nowrap;
+    }
+    .logo-text .en { font-size: 0.75rem; opacity: 0.85; line-height: 1.3; margin-top: 0.15rem; }
+    .system-name-big {
+        font-size: 1.8rem;
+        margin-left: 1.2rem;
+        font-weight: normal;
+        letter-spacing: 0.05rem;
+        color: #fff;
+        white-space: nowrap;
+        position: relative;
+        top: 0.3rem;
+    }
+    .topbar-user {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        color: #fff;
+        flex-shrink: 0;
+    }
+    .user-avatar {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: #fff;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    #userName {
+        font-size: 1.05rem;
+        white-space: nowrap;
+    }
+    #userStatus {
+        font-size: 0.75rem;
+        opacity: 0.82;
+        margin-top: 0.15rem;
+        white-space: nowrap;
+    }
+
+    /* 主体区 */
+    .main-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 2rem;
+    }
+    .identity-panel {
+        width: 100%;
+        max-width: 70rem;
+        background-color: #fbe5e5;
+        border-radius: 0.6rem;
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.2);
+        padding: 4rem 5rem;
+        text-align: center;
+    }
+    .welcome-title {
+        font-size: 1.6rem;
+        color: #94070A;
+        font-weight: normal;
+        margin-bottom: 2rem;
+        letter-spacing: 0.05rem;
+    }
+    .divider-line {
+        width: 100%;
+        height: 1px;
+        background-color: #e0b0b0;
+        margin-bottom: 2.5rem;
+    }
+    .select-label {
+        font-size: 1.2rem;
+        color: #333;
+        margin-bottom: 3rem;
+        letter-spacing: 0.05rem;
+    }
+    .identity-options {
+        display: flex;
+        justify-content: center;
+        gap: 4rem;
+        flex-wrap: wrap;
+    }
+    .identity-box {
+        width: 18rem;
+        height: 8rem;
+        border-radius: 0.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 1.5rem;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0.5rem 1.5rem rgba(148, 7, 10, 0.15);
+        letter-spacing: 0.1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .identity-box:hover {
+        transform: translateY(-0.5rem);
+        box-shadow: 0 1rem 2rem rgba(148, 7, 10, 0.3);
+    }
+    .identity-box .ib-desc { font-size: 0.95rem; font-weight: normal; letter-spacing: 0.05rem; opacity: 0.88; }
+    .identity-box.journal-guide { background-color: #94070A; }
+    .identity-box.journal-submit { background-color: #b81c20; }
+
+    .service-info-below {
+        width: 100%;
+        max-width: 70rem;
+        margin-top: 2.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1rem;
+        color: #ffffff;
+        padding: 0 1rem;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+    }
+    .service-info-below a { color: #fff; text-decoration: none; }
+    .service-info-below a:hover { text-decoration: underline; }
+
+    @media (max-width: 860px) {
+        .topbar { height: auto; padding: 1rem 1.2rem; flex-wrap: wrap; }
+        .system-name-big { font-size: 1.3rem; margin-left: 0; width: 100%; order: 3; position: static; }
+        .topbar-user { margin-left: auto; }
+        .identity-panel { padding: 2.5rem 1.5rem; }
+        .identity-options { gap: 1.5rem; }
+        .identity-box { width: 15rem; height: 7rem; font-size: 1.3rem; }
+    }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-left">
+        <img src="assets/haigao-logo.jpg" alt="Logo" class="logo">
+        <div class="logo-text">
+            <span class="zh">海林市高级中学校友（新海高人）</span>
+            <span class="en">Hailin Senior High School Alumni Association</span>
+        </div>
+        <span class="system-name-big">新海高青年期刊电子服务系统</span>
+    </div>
+    <div class="topbar-user">
+        <div class="user-avatar" id="userAvatar">—</div>
+        <div>
+            <div id="userName">—</div>
+            <div id="userStatus">已通过内网身份认证</div>
+        </div>
+    </div>
+</header>
+
+<div class="main-wrapper">
+    <div class="identity-panel">
+        <h1 class="welcome-title">欢迎使用新海高青年期刊电子服务系统</h1>
+        <div class="divider-line"></div>
+        <p class="select-label">请选择你要办理的事项：</p>
+
+        <div class="identity-options">
+            <a href="https://cloud.tsinghua.edu.cn/d/473c1fbb90fe48a78cda/" target="_blank" rel="noopener noreferrer" class="identity-box journal-guide">
+                投稿说明
+                <span class="ib-desc">查看投稿规范、格式要求与注意事项</span>
+            </a>
+            <a href="https://cloud.tsinghua.edu.cn/u/d/5ba867c4cac946baa7f2/" target="_blank" rel="noopener noreferrer" class="identity-box journal-submit">
+                投稿入口
+                <span class="ib-desc">进入在线投稿与稿件上传页面</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="service-info-below">
+        <div class="service-item">服务邮箱：<a href="mailto:xinhaigaoren@126.com">xinhaigaoren@126.com</a></div>
+        <div class="service-item">每天 9:00-20:00（节假日除外）</div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        // 未登录不允许访问（先跳转内网登录）
+        const token = localStorage.getItem('alumniToken');
+        if (!token) {
+            location.replace('login.html?redirect=journal.html');
+            return;
+        }
+        // 展示当前校友信息
+        const u = (function () {
+            try { return JSON.parse(localStorage.getItem('alumniUser') || '{}'); } catch (e) { return {}; }
+        })();
+        const name = u.name || '';
+        const avatar = u.avatar || u.photoUrl || '';
+        const nameEl = document.getElementById('userName');
+        if (name) {
+            nameEl.textContent = name;
+            document.getElementById('userAvatar').textContent = Array.from(name)[0] || '—';
+        }
+        if (avatar) {
+            const img = document.createElement('img');
+            img.onload = () => {
+                const box = document.getElementById('userAvatar');
+                box.textContent = '';
+                box.appendChild(img);
+            };
+            img.onerror = () => {};
+            img.src = avatar;
+        }
+        // 后端实时信息兜底
+        fetch('https://hailin-alumni-api.onrender.com/api/alumni/me', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        }).then(r => r.json()).then(data => {
+            const user = (data && data.user) || {};
+            const profile = (data && data.profile) || {};
+            const realName = user.display_name || profile.name || '';
+            if (realName) {
+                nameEl.textContent = realName;
+                document.getElementById('userAvatar').textContent = Array.from(realName)[0] || '—';
+            }
+        }).catch(() => {});
+    })();
+</script>
+
+</body>
+</html>

@@ -140,7 +140,8 @@
                 role: data.user.role || '',
                 status: data.user.status || ''
             }));
-            location.href = 'member.html';
+            const redirect = new URLSearchParams(location.search).get('redirect') || '';
+            location.href = (redirect && /^[\w-]+\.html$/.test(redirect)) ? redirect : 'member.html';
         } catch (err) {
             alert('网络异常，请稍后重试（' + err.message + '）');
         } finally {
