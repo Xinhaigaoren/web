@@ -300,6 +300,7 @@
     const photoEl = document.getElementById('cardPhoto');
     const photoBox = document.getElementById('cardPhotoBox');
     const photoInput = document.getElementById('photoInput');
+    const exportBtn = document.getElementById('exportBtn');
     let currentName = '';
     let currentNo = 'NO.————';
     function applyCard(data) {
@@ -527,11 +528,18 @@
             a.href = canvas.toDataURL('image/png');
             a.download = (currentName || '校友') + '校友卡.png';
             a.click();
+            /* 领取成功：按钮自动擦除（已领取状态持久化） */
+            exportBtn.style.display = 'none';
+            localStorage.setItem('alumniCardClaimed', '1');
         } catch (err) {
             alert('导出失败，请重试');
         }
     });
     (async () => {
+        /* 已领取过校友电子卡：按钮自动擦除，不再显示 */
+        if (localStorage.getItem('alumniCardClaimed') === '1') {
+            exportBtn.style.display = 'none';
+        }
         const token = localStorage.getItem('alumniToken');
         const local = readUser() || {};
         if (!token) { applyCard(local); return; }
