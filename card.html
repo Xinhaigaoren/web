@@ -483,7 +483,37 @@
         }
         try {
             const cardEl = document.querySelector('.alumni-card');
-            const canvas = await html2canvas(cardEl, { scale: 2, useCORS: true, backgroundColor: null, logging: false });
+            const canvas = await html2canvas(cardEl, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: null,
+                logging: false,
+                onclone: (d) => {
+                    /* 左侧竖排文字：逐字竖排（字母朝向正常），规避 html2canvas 对 writing-mode/rotate 的渲染偏差 */
+                    const el = d.querySelector('.card-left-letters');
+                    if (el) {
+                        el.style.writingMode = 'horizontal-tb';
+                        el.style.transform = 'none';
+                        el.style.display = 'flex';
+                        el.style.flexDirection = 'column';
+                        el.style.alignItems = 'center';
+                        el.style.justifyContent = 'center';
+                        el.style.gap = '0.4rem';
+                        const txt = el.textContent || '';
+                        el.textContent = '';
+                        const frag = d.createDocumentFragment();
+                        for (const ch of txt) {
+                            if (ch === ' ') continue;
+                            const s = d.createElement('span');
+                            s.textContent = ch;
+                            s.style.display = 'block';
+                            s.style.lineHeight = '1.2';
+                            frag.appendChild(s);
+                        }
+                        el.appendChild(frag);
+                    }
+                }
+            });
             const a = document.createElement('a');
             a.href = canvas.toDataURL('image/png');
             a.download = (currentName || '校友') + '校友卡.png';
