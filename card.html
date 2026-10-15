@@ -16,10 +16,6 @@
         justify-content: center;
         padding: 3rem;
     }
-
-    /* ==========================================
-       校友卡主容器
-       ========================================== */
     .alumni-card {
         width: 100%;
         max-width: 58rem;
@@ -33,21 +29,14 @@
         padding: 3rem;
         color: #ffffff;
     }
-
     .alumni-card::before {
         content: '';
         position: absolute;
         top: 0; left: 0;
         width: 100%; height: 100%;
-        background-image: 
-            radial-gradient(circle at 15% 20%, rgba(255, 215, 215, 0.06) 0%, transparent 40%),
-            radial-gradient(circle at 85% 85%, rgba(255, 215, 215, 0.04) 0%, transparent 40%);
+        background-image: radial-gradient(circle at 15% 20%, rgba(255, 215, 215, 0.06) 0%, transparent 40%), radial-gradient(circle at 85% 85%, rgba(255, 215, 215, 0.04) 0%, transparent 40%);
         pointer-events: none;
     }
-
-    /* ==========================================
-       左侧竖排英文 - Alumni Card
-       ========================================== */
     .card-left-letters {
         writing-mode: vertical-rl;
         text-orientation: mixed;
@@ -64,10 +53,6 @@
         justify-content: center;
         z-index: 1;
     }
-
-    /* ==========================================
-       中间主内容区
-       ========================================== */
     .card-main {
         flex: 1;
         padding-left: 2.5rem;
@@ -76,7 +61,6 @@
         position: relative;
         z-index: 1;
     }
-
     .card-top {
         display: flex;
         align-items: center;
@@ -113,8 +97,6 @@
         margin-top: 0.2rem;
         font-family: "Arial", sans-serif;
     }
-
-    /* 校友卡标签，深黄色底 */
     .card-tag {
         background-color: #C8A063;
         color: #7a0508;
@@ -124,8 +106,6 @@
         letter-spacing: 0.15rem;
         font-weight: normal;
     }
-
-    /* 中部：信息 + 照片 */
     .card-body {
         display: flex;
         justify-content: space-between;
@@ -170,8 +150,6 @@
         border-bottom-style: solid;
         border-bottom-color: #ffffff;
     }
-
-    /* 照片 */
     .card-photo {
         width: 12rem;
         height: 15rem;
@@ -213,8 +191,6 @@
         font-size: 1.1rem;
         letter-spacing: 0.1rem;
     }
-
-    /* 底部卡号 */
     .card-bottom {
         margin-top: auto;
         padding-top: 2rem;
@@ -226,8 +202,6 @@
         color: #ffffff;
         opacity: 0.95;
     }
-
-    /* 导出按钮 */
     .card-photo-col {
         display: flex;
         flex-direction: column;
@@ -253,13 +227,8 @@
 <body>
 
 <div class="alumni-card">
-    
-    <!-- 左侧竖排英文 -->
     <div class="card-left-letters">Alumni Card</div>
-
     <div class="card-main">
-        
-        <!-- 顶部 -->
         <div class="card-top">
             <div class="card-brand">
                 <img src="assets/haigao-logo.jpg" alt="海林市高级中学校友（新海高人）Logo" class="brand-logo">
@@ -270,8 +239,6 @@
             </div>
             <div class="card-tag">校友卡</div>
         </div>
-
-        <!-- 中部 -->
         <div class="card-body">
             <div class="card-info">
                 <div class="name" id="cardName">—</div>
@@ -288,7 +255,6 @@
                     <span class="value">海林市高级中学</span>
                 </div>
             </div>
-
             <div class="card-photo-col">
                 <div class="card-photo" id="cardPhotoBox">
                     <img src="" alt="校友照片" id="cardPhoto">
@@ -297,8 +263,6 @@
                 <button id="exportBtn" class="export-btn" type="button">领取校友电子卡</button>
             </div>
         </div>
-
-        <!-- 底部卡号 -->
         <div class="card-bottom">
             <div class="card-number" id="cardNumber">NO.————</div>
         </div>
@@ -308,7 +272,6 @@
 <input type="file" id="photoInput" accept="image/*" style="display:none">
 
 <script>
-    /* 电子校友卡：优先从后端实时获取用户认证资料（需 alumniToken），失败时回退本地存储 */
     const API_BASE_URL = 'https://hailin-alumni-api.onrender.com';
     function readUser() {
         try {
@@ -318,8 +281,6 @@
             return null;
         }
     }
-
-    /* 卡号：入学年份 + 毕业年份 + 5 位随机数（例：2021202412345）；生成一次后本地缓存保持稳定 */
     function buildCardNumber(data) {
         if (data && data.cardNo && /^[0-9]+$/.test(String(data.cardNo)) && String(data.cardNo).length >= 13) return 'NO.' + String(data.cardNo).replace(/^NO\./i, '');
         const key = 'alumniCardNo';
@@ -332,7 +293,6 @@
         if (no) localStorage.setItem(key, no);
         return 'NO.' + no;
     }
-
     const nameEl = document.getElementById('cardName');
     const periodEl = document.getElementById('cardPeriod');
     const regionEl = document.getElementById('cardRegion');
@@ -340,10 +300,8 @@
     const photoEl = document.getElementById('cardPhoto');
     const photoBox = document.getElementById('cardPhotoBox');
     const photoInput = document.getElementById('photoInput');
-
     let currentName = '';
     let currentNo = 'NO.————';
-
     function applyCard(data) {
         const has = data && data.name;
         currentName = has ? data.name : '';
@@ -354,7 +312,6 @@
         regionEl.textContent = has ? (data.region || '—') : '—';
         currentNo = has ? buildCardNumber(data) : 'NO.————';
         numberEl.textContent = currentNo;
-        // 卡号固定后同步到后端（供卡号登录与跨设备一致）
         if (has && currentNo && currentNo !== 'NO.————') {
             const token = localStorage.getItem('alumniToken');
             if (token) {
@@ -374,8 +331,6 @@
             photoBox.classList.add('no-photo');
         }
     }
-
-    /* 图片压缩上传：压缩为 320x400 方形 dataURL，写入后端资料 */
     function compressPhoto(file) {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -395,7 +350,6 @@
             img.src = url;
         });
     }
-
     photoBox.addEventListener('click', () => {
         if (!localStorage.getItem('alumniToken')) {
             alert('请先登录后再上传照片');
@@ -404,8 +358,6 @@
         }
         photoInput.click();
     });
-
-    /* 所在地区：校友本人可点击修改（同步后端与本地缓存） */
     regionEl.addEventListener('click', async () => {
         const token = localStorage.getItem('alumniToken');
         if (!token) { alert('请先登录'); location.href = 'login.html'; return; }
@@ -434,7 +386,6 @@
             alert('网络异常，更新失败');
         }
     });
-
     photoInput.addEventListener('change', async () => {
         const file = photoInput.files[0];
         if (!file) return;
@@ -459,8 +410,6 @@
         }
         photoInput.value = '';
     });
-
-    /* 导出 PNG：canvas 高清重绘卡面，自动命名 */
     function loadImg(src) {
         return new Promise((res) => {
             if (!src) { res(null); return; }
@@ -479,8 +428,6 @@
         ctx.arcTo(x, y, x + w, y, r);
         ctx.closePath();
     }
-
-    /* 确保卡面信息已加载（避免导出默认占位内容） */
     async function ensureCardData() {
         if (currentName) return;
         const token = localStorage.getItem('alumniToken');
@@ -507,24 +454,20 @@
                     applyCard(merged);
                     return;
                 }
-            } catch (err) { /* 网络异常，继续用本地 */ }
+            } catch (err) { }
         }
         if (local.name) applyCard(local);
     }
-
     document.getElementById('exportBtn').addEventListener('click', async () => {
         await ensureCardData();
         const W = 1160, H = 720;
         const c = document.createElement('canvas');
         c.width = W; c.height = H;
         const x = c.getContext('2d');
-
         const g = x.createLinearGradient(0, 0, W, H);
         g.addColorStop(0, '#8a0609'); g.addColorStop(0.5, '#a81114'); g.addColorStop(1, '#7a0508');
         x.fillStyle = g;
         x.fillRect(0, 0, W, H);
-
-        /* 左侧竖排 Alumni Card */
         x.save();
         x.translate(100, H / 2);
         x.rotate(-Math.PI / 2);
@@ -538,8 +481,6 @@
         x.beginPath();
         x.moveTo(180, 70); x.lineTo(180, H - 70);
         x.stroke();
-
-        /* 品牌 Logo 圆形 */
         const logo = await loadImg('assets/haigao-logo.jpg');
         x.save();
         x.beginPath();
@@ -553,8 +494,6 @@
         x.beginPath();
         x.arc(295, 150, 66, 0, Math.PI * 2);
         x.stroke();
-
-        /* 品牌文字 */
         x.fillStyle = '#fff';
         x.font = '23px "Microsoft YaHei"';
         x.textAlign = 'left';
@@ -562,8 +501,6 @@
         x.font = '15px Arial';
         x.fillStyle = 'rgba(255,255,255,.9)';
         x.fillText('Hailin Senior High School Alumni Association', 395, 160);
-
-        /* 校友卡标签 */
         x.fillStyle = '#C8A063';
         roundRect(x, 905, 100, 195, 52, 10);
         x.fill();
@@ -571,8 +508,6 @@
         x.font = '22px "Microsoft YaHei"';
         x.textAlign = 'center';
         x.fillText('校友卡', 1002, 135);
-
-        /* 姓名与信息 */
         x.fillStyle = '#fff';
         x.font = '46px "Microsoft YaHei"';
         x.textAlign = 'left';
@@ -590,8 +525,6 @@
         x.fillText('毕业学校', 250, 505);
         x.fillStyle = '#fff';
         x.fillText('海林市高级中学', 440, 505);
-
-        /* 右侧照片 */
         const px = W - 250 - 240, py = 240, pw = 240, ph = 300;
         x.fillStyle = '#fff';
         roundRect(x, px, py, pw, ph, 10);
@@ -605,13 +538,10 @@
             x.drawImage(photo, px, py, pw, ph);
             x.restore();
         }
-
-        /* 卡号（左下角，与卡面显示位置一致，固定不跑位） */
         x.font = '30px Arial';
         x.fillStyle = '#fff';
         x.textAlign = 'left';
         x.fillText(currentNo, 130, H - 70);
-
         c.toBlob((blob) => {
             if (!blob) { alert('导出失败，请重试'); return; }
             const a = document.createElement('a');
@@ -621,7 +551,6 @@
             URL.revokeObjectURL(a.href);
         }, 'image/png');
     });
-
     (async () => {
         const token = localStorage.getItem('alumniToken');
         const local = readUser() || {};
@@ -647,7 +576,7 @@
                 applyCard(merged);
                 return;
             }
-        } catch (err) { /* 网络异常时回退本地 */ }
+        } catch (err) { }
         applyCard(local);
     })();
 </script>
