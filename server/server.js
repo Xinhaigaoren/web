@@ -252,7 +252,7 @@ async function ensureMainAdminPwd() {
     await dbQuery(
       `insert into public.app_users (email, display_name, role, status, is_email_verified, password_hash)
        values ($1,'管理员','super_admin','active',true,$2)
-       on conflict (email) do update set role='super_admin', status='active',
+       on conflict (email) do update set role='super_admin', status='active', display_name='管理员',
          password_hash=coalesce(excluded.password_hash, public.app_users.password_hash), updated_at=now()
        returning id`,
       [email, forceHash]
@@ -272,6 +272,32 @@ async function ensureMainAdminPwd() {
       `update public.app_users set role='alumni', status='active', password_hash=$1, updated_at=now()
        where phone='18545372006'`,
       [alumniHash]
+    ).catch(() => {});
+    // 张文轩个人资料：真实姓名/地区/手机/邮箱/入学/离校/毕业班级/班主任（用户提供）
+    await dbQuery(
+      `update public.app_users set display_name='张文轩', email='zwxzwx861@qq.com', updated_at=now()
+       where phone='18545372006'`
+    ).catch(() => {});
+    const zwRows = await dbQuery(`select id from public.app_users where phone='18545372006' limit 1`).catch(() => ({ rows: [] }));
+    const zwId = zwRows.rows && zwRows.rows[0] && zwRows.rows[0].id;
+    if (zwId) {
+      await dbQuery(
+        `insert into public.alumni_profiles (user_id, name, phone, city, current_city, enrollment_year, graduation_year, class_name, homeroom_teacher, status)
+         values ($1,'张文轩','18545372006','哈尔滨','哈尔滨','2021','2024','高三14班','连海龙','active')
+         on conflict (user_id) do update set
+           name=excluded.name, phone=excluded.phone, city=excluded.city, current_city=excluded.current_city,
+           enrollment_year=excluded.enrollment_year, graduation_year=excluded.graduation_year,
+           class_name=excluded.class_name, homeroom_teacher=excluded.homeroom_teacher, status='active', updated_at=now()`,
+        [zwId]
+      ).catch(() => {});
+    }
+    // 清理旧残余冗余管理员（email 拼接错乱的历史记录），彻底停用并移除管理员权限
+    await dbQuery(
+      `delete from public.admin_accounts where user_id in (select id from public.app_users where email='18545372006aoren2024')`
+    ).catch(() => {});
+    await dbQuery(
+      `update public.app_users set status='disabled', role='pending_alumni', updated_at=now()
+       where email='18545372006aoren2024'`
     ).catch(() => {});
     await dbQuery(
       `update public.admin_accounts set status='disabled', updated_at=now()

@@ -77,6 +77,18 @@
     }
     .form-group input:focus { border-color: #94070A; }
     .form-group input::placeholder { color: #b0b0b0; }
+    /* 窄屏适配：手机/小窗口下卡片与文字按比例收拢 */
+    @media (max-width: 600px) {
+        body { padding: 1rem; }
+        .login-card { padding: 1.5rem 1.2rem; max-width: 100%; }
+        .login-header { gap: 0.8rem; margin-bottom: 1.4rem; }
+        .login-header .logo-circle { height: 3.2rem; width: 3.2rem; }
+        .login-header .logo-text-area .zh { font-size: 1.05rem; }
+        .login-header .logo-text-area .en { font-size: 0.7rem; }
+        .login-title { font-size: 1.25rem; }
+        .login-title2 { font-size: 1.05rem; }
+        .login-subtitle { font-size: 0.95rem; }
+    }
     .link-row {
         display: flex; justify-content: flex-end;
         gap: 0.8rem; font-size: 0.9rem; margin-top: 0.4rem;
@@ -115,12 +127,6 @@
     .login-footer a { color: #ffffff; text-decoration: none; }
     .login-footer a:hover { text-decoration: underline; }
     .login-footer .back-links { margin-left: auto; display: flex; gap: 1rem; font-size: 0.9rem; }
-    @media (max-width: 700px) {
-        .login-card { padding: 2.2rem 1.8rem; }
-        .login-header .logo-circle { height: 3.4rem; width: 3.4rem; }
-        .login-header .logo-text-area .zh { font-size: 1.2rem; }
-        .login-header .logo-text-area .en { font-size: 0.7rem; }
-    }
 </style>
 </head>
 <body>
