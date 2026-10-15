@@ -410,24 +410,7 @@
         }
         photoInput.value = '';
     });
-    function loadImg(src) {
-        return new Promise((res) => {
-            if (!src) { res(null); return; }
-            const i = new Image();
-            i.onload = () => res(i);
-            i.onerror = () => res(null);
-            i.src = src;
-        });
-    }
-    function roundRect(ctx, x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.arcTo(x + w, y, x + w, y + h, r);
-        ctx.arcTo(x + w, y + h, x, y + h, r);
-        ctx.arcTo(x, y + h, x, y, r);
-        ctx.arcTo(x, y, x + w, y, r);
-        ctx.closePath();
-    }
+    /* 确保卡面信息已加载（避免导出默认占位内容） */
     async function ensureCardData() {
         if (currentName) return;
         const token = localStorage.getItem('alumniToken');
@@ -454,9 +437,26 @@
                     applyCard(merged);
                     return;
                 }
-            } catch (err) { }
+            } catch (err) { /* 网络异常，继续用本地 */ }
         }
         if (local.name) applyCard(local);
+    }
+    /* 动态加载 html2canvas（jsDelivr 优先，cdnjs 备用） */
+    function loadHtml2canvas() {
+        return new Promise((res, rej) => {
+            if (window.html2canvas) { res(); return; }
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+            s.onload = () => res();
+            s.onerror = () => {
+                const s2 = document.createElement('script');
+                s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                s2.onload = () => res();
+                s2.onerror = () => rej(new Error('html2canvas load failed'));
+                document.head.appendChild(s2);
+            };
+            document.head.appendChild(s);
+        });
     }
     document.getElementById('exportBtn').addEventListener('click', async () => {
         await ensureCardData();
@@ -474,97 +474,23 @@
                 }
             } catch (e) { /* 后端不可达时用当前卡号 */ }
         }
-        const W = 1160, H = 720;
-        const c = document.createElement('canvas');
-        c.width = W; c.height = H;
-        const x = c.getContext('2d');
-        const g = x.createLinearGradient(0, 0, W, H);
-        g.addColorStop(0, '#8a0609'); g.addColorStop(0.5, '#a81114'); g.addColorStop(1, '#7a0508');
-        x.fillStyle = g;
-        x.fillRect(0, 0, W, H);
-        x.save();
-        x.translate(100, H / 2);
-        x.rotate(-Math.PI / 2);
-        x.font = 'bold 34px Arial';
-        x.fillStyle = 'rgba(255,255,255,.9)';
-        x.textAlign = 'center';
-        x.fillText('Alumni Card', 0, 0);
-        x.restore();
-        x.strokeStyle = 'rgba(255,255,255,.2)';
-        x.lineWidth = 3;
-        x.beginPath();
-        x.moveTo(180, 70); x.lineTo(180, H - 70);
-        x.stroke();
-        const logo = await loadImg('assets/haigao-logo.jpg');
-        x.save();
-        x.beginPath();
-        x.arc(295, 150, 66, 0, Math.PI * 2);
-        x.clip();
-        if (logo) x.drawImage(logo, 229, 84, 132, 132);
-        else { x.fillStyle = 'rgba(255,255,255,.1)'; x.fillRect(229, 84, 132, 132); }
-        x.restore();
-        x.strokeStyle = 'rgba(255,255,255,.3)';
-        x.lineWidth = 3;
-        x.beginPath();
-        x.arc(295, 150, 66, 0, Math.PI * 2);
-        x.stroke();
-        x.fillStyle = '#fff';
-        x.font = '23px "Microsoft YaHei"';
-        x.textAlign = 'left';
-        x.fillText('海林市高级中学校友（新海高人）', 395, 133);
-        x.font = '15px Arial';
-        x.fillStyle = 'rgba(255,255,255,.9)';
-        x.fillText('Hailin Senior High School Alumni Association', 395, 160);
-        x.fillStyle = '#C8A063';
-        roundRect(x, 905, 100, 195, 52, 10);
-        x.fill();
-        x.fillStyle = '#7a0508';
-        x.font = '22px "Microsoft YaHei"';
-        x.textAlign = 'center';
-        x.fillText('校友卡', 1002, 135);
-        x.fillStyle = '#fff';
-        x.font = '46px "Microsoft YaHei"';
-        x.textAlign = 'left';
-        x.fillText(currentName || '—', 250, 330);
-        x.font = '26px "Microsoft YaHei"';
-        x.fillStyle = 'rgba(255,255,255,.92)';
-        x.fillText('在校时间', 250, 405);
-        x.fillStyle = '#fff';
-        x.fillText(periodEl.textContent, 440, 405);
-        x.fillStyle = 'rgba(255,255,255,.92)';
-        x.fillText('所在地区', 250, 455);
-        x.fillStyle = '#fff';
-        x.fillText(regionEl.textContent, 440, 455);
-        x.fillStyle = 'rgba(255,255,255,.92)';
-        x.fillText('毕业学校', 250, 505);
-        x.fillStyle = '#fff';
-        x.fillText('海林市高级中学', 440, 505);
-        const px = W - 250 - 240, py = 240, pw = 240, ph = 300;
-        x.fillStyle = '#fff';
-        roundRect(x, px, py, pw, ph, 10);
-        x.fill();
-        const photo = await loadImg(photoEl.src);
-        if (photo) {
-            x.save();
-            x.beginPath();
-            roundRect(x, px, py, pw, ph, 10);
-            x.clip();
-            x.drawImage(photo, px, py, pw, ph);
-            x.restore();
+        /* 截取页面卡面（所见即所得，校友看到的与导出图一致） */
+        try {
+            await loadHtml2canvas();
+        } catch (e) {
+            alert('截图组件加载失败，请检查网络后重试');
+            return;
         }
-        /* 卡号（左下角，与卡面显示位置一致，固定不跑位） */
-        x.font = '30px Arial';
-        x.fillStyle = '#fff';
-        x.textAlign = 'left';
-        x.fillText(currentNo, 130, H - 70);
-        c.toBlob((blob) => {
-            if (!blob) { alert('导出失败，请重试'); return; }
+        try {
+            const cardEl = document.querySelector('.alumni-card');
+            const canvas = await html2canvas(cardEl, { scale: 2, useCORS: true, backgroundColor: null, logging: false });
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
+            a.href = canvas.toDataURL('image/png');
             a.download = (currentName || '校友') + '校友卡.png';
             a.click();
-            URL.revokeObjectURL(a.href);
-        }, 'image/png');
+        } catch (err) {
+            alert('导出失败，请重试');
+        }
     });
     (async () => {
         const token = localStorage.getItem('alumniToken');
@@ -591,7 +517,7 @@
                 applyCard(merged);
                 return;
             }
-        } catch (err) { }
+        } catch (err) { /* 网络异常时回退本地 */ }
         applyCard(local);
     })();
 </script>
