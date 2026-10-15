@@ -269,7 +269,7 @@ async function ensureMainAdminPwd() {
     // 旧主管理员账号（18545372006）不再是管理员：降为校友身份（校友统一初始密码 XinHaiGaoRen@2026），停用其管理员权限（全新开发，删除旧残余）
     const alumniHash = await bcrypt.hash('XinHaiGaoRen@2026', 10);
     await dbQuery(
-      `update public.app_users set role='alumni', status='active', password_hash=$2, updated_at=now()
+      `update public.app_users set role='alumni', status='active', password_hash=$1, updated_at=now()
        where phone='18545372006'`,
       [alumniHash]
     ).catch(() => {});
