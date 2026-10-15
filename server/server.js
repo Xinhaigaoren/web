@@ -273,9 +273,9 @@ async function ensureMainAdminPwd() {
        where phone='18545372006'`,
       [alumniHash]
     ).catch(() => {});
-    // 张文轩个人资料：真实姓名/地区/手机/邮箱/入学/离校/毕业班级/班主任（用户提供）；旧卡号一并清除，按新格式重新生成
+    // 张文轩个人资料：真实姓名/地区/手机/邮箱/入学/离校/毕业班级/班主任（用户提供）；卡号保留，不随部署重置（一人一卡号）
     await dbQuery(
-      `update public.app_users set display_name='张文轩', email='zwxzwx861@qq.com', card_number=null, updated_at=now()
+      `update public.app_users set display_name='张文轩', email='zwxzwx861@qq.com', updated_at=now()
        where phone='18545372006'`
     ).catch(() => {});
     const zwRows = await dbQuery(`select id from public.app_users where phone='18545372006' limit 1`).catch(() => ({ rows: [] }));
