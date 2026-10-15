@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /internal/
-Disallow: /admin/
-Disallow: /server/
-Disallow: /.git/
-Disallow: /docs/

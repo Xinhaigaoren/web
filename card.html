@@ -174,11 +174,35 @@
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+        cursor: pointer;
+        position: relative;
     }
     .card-photo img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+    }
+    .card-photo .photo-hint {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        font-size: 0.85rem;
+        text-align: center;
+        padding: 0.4rem 0;
+        display: none;
+    }
+    .card-photo:hover .photo-hint { display: block; }
+    .card-photo.no-photo::after {
+        content: '点击上传照片';
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 1.1rem;
+        letter-spacing: 0.1rem;
     }
 
     /* 底部卡号 */
@@ -193,6 +217,27 @@
         color: #ffffff;
         opacity: 0.95;
     }
+
+    /* 导出按钮 */
+    .card-actions {
+        position: fixed;
+        right: 2.5rem;
+        bottom: 2.5rem;
+        z-index: 10;
+    }
+    .card-actions button {
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        font-size: 1.05rem;
+        color: #fff;
+        background-color: #94070A;
+        border: none;
+        border-radius: 0.4rem;
+        padding: 0.9rem 1.8rem;
+        cursor: pointer;
+        box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.25);
+        letter-spacing: 0.08rem;
+    }
+    .card-actions button:hover { background-color: #a81114; }
 </style>
   <link rel="icon" href="assets/favicon.png" />
 </head>
@@ -231,8 +276,9 @@
                 </div>
             </div>
 
-            <div class="card-photo">
+            <div class="card-photo" id="cardPhotoBox">
                 <img src="" alt="校友照片" id="cardPhoto">
+                <span class="photo-hint">点击上传照片</span>
             </div>
         </div>
 
@@ -241,6 +287,11 @@
             <div class="card-number" id="cardNumber">NO.————</div>
         </div>
     </div>
+</div>
+
+<input type="file" id="photoInput" accept="image/*" style="display:none">
+<div class="card-actions">
+    <button id="exportBtn" type="button">导出图片 PNG</button>
 </div>
 
 <script>
@@ -255,8 +306,11 @@
         }
     }
 
-    /* 卡号：NO. + 离校年份 + 班级号 + 4 位随机数（如 NO.2018 1 1234 → NO.201811234） */
+    /* 卡号：NO. + 离校年份 + 班级号 + 4 位随机数；生成一次后本地缓存保持稳定 */
     function buildCardNumber(data) {
+        const key = 'alumniCardNo';
+        const cached = localStorage.getItem(key);
+        if (cached) return 'NO.' + cached;
         const year = data.graduateYear || '';
         let classNum = '';
         if (data.className) {
@@ -264,21 +318,214 @@
             classNum = m ? m[0] : '';
         }
         const rand = String(Math.floor(1000 + Math.random() * 9000));
-        return 'NO.' + year + classNum + rand;
+        const no = year + classNum + rand;
+        if (year) localStorage.setItem(key, no);
+        return 'NO.' + no;
     }
 
     const nameEl = document.getElementById('cardName');
     const yearEl = document.getElementById('cardYear');
     const numberEl = document.getElementById('cardNumber');
     const photoEl = document.getElementById('cardPhoto');
+    const photoBox = document.getElementById('cardPhotoBox');
+    const photoInput = document.getElementById('photoInput');
+
+    let currentName = '';
+    let currentNo = 'NO.————';
 
     function applyCard(data) {
         const has = data && data.name;
+        currentName = has ? data.name : '';
         nameEl.textContent = has ? data.name : '—';
         yearEl.textContent = has ? (data.graduateYear || '—') : '—';
-        numberEl.textContent = has ? buildCardNumber(data) : 'NO.————';
-        if (has && data.photoUrl) photoEl.src = data.photoUrl;
+        currentNo = has ? buildCardNumber(data) : 'NO.————';
+        numberEl.textContent = currentNo;
+        if (has && data.photoUrl) {
+            photoEl.src = data.photoUrl;
+            photoBox.classList.remove('no-photo');
+        } else if (!photoEl.src) {
+            photoBox.classList.add('no-photo');
+        }
     }
+
+    /* 图片压缩上传：压缩为 320x400 方形 dataURL，写入后端资料 */
+    function compressPhoto(file) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+                const w = 480, h = 600;
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                const min = Math.min(img.width, img.height);
+                const sx = (img.width - min) / 2, sy = (img.height - min) / 2;
+                ctx.drawImage(img, sx, sy, min, min, 0, 0, w, h);
+                URL.revokeObjectURL(url);
+                resolve(canvas.toDataURL('image/jpeg', 0.88));
+            };
+            img.onerror = reject;
+            img.src = url;
+        });
+    }
+
+    photoBox.addEventListener('click', () => {
+        if (!localStorage.getItem('alumniToken')) {
+            alert('请先登录后再上传照片');
+            location.href = 'login.html';
+            return;
+        }
+        photoInput.click();
+    });
+
+    photoInput.addEventListener('change', async () => {
+        const file = photoInput.files[0];
+        if (!file) return;
+        const dataUrl = await compressPhoto(file);
+        try {
+            const resp = await fetch(API_BASE_URL + '/api/alumni/me', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('alumniToken') },
+                body: JSON.stringify({ avatar_url: dataUrl })
+            });
+            const r = await resp.json();
+            if (resp.ok && r.profile) {
+                photoEl.src = dataUrl;
+                photoBox.classList.remove('no-photo');
+                alert('照片已上传并同步');
+            } else {
+                alert(r.message || '照片上传失败，请先完成校友认证');
+            }
+        } catch (err) {
+            alert('网络异常，照片上传失败');
+        }
+        photoInput.value = '';
+    });
+
+    /* 导出 PNG：canvas 高清重绘卡面，自动命名 */
+    function loadImg(src) {
+        return new Promise((res) => {
+            if (!src) { res(null); return; }
+            const i = new Image();
+            i.onload = () => res(i);
+            i.onerror = () => res(null);
+            i.src = src;
+        });
+    }
+    function roundRect(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+    }
+
+    document.getElementById('exportBtn').addEventListener('click', async () => {
+        const W = 1160, H = 720;
+        const c = document.createElement('canvas');
+        c.width = W; c.height = H;
+        const x = c.getContext('2d');
+
+        const g = x.createLinearGradient(0, 0, W, H);
+        g.addColorStop(0, '#8a0609'); g.addColorStop(0.5, '#a81114'); g.addColorStop(1, '#7a0508');
+        x.fillStyle = g;
+        x.fillRect(0, 0, W, H);
+
+        /* 左侧竖排 Alumni Card */
+        x.save();
+        x.translate(100, H / 2);
+        x.rotate(-Math.PI / 2);
+        x.font = 'bold 34px Arial';
+        x.fillStyle = 'rgba(255,255,255,.9)';
+        x.textAlign = 'center';
+        x.fillText('Alumni Card', 0, 0);
+        x.restore();
+        x.strokeStyle = 'rgba(255,255,255,.2)';
+        x.lineWidth = 3;
+        x.beginPath();
+        x.moveTo(180, 70); x.lineTo(180, H - 70);
+        x.stroke();
+
+        /* 品牌 Logo 圆形 */
+        const logo = await loadImg('assets/haigao-logo.jpg');
+        x.save();
+        x.beginPath();
+        x.arc(295, 150, 66, 0, Math.PI * 2);
+        x.clip();
+        if (logo) x.drawImage(logo, 229, 84, 132, 132);
+        else { x.fillStyle = 'rgba(255,255,255,.1)'; x.fillRect(229, 84, 132, 132); }
+        x.restore();
+        x.strokeStyle = 'rgba(255,255,255,.3)';
+        x.lineWidth = 3;
+        x.beginPath();
+        x.arc(295, 150, 66, 0, Math.PI * 2);
+        x.stroke();
+
+        /* 品牌文字 */
+        x.fillStyle = '#fff';
+        x.font = '23px "Microsoft YaHei"';
+        x.textAlign = 'left';
+        x.fillText('海林市高级中学校友（新海高人）', 395, 133);
+        x.font = '15px Arial';
+        x.fillStyle = 'rgba(255,255,255,.9)';
+        x.fillText('Hailin Senior High School Alumni Association', 395, 160);
+
+        /* 校友卡标签 */
+        x.fillStyle = '#C8A063';
+        roundRect(x, 905, 100, 195, 52, 10);
+        x.fill();
+        x.fillStyle = '#7a0508';
+        x.font = '22px "Microsoft YaHei"';
+        x.textAlign = 'center';
+        x.fillText('校友卡', 1002, 135);
+
+        /* 姓名与信息 */
+        x.fillStyle = '#fff';
+        x.font = '46px "Microsoft YaHei"';
+        x.textAlign = 'left';
+        x.fillText(currentName || '—', 250, 330);
+        x.font = '26px "Microsoft YaHei"';
+        x.fillStyle = 'rgba(255,255,255,.92)';
+        x.fillText('毕业时间', 250, 415);
+        x.fillStyle = '#fff';
+        x.fillText(yearEl.textContent, 440, 415);
+        x.fillStyle = 'rgba(255,255,255,.92)';
+        x.fillText('毕业学校', 250, 475);
+        x.fillStyle = '#fff';
+        x.fillText('海林市高级中学', 440, 475);
+
+        /* 右侧照片 */
+        const px = W - 250 - 240, py = 240, pw = 240, ph = 300;
+        x.fillStyle = '#fff';
+        roundRect(x, px, py, pw, ph, 10);
+        x.fill();
+        const photo = await loadImg(photoEl.src);
+        if (photo) {
+            x.save();
+            x.beginPath();
+            roundRect(x, px, py, pw, ph, 10);
+            x.clip();
+            x.drawImage(photo, px, py, pw, ph);
+            x.restore();
+        }
+
+        /* 卡号 */
+        x.font = '30px Arial';
+        x.fillStyle = '#fff';
+        x.textAlign = 'right';
+        x.fillText(currentNo, W - 130, H - 85);
+
+        c.toBlob((blob) => {
+            if (!blob) { alert('导出失败，请重试'); return; }
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = '新海高人电子校友卡-' + (currentName || '校友') + '-' + currentNo.replace(/[^0-9]/g, '') + '.png';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }, 'image/png');
+    });
 
     (async () => {
         const token = localStorage.getItem('alumniToken');
@@ -295,7 +542,8 @@
                 const merged = {
                     name: u.display_name || p.name || local.name || '',
                     graduateYear: p.graduation_year || u.graduation_year || local.graduateYear || '',
-                    className: p.class_name || u.class_name || local.className || ''
+                    className: p.class_name || u.class_name || local.className || '',
+                    photoUrl: p.avatar_url || ''
                 };
                 localStorage.setItem('alumniUser', JSON.stringify(merged));
                 applyCard(merged);

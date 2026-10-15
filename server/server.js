@@ -1388,6 +1388,12 @@ async function ensureContentTables() {
     data text,
     created_at timestamptz default now()
   )`);
+  await dbQuery(`create table if not exists public.favorites (
+    user_id bigint references public.app_users(id) on delete cascade,
+    service_key text,
+    created_at timestamptz default now(),
+    primary key (user_id, service_key)
+  )`);
   // 老库可能在功能迭代前就建了表，这里逐列补齐，避免发布新闻/活动时因缺列报错
   const newsCols = [
     ['slug', 'text'], ['title', 'text'], ['summary', 'text'], ['content', 'text'],
@@ -1834,6 +1840,44 @@ app.put('/api/alumni/me', requireAuth, async (req, res) => {
     return ok(res, { profile: r.rows[0], message: '资料已更新' });
   } catch (e) {
     return fail(res, 500, '更新资料失败', { error: e.message });
+  }
+});
+
+// ---------- 用户收藏（真实持久化） ----------
+app.get('/api/favorites', requireAuth, async (req, res) => {
+  try {
+    const r = await dbQuery(
+      `select service_key from public.favorites where user_id=$1 order by created_at desc`,
+      [req.user.user_id]
+    );
+    return ok(res, { favorites: r.rows.map((x) => x.service_key) });
+  } catch (e) {
+    return fail(res, 500, '获取收藏失败', { error: e.message });
+  }
+});
+
+app.post('/api/favorites', requireAuth, async (req, res) => {
+  try {
+    const key = String(req.body?.service_key || '').trim();
+    if (!key) return fail(res, 400, '缺少服务标识');
+    await dbQuery(
+      `insert into public.favorites (user_id, service_key) values ($1,$2)
+       on conflict (user_id, service_key) do nothing`,
+      [req.user.user_id, key]
+    );
+    return ok(res, { message: '已收藏', favorite: true });
+  } catch (e) {
+    return fail(res, 500, '收藏失败', { error: e.message });
+  }
+});
+
+app.delete('/api/favorites/:service_key', requireAuth, async (req, res) => {
+  try {
+    const key = String(req.params.service_key || '').trim();
+    await dbQuery(`delete from public.favorites where user_id=$1 and service_key=$2`, [req.user.user_id, key]);
+    return ok(res, { message: '已取消收藏', favorite: false });
+  } catch (e) {
+    return fail(res, 500, '取消收藏失败', { error: e.message });
   }
 });
 
