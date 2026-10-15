@@ -128,8 +128,8 @@ body {
   font-weight: normal;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
-.tab-btn:hover { background-color: #e8e8e8; }          /* 悬停（未选中）灰 */
-.tab-btn.active { background-color: #94070A; color: #fff; }  /* 选中深红白字 */
+.tab-btn:hover { background-color: #e8e8e8; }
+.tab-btn.active { background-color: #94070A; color: #fff; }
 
 /* 内容面板：白色容器 + 顶部红色边框 */
 .panel {
@@ -146,10 +146,10 @@ body {
 /* 地区联络：国内 / 国外 左右两栏 */
 .region-layout { display: flex; align-items: stretch; }
 .region-layout .region-block { flex: 1; padding: 1.5rem 2.5rem; display: flex; align-items: flex-start; gap: 2rem; }
-.region-layout .region-block + .region-block { border-left: 1px solid #eeeeee; }  /* 区块间浅灰细线 */
+.region-layout .region-block + .region-block { border-left: 1px solid #eeeeee; }
 .region-label {
   flex-shrink: 0;
-  white-space: nowrap;               /* 标签单行显示，不换行 */
+  white-space: nowrap;
   font-size: 1.1rem; color: #94070A;
   font-weight: normal; font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
 }
@@ -396,7 +396,7 @@ body {
             <div class="region-grid committee-grid">
                 <a href="#">新海高人人工智能专业委员会</a>
                 <a href="#">新海高人航空航天专业委员会</a>
-                <a href="#">新海高人土木工程专业委员会</a>
+                <a href="土木专业委员会.html">新海高人土木工程专业委员会</a>
                 <a href="#">新海高人高等教育专业委员会</a>
                 <a href="#">新海高人基础教育专业委员会</a>
                 <a href="#">新海高人能源专业委员会</a>
@@ -500,7 +500,7 @@ body {
                 <p class="copyright-text">版权所有 © 海林市高级中学校友（新海高人）</p>
                 <div class="stats">
                     <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-3-3-3z"/></svg>
-                    <!-- 浏览量：复用与首页一致的站内实时统计（site.js 自动填充真实数字；如需切换不蒜子统计，替换为 busuanzi 脚本并去掉 site.js 计数即可） -->
+                    <!-- 浏览量：复用与首页一致的站内实时统计（site.js 自动填充真实数字） -->
                     <span id="site-pv-count" class="view-count">加载中...</span>
                 </div>
             </div>
