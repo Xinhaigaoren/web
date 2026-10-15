@@ -314,7 +314,7 @@
         }
     }
 
-    /* 卡号：入学年份 + 毕业年份 + 毕业班级 + 5 位随机数；生成一次后本地缓存保持稳定 */
+    /* 卡号：入学年份 + 毕业年份 + 毕业班级号 + 5 位随机数（例：202120241468774）；生成一次后本地缓存保持稳定 */
     function buildCardNumber(data) {
         if (data && data.cardNo) return 'NO.' + String(data.cardNo).replace(/^NO\./i, '');
         const key = 'alumniCardNo';
@@ -322,9 +322,10 @@
         if (cached) return 'NO.' + cached;
         const enroll = data.enrollYear || '';
         const year = data.graduateYear || '';
-        const cls = data.className || '';
+        const clsMatch = String(data.className || '').match(/\d+/);
+        const clsNum = clsMatch ? clsMatch[0] : '';
         const rand = String(Math.floor(10000 + Math.random() * 90000));
-        const no = enroll + year + cls + rand;
+        const no = enroll + year + clsNum + rand;
         if (no) localStorage.setItem(key, no);
         return 'NO.' + no;
     }
@@ -347,7 +348,7 @@
         nameEl.textContent = has ? data.name : '—';
         const enroll = has ? (data.enrollYear || '') : '';
         const grad = has ? (data.graduateYear || '') : '';
-        periodEl.textContent = has ? (enroll && grad ? enroll + ' - ' + grad : (grad || '—')) : '—';
+        periodEl.textContent = has ? (enroll && grad ? enroll + '-' + grad : (grad || '—')) : '—';
         classEl.textContent = has ? (data.className || '—') : '—';
         regionEl.textContent = has ? (data.region || '—') : '—';
         currentNo = has ? buildCardNumber(data) : 'NO.————';
