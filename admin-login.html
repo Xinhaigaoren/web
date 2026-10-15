@@ -196,6 +196,7 @@
             });
             const data = await resp.json();
             if (!resp.ok) { alert(data.message || '登录失败'); return; }
+            localStorage.setItem('adminToken', data.token);
             localStorage.setItem('alumniToken', data.token);
             localStorage.setItem('alumniUser', JSON.stringify({
                 name: data.user.name || data.user.display_name || '',
@@ -203,7 +204,7 @@
                 email: data.user.email || '',
                 role: data.user.role || 'admin'
             }));
-            location.href = 'member.html';
+            location.href = 'admin.html';
         } catch (err) {
             alert('网络异常，请稍后重试');
         } finally {

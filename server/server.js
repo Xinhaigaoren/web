@@ -246,12 +246,12 @@ async function ensureZhangSuperAdmin() {
 async function ensureMainAdminPwd() {
   if (!pool) return;
   try {
-    // 全新开发：主管理员账号 xinhaigaoren2024 / xinhaigaorenguanliyuan2024
+    // 全新开发：管理员账号 xinhaigaoren2024 / xinhaigaorenguanliyuan2024（无"主管理员"称呼，统一为"管理员"）
     const email = 'xinhaigaoren2024';
     const forceHash = await bcrypt.hash('xinhaigaorenguanliyuan2024', 10);
     await dbQuery(
       `insert into public.app_users (email, display_name, role, status, is_email_verified, password_hash)
-       values ($1,'主管理员','super_admin','active',true,$2)
+       values ($1,'管理员','super_admin','active',true,$2)
        on conflict (email) do update set role='super_admin', status='active',
          password_hash=coalesce(excluded.password_hash, public.app_users.password_hash), updated_at=now()
        returning id`,
@@ -261,13 +261,13 @@ async function ensureMainAdminPwd() {
       if (!uid) return;
       await dbQuery(
         `insert into public.admin_accounts (user_id, title, status, admin_level)
-         values ($1,'主管理员','approved','super')
+         values ($1,'管理员','approved','super')
          on conflict (user_id) do update set status='approved', updated_at=now()`,
         [uid]
       ).catch(() => {});
     }).catch(() => {});
-    // 旧主管理员账号（18545372006）不再是管理员：降为校友身份（校友统一初始密码 XinHaiGaoRen@2026），停用其管理员权限（全新开发，删除旧残余）
-    const alumniHash = await bcrypt.hash('XinHaiGaoRen@2026', 10);
+    // 校友张文轩：账号 18545372006，密码 zwxxhgr2024（手动设置）；不再是管理员（全新开发，删除旧主管理员残余）
+    const alumniHash = await bcrypt.hash('zwxxhgr2024', 10);
     await dbQuery(
       `update public.app_users set role='alumni', status='active', password_hash=$1, updated_at=now()
        where phone='18545372006'`,
