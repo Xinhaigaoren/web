@@ -219,25 +219,25 @@
     }
 
     /* 导出按钮 */
-    .card-actions {
-        position: fixed;
-        right: 2.5rem;
-        bottom: 2.5rem;
-        z-index: 10;
+    .card-photo-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.2rem;
+        flex-shrink: 0;
     }
-    .card-actions button {
+    .export-btn {
         font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-        font-size: 1.05rem;
+        font-size: 1rem;
         color: #fff;
         background-color: #94070A;
-        border: none;
+        border: 1px solid rgba(255, 255, 255, 0.6);
         border-radius: 0.4rem;
-        padding: 0.9rem 1.8rem;
+        padding: 0.7rem 1.6rem;
         cursor: pointer;
-        box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.25);
-        letter-spacing: 0.08rem;
+        letter-spacing: 0.1rem;
     }
-    .card-actions button:hover { background-color: #a81114; }
+    .export-btn:hover { background-color: #a81114; }
 </style>
   <link rel="icon" href="assets/favicon.png" />
 </head>
@@ -276,9 +276,12 @@
                 </div>
             </div>
 
-            <div class="card-photo" id="cardPhotoBox">
-                <img src="" alt="校友照片" id="cardPhoto">
-                <span class="photo-hint">点击上传照片</span>
+            <div class="card-photo-col">
+                <div class="card-photo" id="cardPhotoBox">
+                    <img src="" alt="校友照片" id="cardPhoto">
+                    <span class="photo-hint">点击上传照片</span>
+                </div>
+                <button id="exportBtn" class="export-btn" type="button">导出图片 PNG</button>
             </div>
         </div>
 
@@ -290,9 +293,6 @@
 </div>
 
 <input type="file" id="photoInput" accept="image/*" style="display:none">
-<div class="card-actions">
-    <button id="exportBtn" type="button">导出图片 PNG</button>
-</div>
 
 <script>
     /* 电子校友卡：优先从后端实时获取用户认证资料（需 alumniToken），失败时回退本地存储 */
@@ -425,7 +425,37 @@
         ctx.closePath();
     }
 
+    /* 确保卡面信息已加载（避免导出默认占位内容） */
+    async function ensureCardData() {
+        if (currentName) return;
+        const token = localStorage.getItem('alumniToken');
+        const local = readUser() || {};
+        if (token) {
+            try {
+                const resp = await fetch(API_BASE_URL + '/api/alumni/me', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await resp.json();
+                if (resp.ok && (data.user || data.profile)) {
+                    const u = data.user || {};
+                    const p = data.profile || {};
+                    const merged = {
+                        name: u.display_name || p.name || local.name || '',
+                        graduateYear: p.graduation_year || u.graduation_year || local.graduateYear || '',
+                        className: p.class_name || u.class_name || local.className || '',
+                        photoUrl: p.avatar_url || ''
+                    };
+                    localStorage.setItem('alumniUser', JSON.stringify(merged));
+                    applyCard(merged);
+                    return;
+                }
+            } catch (err) { /* 网络异常，继续用本地 */ }
+        }
+        if (local.name) applyCard(local);
+    }
+
     document.getElementById('exportBtn').addEventListener('click', async () => {
+        await ensureCardData();
         const W = 1160, H = 720;
         const c = document.createElement('canvas');
         c.width = W; c.height = H;
@@ -524,7 +554,7 @@
             if (!blob) { alert('导出失败，请重试'); return; }
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = '新海高人电子校友卡-' + (currentName || '校友') + '-' + currentNo.replace(/[^0-9]/g, '') + '.png';
+            a.download = (currentName || '校友') + '校友卡.png';
             a.click();
             URL.revokeObjectURL(a.href);
         }, 'image/png');

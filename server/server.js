@@ -582,6 +582,10 @@ app.post('/api/auth/login', async (req, res) => {
       return fail(res, 401, '账号或密码错误，请重新输入');
     }
     if (user.status === 'disabled') return fail(res, 403, '该账号已被停用，请联系管理员');
+    // 管理员/主管理员禁止通过校友登录通道登录
+    if (user.role === 'super_admin' || user.role === 'admin') {
+      return fail(res, 403, '该账号为管理员，请从「管理员登录」入口进入（校友登录仅限校友账号）');
+    }
     const token = jwt.sign({ user_id: user.user_id, role: user.role, type: 'alumni' }, TOKEN_SECRET, { expiresIn: '7d' });
     await dbQuery(`update public.app_users set last_login_at=now(), updated_at=now() where id=$1`, [user.user_id]).catch(() => {});
     return ok(res, { token, user: { name: user.display_name, email: user.email, phone: user.phone, role: user.role, status: user.status } });

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理员登录 - 海林市高级中学校友（新海高人）</title>
+<link rel="icon" href="assets/favicon.png" />
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: clamp(12px, 1.1vw, 18px); }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #8a0609 0%, #a81114 50%, #7a0508 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+    .login-box {
+        width: 100%;
+        max-width: 26rem;
+        background: #fff;
+        border-radius: 1rem;
+        box-shadow: 0 1.5rem 3.5rem rgba(0, 0, 0, 0.35);
+        padding: 2.5rem 2.5rem 2rem;
+    }
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        margin-bottom: 1.6rem;
+    }
+    .brand img {
+        width: 3.4rem;
+        height: 3.4rem;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 0.15rem solid #e8d9c8;
+    }
+    .brand .txt { line-height: 1.25; }
+    .brand .txt .zh { font-size: 1.05rem; color: #333; }
+    .brand .txt .en { font-size: 0.72rem; color: #999; }
+    h1 {
+        font-size: 1.3rem;
+        color: #94070A;
+        font-weight: normal;
+        margin-bottom: 1.4rem;
+        letter-spacing: 0.08rem;
+    }
+    label {
+        display: block;
+        font-size: 0.9rem;
+        color: #555;
+        margin-bottom: 0.4rem;
+    }
+    input {
+        width: 100%;
+        height: 2.9rem;
+        border: 1px solid #ddd;
+        border-radius: 0.35rem;
+        padding: 0 0.9rem;
+        font-size: 1rem;
+        font-family: inherit;
+        margin-bottom: 1.1rem;
+        outline: none;
+    }
+    input:focus { border-color: #94070A; }
+    button {
+        width: 100%;
+        height: 2.9rem;
+        background: #94070A;
+        color: #fff;
+        border: none;
+        border-radius: 0.35rem;
+        font-size: 1.05rem;
+        font-family: inherit;
+        letter-spacing: 0.15rem;
+        cursor: pointer;
+        margin-top: 0.3rem;
+    }
+    button:hover { background: #a81114; }
+    .links {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1.3rem;
+        font-size: 0.85rem;
+    }
+    .links a { color: #94070A; text-decoration: none; }
+    .links a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="login-box">
+    <div class="brand">
+        <img src="assets/haigao-logo.jpg" alt="校徽">
+        <div class="txt">
+            <div class="zh">海林市高级中学校友（新海高人）</div>
+            <div class="en">Hailin Senior High School Alumni Association</div>
+        </div>
+    </div>
+    <h1>管理员登录</h1>
+    <form id="loginForm">
+        <label for="username">账号</label>
+        <input type="text" id="username" placeholder="请输入管理员账号" autocomplete="username">
+        <label for="password">密码</label>
+        <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password">
+        <button type="submit" id="loginBtn">登 录</button>
+    </form>
+    <div class="links">
+        <a href="login.html">← 校友登录</a>
+        <a href="index.html">返回首页</a>
+    </div>
+</div>
+
+<script>
+    const API_BASE_URL = 'https://hailin-alumni-api.onrender.com';
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!username || !password) { alert('请输入账号和密码'); return; }
+        loginBtn.disabled = true;
+        loginBtn.textContent = '登录中...';
+        try {
+            const resp = await fetch(API_BASE_URL + '/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await resp.json();
+            if (!resp.ok) { alert(data.message || '登录失败'); return; }
+            localStorage.setItem('alumniToken', data.token);
+            localStorage.setItem('alumniUser', JSON.stringify({
+                name: data.user.name || data.user.display_name || '',
+                phone: data.user.phone || '',
+                email: data.user.email || '',
+                role: data.user.role || 'admin'
+            }));
+            location.href = 'member.html';
+        } catch (err) {
+            alert('网络异常，请稍后重试');
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = '登 录';
+        }
+    });
+</script>
+
+</body>
+</html>
