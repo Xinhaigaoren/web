@@ -7,108 +7,171 @@
 <link rel="icon" href="assets/favicon.png" />
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: clamp(12px, 1.1vw, 18px); }
+    html { font-size: clamp(12px, 1.25vw, 18px); }
     body {
-        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background: linear-gradient(135deg, #a21217 0%, #c41e22 50%, #e85d5d 100%);
         min-height: 100vh;
-        background: linear-gradient(135deg, #8a0609 0%, #a81114 50%, #7a0508 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
         padding: 2rem;
     }
-    .login-box {
-        width: 100%;
-        max-width: 26rem;
-        background: #fff;
-        border-radius: 1rem;
-        box-shadow: 0 1.5rem 3.5rem rgba(0, 0, 0, 0.35);
-        padding: 2.5rem 2.5rem 2rem;
+    .login-header {
+        display: flex; align-items: center; justify-content: center;
+        gap: 1.2rem; margin-bottom: 2rem;
     }
-    .brand {
-        display: flex;
-        align-items: center;
-        gap: 0.9rem;
-        margin-bottom: 1.6rem;
-    }
-    .brand img {
-        width: 3.4rem;
-        height: 3.4rem;
+    .login-header .logo-circle {
+        height: 4.5rem; width: 4.5rem; object-fit: contain;
         border-radius: 50%;
-        object-fit: cover;
-        border: 0.15rem solid #e8d9c8;
+        background-color: rgba(255,255,255,0.1);
+        border: 0.15rem solid rgba(255,255,255,0.3);
     }
-    .brand .txt { line-height: 1.25; }
-    .brand .txt .zh { font-size: 1.05rem; color: #333; }
-    .brand .txt .en { font-size: 0.72rem; color: #999; }
-    h1 {
-        font-size: 1.3rem;
-        color: #94070A;
-        font-weight: normal;
-        margin-bottom: 1.4rem;
-        letter-spacing: 0.08rem;
+    .login-header .logo-text-area {
+        display: flex; flex-direction: column; color: #ffffff;
     }
-    label {
-        display: block;
-        font-size: 0.9rem;
-        color: #555;
-        margin-bottom: 0.4rem;
+    .login-header .logo-text-area .zh {
+        font-size: 1.5rem; font-weight: normal;
+        line-height: 1.3; letter-spacing: 0.05rem;
     }
-    input {
-        width: 100%;
-        height: 2.9rem;
-        border: 1px solid #ddd;
-        border-radius: 0.35rem;
-        padding: 0 0.9rem;
-        font-size: 1rem;
-        font-family: inherit;
-        margin-bottom: 1.1rem;
-        outline: none;
+    .login-header .logo-text-area .en {
+        font-size: 0.85rem; opacity: 0.9;
+        line-height: 1.3; margin-top: 0.15rem;
     }
-    input:focus { border-color: #94070A; }
-    button {
-        width: 100%;
-        height: 2.9rem;
-        background: #94070A;
-        color: #fff;
-        border: none;
-        border-radius: 0.35rem;
-        font-size: 1.05rem;
-        font-family: inherit;
-        letter-spacing: 0.15rem;
-        cursor: pointer;
-        margin-top: 0.3rem;
+    .login-card {
+        width: 100%; max-width: 40rem;
+        background-color: #fbe5e5;
+        border-radius: 0.8rem;
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.25);
+        padding: 3rem 3.5rem;
+        position: relative;
     }
-    button:hover { background: #a81114; }
-    .links {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 1.3rem;
-        font-size: 0.85rem;
+    .login-title {
+        text-align: center; font-size: 1.6rem;
+        font-weight: normal; color: #94070A;
+        margin-bottom: 0.8rem; letter-spacing: 0.05rem; line-height: 1.4;
     }
-    .links a { color: #94070A; text-decoration: none; }
-    .links a:hover { text-decoration: underline; }
+    .login-title2 {
+        text-align: center; font-size: 1.3rem;
+        font-weight: normal; color: #94070A;
+        margin-bottom: 2rem; letter-spacing: 0.05rem; line-height: 1.4;
+    }
+    .login-subtitle {
+        text-align: center; font-size: 1.05rem;
+        color: #333; margin-bottom: 2rem;
+        display: flex; align-items: center; justify-content: center;
+        gap: 0.5rem;
+    }
+    .login-subtitle .arrow-icon { width: 1.2rem; height: 1.2rem; fill: #94070A; }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label {
+        display: block; font-size: 0.95rem; color: #333;
+        margin-bottom: 0.5rem;
+    }
+    .form-group input {
+        width: 100%; padding: 0.85rem 1rem;
+        font-size: 0.95rem; border: 1px solid #d9b0a8;
+        border-radius: 0.3rem; outline: none;
+        background-color: #ffffff;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        color: #333;
+    }
+    .form-group input:focus { border-color: #94070A; }
+    .form-group input::placeholder { color: #b0b0b0; }
+    .link-row {
+        display: flex; justify-content: flex-end;
+        gap: 0.8rem; font-size: 0.9rem; margin-top: 0.4rem;
+    }
+    .link-row a { color: #94070A; text-decoration: none; }
+    .link-row a:hover { text-decoration: underline; }
+    .link-row .divider { color: #94070A; opacity: 0.5; }
+    .trust-browser {
+        display: flex; align-items: flex-start; gap: 0.5rem;
+        margin: 1.2rem 0 1.5rem; font-size: 0.85rem;
+        color: #555; line-height: 1.6;
+    }
+    .trust-browser input[type="checkbox"] {
+        margin-top: 0.2rem; accent-color: #94070A;
+        transform: scale(1.1);
+    }
+    .login-btn {
+        width: 100%; padding: 1rem;
+        font-size: 1.15rem; font-weight: normal;
+        color: #ffffff; background-color: #94070A;
+        border: none; border-radius: 0.3rem;
+        cursor: pointer; letter-spacing: 0.3rem;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        transition: background 0.3s;
+    }
+    .login-btn:hover {
+        background-color: #b81c20;
+        box-shadow: 0 0.4rem 1rem rgba(148, 7, 10, 0.4);
+    }
+    .login-footer {
+        margin-top: 2.5rem;
+        display: flex; align-items: center; gap: 0.5rem;
+        font-size: 1rem; color: #ffffff;
+    }
+    .login-footer svg { width: 1.1rem; height: 1.1rem; fill: #ffffff; }
+    .login-footer a { color: #ffffff; text-decoration: none; }
+    .login-footer a:hover { text-decoration: underline; }
+    .login-footer .back-links { margin-left: auto; display: flex; gap: 1rem; font-size: 0.9rem; }
+    @media (max-width: 700px) {
+        .login-card { padding: 2.2rem 1.8rem; }
+        .login-header .logo-circle { height: 3.4rem; width: 3.4rem; }
+        .login-header .logo-text-area .zh { font-size: 1.2rem; }
+        .login-header .logo-text-area .en { font-size: 0.7rem; }
+    }
 </style>
 </head>
 <body>
 
-<div class="login-box">
-    <div class="brand">
-        <img src="assets/haigao-logo.jpg" alt="校徽">
-        <div class="txt">
-            <div class="zh">海林市高级中学校友（新海高人）</div>
-            <div class="en">Hailin Senior High School Alumni Association</div>
-        </div>
+<div class="login-header">
+    <img src="assets/haigao-logo.jpg" alt="Logo" class="logo-circle">
+    <div class="logo-text-area">
+        <span class="zh">海林市高级中学校友（新海高人）</span>
+        <span class="en">Hailin Senior High School Alumni Association</span>
     </div>
-    <h1>管理员登录</h1>
+</div>
+
+<div class="login-card">
+    <h1 class="login-title">海林市高级中学校友（新海高人）</h1>
+    <h2 class="login-title2">用户电子身份服务系统 · 管理员登录</h2>
+
+    <p class="login-subtitle">
+        您即将登录
+        <svg class="arrow-icon" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+        管理员后台
+    </p>
+
     <form id="loginForm">
-        <label for="username">账号</label>
-        <input type="text" id="username" placeholder="请输入管理员账号" autocomplete="username">
-        <label for="password">密码</label>
-        <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password">
-        <button type="submit" id="loginBtn">登 录</button>
+        <div class="form-group">
+            <label>用户名</label>
+            <input type="text" id="username" placeholder="用户名 / 电话号 / 校友电子卡号" autocomplete="username">
+        </div>
+
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="password" placeholder="密码" autocomplete="current-password">
+            <div class="link-row">
+                <a href="register.html">校友注册</a>
+                <span class="divider">|</span>
+                <a href="reset.html">忘记密码</a>
+            </div>
+        </div>
+
+        <div class="trust-browser">
+            <input type="checkbox" id="trustBrowser">
+            <label for="trustBrowser">本次登录使用信任浏览器访问校友内网门户时不必再输入账号密码（统一登录），为了您的账号安全，使用完请关闭本浏览器。</label>
+        </div>
+
+        <button type="submit" class="login-btn" id="loginBtn">登 录</button>
     </form>
-    <div class="links">
+</div>
+
+<div class="login-footer">
+    <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+    <a href="mailto:xinhaigaoren@126.com">xinhaigaoren@126.com</a>
+    <div class="back-links">
         <a href="login.html">← 校友登录</a>
         <a href="index.html">返回首页</a>
     </div>
@@ -122,7 +185,7 @@
         e.preventDefault();
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
-        if (!username || !password) { alert('请输入账号和密码'); return; }
+        if (!username || !password) { alert('请输入用户名和密码'); return; }
         loginBtn.disabled = true;
         loginBtn.textContent = '登录中...';
         try {
