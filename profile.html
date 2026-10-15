@@ -149,7 +149,7 @@
             中文
             <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
         </a>
-        <a id="logoutBtn">退出登录</a>
+        <a id="backBtn">返回内网</a>
     </div>
 </header>
 
@@ -293,10 +293,8 @@
     document.getElementById('btnEdit').addEventListener('click', () => {
         if (editing) { exitEdit(); } else { enterEdit(); }
     });
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('alumniToken');
-        localStorage.removeItem('alumniUser');
-        location.href = 'login.html';
+    document.getElementById('backBtn').addEventListener('click', () => {
+        location.href = 'member.html';
     });
     document.getElementById('langSwitch').addEventListener('click', () => {
         alert('当前已为简体中文');
