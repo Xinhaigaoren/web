@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>校友审批 - 海林市高级中学校友（新海高人）</title>
+<title>校友个人信息 - 海林市高级中学校友（新海高人）</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: clamp(12px, 1vw, 18px); }
@@ -55,7 +55,7 @@
         border: 1px solid #e0e0e0; padding: 2.5rem 3rem;
     }
 
-    /* ========== 审批表单 ========== */
+    /* ========== 个人信息 ========== */
     .form-section-title {
         font-size: 1.1rem; color: #333;
         margin: 0 0 1.5rem; padding-bottom: 0.8rem;
@@ -195,14 +195,14 @@
 </header>
 
 <!-- ========== 页面标题 ========== -->
-<div class="page-title">校友审批</div>
+<div class="page-title">校友个人信息</div>
 
 <!-- ========== 主卡片 ========== -->
 <div class="main-content">
     <div class="info-card">
 
-        <!-- 审批表单（动态填充） -->
-        <h3 class="form-section-title">审批表单</h3>
+        <!-- 个人信息（动态填充） -->
+        <h3 class="form-section-title">个人信息</h3>
         <table class="form-table">
             <tr>
                 <td class="label">真实姓名</td>
@@ -244,11 +244,11 @@
         <div class="btn-row" id="actionButtons">
             <button class="btn btn-pass" id="approveBtn">
                 <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                通过审批
+                确认填写
             </button>
             <button class="btn btn-reject" id="rejectBtn">
                 <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-                拒绝
+                修改信息
             </button>
         </div>
 
@@ -306,7 +306,7 @@
 
 <script>
 /* ============================================================
-   校友审批后台：数据来自后端 API（需管理员登录 token）
+   校友个人信息后台：数据来自后端 API（需管理员登录 token）
    ============================================================ */
 const API_BASE_URL = 'https://hailin-alumni-api.onrender.com';
 const adminToken = localStorage.getItem('adminToken');
@@ -362,7 +362,7 @@ function renderTable() {
             <td>
                 ${currentStatus === 'pending' ?
                     `<button class="approve-btn pass">通过</button>
-                <button class="approve-btn reject">拒绝</button>` :
+                <button class="approve-btn reject">修改信息</button>` :
                     `<button class="approve-btn del">删除</button>`}
             </td>
         `;
@@ -436,7 +436,7 @@ function clearForm() {
     });
 }
 
-/* 选中某行 → 填充审批表单 */
+/* 选中某行 → 填充个人信息 */
 function selectRow(index) {
     selectedIndex = index;
     const data = applications[index];
@@ -460,7 +460,7 @@ function selectRow(index) {
 async function reviewApplication(status, rejectReason) {
     const data = applications[selectedIndex];
     if (!data) return;
-    if (!confirm((status === 'approved' ? '确认通过 ' : '确认拒绝 ') + (data.name || '') + ' 的认证申请？')) return;
+    if (!confirm((status === 'approved' ? '确认填写 ' : '确认修改信息 ') + (data.name || '') + ' 的认证申请？')) return;
     try {
         const resp = await fetch(API_BASE_URL + '/api/applications/' + data.id + '/status', {
             method: 'PATCH',
@@ -469,7 +469,7 @@ async function reviewApplication(status, rejectReason) {
         });
         const result = await resp.json();
         if (!resp.ok) { alert(result.message || '操作失败'); return; }
-        alert((status === 'approved' ? '已通过 ' : '已拒绝 ') + (data.name || '') + ' 的认证申请');
+        alert((status === 'approved' ? '已确认填写 ' : '已转修改信息 ') + (data.name || '') + ' 的认证申请');
         await loadApplications();
     } catch (err) {
         alert('网络异常，操作失败（' + err.message + '）');

@@ -553,6 +553,9 @@
             if (p.avatar_url) setAvatar(p.avatar_url);
             /* 管理员身份标识 */
             const nameSpan = document.getElementById('userName');
+            nameSpan.style.cursor = 'pointer';
+            nameSpan.title = '点击查看个人信息';
+            nameSpan.onclick = () => { location.href = 'profile.html'; };
             if (role === 'super_admin' || role === 'admin') {
                 nameSpan.textContent = nameSpan.textContent.replace(/\s*（管理员）$/, '') + '（管理员）';
             }

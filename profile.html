@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校友个人信息 - 海林市高级中学校友（新海高人）</title>
+<link rel="icon" href="assets/favicon.png" />
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: clamp(11px, 1.05vw, 14px); }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background: linear-gradient(135deg, #a21217 0%, #c41e22 50%, #e85d5d 100%);
+        min-height: 100vh;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        padding: 2rem;
+    }
+    .page-card {
+        width: 100%; max-width: 42rem;
+        background-color: #ffffff;
+        border-radius: 0.8rem;
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+    }
+    .page-head {
+        background-color: #94070A;
+        color: #ffffff;
+        padding: 1.4rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .page-head .title { font-size: 1.4rem; letter-spacing: 0.1rem; }
+    .page-head .back-link { color: #ffffff; text-decoration: none; font-size: 0.95rem; opacity: 0.9; }
+    .page-head .back-link:hover { text-decoration: underline; opacity: 1; }
+    .form-body { padding: 2rem 2.5rem 2.5rem; }
+    .form-section-title {
+        font-size: 1.15rem; color: #94070A;
+        font-weight: normal; margin-bottom: 1.5rem; letter-spacing: 0.05rem;
+    }
+    .info-table { width: 100%; border-collapse: collapse; }
+    .info-table tr { border-bottom: 1px solid #f0e0e0; }
+    .info-table tr:last-child { border-bottom: none; }
+    .info-table td { padding: 0.9rem 0.5rem; vertical-align: middle; }
+    .info-table .label { width: 32%; color: #555; font-size: 1rem; }
+    .info-table .value { color: #222; font-size: 1rem; }
+    .info-table .value.placeholder { color: #b0b0b0; }
+    .info-table input {
+        width: 100%; max-width: 26rem;
+        padding: 0.55rem 0.8rem;
+        font-size: 1rem; border: 1px solid #d9b0a8;
+        border-radius: 0.3rem; outline: none; background-color: #fff7f7;
+        color: #333;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    }
+    .info-table input:focus { border-color: #94070A; }
+    .actions {
+        display: flex; justify-content: center;
+        gap: 2rem; margin-top: 2.2rem;
+    }
+    .act-btn {
+        min-width: 11rem;
+        padding: 0.85rem 1.5rem;
+        font-size: 1.05rem;
+        border-radius: 0.35rem;
+        cursor: pointer;
+        letter-spacing: 0.15rem;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        transition: all 0.2s;
+    }
+    .act-btn.confirm {
+        color: #ffffff; background-color: #94070A; border: none;
+    }
+    .act-btn.confirm:hover { background-color: #b81c20; }
+    .act-btn.edit {
+        color: #94070A; background-color: #ffffff;
+        border: 1.5px solid #94070A;
+    }
+    .act-btn.edit:hover { background-color: #fdf0f0; }
+    .tip { text-align: center; color: #999; font-size: 0.85rem; margin-top: 1.2rem; }
+    .loading { text-align: center; color: #888; font-size: 1.05rem; padding: 3rem 0; }
+</style>
+</head>
+<body>
+
+<div class="page-card">
+    <div class="page-head">
+        <span class="title">校友个人信息</span>
+        <a class="back-link" href="member.html">← 返回内网</a>
+    </div>
+
+    <div class="form-body">
+        <h3 class="form-section-title">个人信息</h3>
+        <div id="loading" class="loading">正在加载个人信息…</div>
+
+        <table class="info-table" id="infoTable" style="display:none">
+            <tr><td class="label">真实姓名</td><td class="value" id="vName">—</td></tr>
+            <tr><td class="label">所在地区</td><td class="value" id="vRegion">—</td></tr>
+            <tr><td class="label">手机</td><td class="value" id="vPhone">—</td></tr>
+            <tr><td class="label">邮箱</td><td class="value" id="vEmail">—</td></tr>
+            <tr><td class="label">用户名</td><td class="value" id="vUsername">—</td></tr>
+            <tr><td class="label">密码</td><td class="value" id="vPassword">••••••</td></tr>
+            <tr><td class="label">入学年份</td><td class="value" id="vEnroll">—</td></tr>
+            <tr><td class="label">离校年份</td><td class="value" id="vGraduate">—</td></tr>
+            <tr><td class="label">毕业班级</td><td class="value" id="vClass">—</td></tr>
+            <tr><td class="label">班主任老师</td><td class="value" id="vTeacher">—</td></tr>
+            <tr><td class="label">注册说明</td><td class="value" id="vStatus">—</td></tr>
+        </table>
+
+        <div class="actions" id="actions" style="display:none">
+            <button class="act-btn confirm" id="btnConfirm">✓ 确认填写</button>
+            <button class="act-btn edit" id="btnEdit">✎ 修改信息</button>
+        </div>
+        <p class="tip" id="tip" style="display:none">填写完成后点击「确认填写」保存；信息有误可点「修改信息」编辑。</p>
+    </div>
+</div>
+
+<script>
+    const API_BASE_URL = 'https://hailin-alumni-api.onrender.com';
+    const token = localStorage.getItem('alumniToken') || '';
+    if (!token) { location.href = 'login.html'; }
+
+    let profile = null;
+    let user = null;
+    let editing = false;
+
+    function field(id, el) {
+        const data = (editing ? profile : (profile || {}));
+        return data;
+    }
+
+    async function loadProfile() {
+        try {
+            const resp = await fetch(API_BASE_URL + '/api/alumni/me', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await resp.json();
+            if (!resp.ok) { alert(data.message || '获取信息失败'); location.href = 'login.html'; return; }
+            user = data.user || {};
+            profile = data.profile || {};
+            const v = {
+                name: user.display_name || profile.name || '—',
+                region: profile.current_city || profile.city || '—',
+                phone: user.phone || profile.phone || '—',
+                email: user.email || '—',
+                username: user.phone || '—',
+                enroll: profile.enrollment_year || '—',
+                graduate: profile.graduation_year || '—',
+                cls: profile.class_name || '—',
+                teacher: profile.homeroom_teacher || '—',
+                status: (user.status === 'active' ? '已通过校友认证' : (user.status || '—'))
+            };
+            document.getElementById('vName').textContent = v.name;
+            document.getElementById('vRegion').textContent = v.region;
+            document.getElementById('vPhone').textContent = v.phone;
+            document.getElementById('vEmail').textContent = v.email;
+            document.getElementById('vUsername').textContent = v.username;
+            document.getElementById('vEnroll').textContent = v.enroll;
+            document.getElementById('vGraduate').textContent = v.graduate;
+            document.getElementById('vClass').textContent = v.cls;
+            document.getElementById('vTeacher').textContent = v.teacher;
+            document.getElementById('vStatus').textContent = v.status;
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('infoTable').style.display = '';
+            document.getElementById('actions').style.display = '';
+            document.getElementById('tip').style.display = '';
+        } catch (e) {
+            document.getElementById('loading').textContent = '加载失败，请检查网络后刷新';
+        }
+    }
+
+    function enterEdit() {
+        editing = true;
+        const mkInput = (id, val) => {
+            const td = document.getElementById(id);
+            td.innerHTML = '';
+            const input = document.createElement('input');
+            input.value = val === '—' ? '' : val;
+            input.id = 'input_' + id;
+            input.maxLength = 40;
+            td.appendChild(input);
+            return input;
+        };
+        mkInput('vName', document.getElementById('vName').textContent);
+        mkInput('vRegion', document.getElementById('vRegion').textContent);
+        mkInput('vEmail', document.getElementById('vEmail').textContent);
+        mkInput('vEnroll', document.getElementById('vEnroll').textContent);
+        mkInput('vGraduate', document.getElementById('vGraduate').textContent);
+        mkInput('vClass', document.getElementById('vClass').textContent);
+        mkInput('vTeacher', document.getElementById('vTeacher').textContent);
+        document.getElementById('btnConfirm').textContent = '✓ 保存信息';
+        document.getElementById('btnEdit').textContent = '取消修改';
+        document.getElementById('tip').textContent = '修改后点击「保存信息」更新；「取消修改」放弃本次改动。';
+    }
+
+    function exitEdit() {
+        editing = false;
+        location.reload();
+    }
+
+    async function saveInfo() {
+        const g = (id, def) => {
+            const input = document.getElementById('input_' + id);
+            const v = input ? input.value.trim() : '';
+            return v || def;
+        };
+        const payload = {
+            display_name: g('vName', user.display_name || profile.name),
+            current_city: g('vRegion', profile.current_city || profile.city),
+            email: g('vEmail', user.email),
+            enrollment_year: g('vEnroll', profile.enrollment_year) || null,
+            graduation_year: g('vGraduate', profile.graduation_year) || null,
+            class_name: g('vClass', profile.class_name) || null,
+            homeroom_teacher: g('vTeacher', profile.homeroom_teacher) || null
+        };
+        if (!payload.display_name || !payload.current_city) { alert('真实姓名和所在地区不能为空'); return; }
+        const emailV = payload.email;
+        if (emailV && emailV.indexOf('@') < 0) { alert('邮箱格式需包含 @'); return; }
+        const btn = document.getElementById('btnConfirm');
+        btn.disabled = true; btn.textContent = '保存中…';
+        try {
+            const resp = await fetch(API_BASE_URL + '/api/alumni/me', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (resp.ok) { alert('个人信息已保存'); location.reload(); }
+            else { alert(data.message || '保存失败'); }
+        } catch (e) { alert('网络异常，保存失败'); }
+        btn.disabled = false; btn.textContent = '✓ 保存信息';
+    }
+
+    document.getElementById('btnConfirm').addEventListener('click', () => {
+        if (editing) { saveInfo(); }
+        else {
+            if (confirm('确认当前个人信息填写无误？')) {
+                alert('个人信息已确认，与校友电子卡信息一致');
+                location.href = 'member.html';
+            }
+        }
+    });
+    document.getElementById('btnEdit').addEventListener('click', () => {
+        if (editing) { exitEdit(); }
+        else { enterEdit(); }
+    });
+
+    loadProfile();
+</script>
+
+</body>
+</html>

@@ -1883,6 +1883,13 @@ app.put('/api/alumni/me', requireAuth, async (req, res) => {
         [String(b.card_number).slice(0, 40), req.user.user_id]
       ).catch(() => {});
     }
+    // 基础资料同步（真实姓名/邮箱，供校友个人信息页修改）
+    if (b.display_name) {
+      await dbQuery(
+        `update public.app_users set display_name=$1, email=coalesce($2, email), updated_at=now() where id=$3`,
+        [String(b.display_name).slice(0, 40), b.email ? String(b.email).slice(0, 120) : null, req.user.user_id]
+      ).catch(() => {});
+    }
     const profile = await dbQuery(`select id from public.alumni_profiles where user_id=$1 limit 1`, [req.user.user_id]);
     if (!profile.rows[0]) return fail(res, 400, '请先完成校友认证');
     const r = await dbQuery(
@@ -1891,9 +1898,10 @@ app.put('/api/alumni/me', requireAuth, async (req, res) => {
         avatar_url=$6, public_contact=$7,
         current_province=coalesce($8, current_province), current_city=coalesce($9, current_city),
         enrollment_year=coalesce($11, enrollment_year), graduation_year=coalesce($12, graduation_year),
+        class_name=coalesce($13, class_name), homeroom_teacher=coalesce($14, homeroom_teacher),
         updated_at=now()
        where user_id=$10 returning *`,
-      [b.industry || null, b.company || null, b.position_title || null, b.wechat || null, b.bio || null, b.avatar_url || null, b.public_contact === true, b.current_province || null, b.current_city || null, req.user.user_id, b.enrollment_year || null, b.graduation_year || null]
+      [b.industry || null, b.company || null, b.position_title || null, b.wechat || null, b.bio || null, b.avatar_url || null, b.public_contact === true, b.current_province || null, b.current_city || null, req.user.user_id, b.enrollment_year || null, b.graduation_year || null, b.class_name || null, b.homeroom_teacher || null]
     );
     return ok(res, { profile: r.rows[0], message: '资料已更新' });
   } catch (e) {
