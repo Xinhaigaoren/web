@@ -77,7 +77,10 @@
     }
     .form-group input:focus { border-color: #94070A; }
     .form-group input::placeholder { color: #b0b0b0; }
-    /* 窄屏适配：手机/小窗口下卡片与文字按比例收拢 */
+    /* 窄屏适配：卡片随视口自适应宽度，手机/小窗口下卡片与文字按比例收拢 */
+    @media (max-width: 1024px) {
+        .login-card { max-width: 100%; }
+    }
     @media (max-width: 768px) {
         body { padding: 1.2rem; }
         .login-card { padding: 2rem 1.6rem; }
