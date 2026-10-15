@@ -489,7 +489,7 @@
                 backgroundColor: null,
                 logging: false,
                 onclone: (d) => {
-                    /* 左侧竖排文字：字母向左倾斜 90 度、紧凑排列、首尾调换（从下往上读出 Alumni Card） */
+                    /* 左侧竖排文字：字母向左倾斜 90 度、单词内紧凑、单词间留空、从下往上读出 Alumni Card */
                     const el = d.querySelector('.card-left-letters');
                     if (el) {
                         el.style.writingMode = 'horizontal-tb';
@@ -498,18 +498,25 @@
                         el.style.flexDirection = 'column';
                         el.style.alignItems = 'center';
                         el.style.justifyContent = 'center';
-                        el.style.gap = '0.18rem';
+                        el.style.gap = '0.12rem';
                         const txt = (el.textContent || '').split('').reverse().join('');
                         el.textContent = '';
                         const frag = d.createDocumentFragment();
                         for (const ch of txt) {
-                            if (ch === ' ') continue;
+                            if (ch === ' ') {
+                                /* 单词间留空 */
+                                const gs = d.createElement('span');
+                                gs.style.display = 'block';
+                                gs.style.height = '1rem';
+                                frag.appendChild(gs);
+                                continue;
+                            }
                             const s = d.createElement('span');
                             s.textContent = ch;
                             s.style.display = 'block';
                             s.style.transform = 'rotate(-90deg)';
                             s.style.transformOrigin = 'center';
-                            s.style.lineHeight = '1.05';
+                            s.style.lineHeight = '1.0';
                             frag.appendChild(s);
                         }
                         el.appendChild(frag);
