@@ -567,7 +567,7 @@ app.post('/api/auth/login', async (req, res) => {
     const r = await dbQuery(
       `select id as user_id, display_name, email, phone, role, status, password_hash
        from public.app_users
-       where lower(email)=lower($1) or phone=$1
+       where lower(email)=lower($1) or phone=$1 or card_number=$1
        order by (email is not null) desc, (password_hash is not null) desc, id asc`,
       [loginName]
     );
@@ -1806,7 +1806,7 @@ app.delete('/api/uploads/:id', requireAuth, requireAdmin, async (req, res) => {
 app.get('/api/alumni/me', requireAuth, async (req, res) => {
   try {
     const userResult = await dbQuery(
-      `select id, display_name, email, phone, role, status, created_at, last_login_at
+      `select id, display_name, email, phone, role, status, card_number, created_at, last_login_at
        from public.app_users where id=$1 limit 1`,
       [req.user.user_id]
     );
@@ -1829,6 +1829,13 @@ app.get('/api/alumni/me', requireAuth, async (req, res) => {
 app.put('/api/alumni/me', requireAuth, async (req, res) => {
   try {
     const b = req.body || {};
+    // 电子校友卡卡号同步（存于 app_users，登录时可用卡号匹配）
+    if (b.card_number) {
+      await dbQuery(
+        `update public.app_users set card_number=$1, updated_at=now() where id=$2`,
+        [String(b.card_number).slice(0, 40), req.user.user_id]
+      ).catch(() => {});
+    }
     const profile = await dbQuery(`select id from public.alumni_profiles where user_id=$1 limit 1`, [req.user.user_id]);
     if (!profile.rows[0]) return fail(res, 400, '请先完成校友认证');
     const r = await dbQuery(
@@ -2003,7 +2010,9 @@ const WECHAT_LOGIN_REDIRECT = (process.env.WECHAT_LOGIN_REDIRECT || `${PUBLIC_SI
 async function ensureUserTableExtras() {
   if (!pool) return;
   await dbQuery(`alter table public.app_users add column if not exists wechat_openid text`);
+  await dbQuery(`alter table public.app_users add column if not exists card_number text`).catch(() => {});
   await dbQuery(`create unique index if not exists idx_app_users_wechat_openid on public.app_users(wechat_openid) where wechat_openid is not null`);
+  await dbQuery(`create index if not exists idx_app_users_card_number on public.app_users(card_number) where card_number is not null`).catch(() => {});
   await dbQuery(`alter table public.app_users add column if not exists enabled_l1 boolean default false`).catch(() => {});
   await dbQuery(`alter table public.app_users add column if not exists enabled_l2 boolean default false`).catch(() => {});
   await dbQuery(`alter table public.app_users add column if not exists l1_locked_until timestamptz`).catch(() => {});

@@ -308,6 +308,7 @@
 
     /* 卡号：NO. + 离校年份 + 班级号 + 4 位随机数；生成一次后本地缓存保持稳定 */
     function buildCardNumber(data) {
+        if (data && data.cardNo) return 'NO.' + String(data.cardNo).replace(/^NO\./i, '');
         const key = 'alumniCardNo';
         const cached = localStorage.getItem(key);
         if (cached) return 'NO.' + cached;
@@ -340,6 +341,17 @@
         yearEl.textContent = has ? (data.graduateYear || '—') : '—';
         currentNo = has ? buildCardNumber(data) : 'NO.————';
         numberEl.textContent = currentNo;
+        // 卡号固定后同步到后端（供卡号登录与跨设备一致）
+        if (has && currentNo && currentNo !== 'NO.————') {
+            const token = localStorage.getItem('alumniToken');
+            if (token) {
+                fetch(API_BASE_URL + '/api/alumni/me', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ card_number: currentNo.replace(/^NO\./, '') })
+                }).catch(() => {});
+            }
+        }
         if (has && data.photoUrl) {
             photoEl.src = data.photoUrl;
             photoEl.style.display = '';
@@ -443,6 +455,7 @@
                         name: u.display_name || p.name || local.name || '',
                         graduateYear: p.graduation_year || u.graduation_year || local.graduateYear || '',
                         className: p.class_name || u.class_name || local.className || '',
+                        cardNo: u.card_number || '',
                         photoUrl: p.avatar_url || ''
                     };
                     localStorage.setItem('alumniUser', JSON.stringify(merged));
