@@ -606,11 +606,11 @@
             x.restore();
         }
 
-        /* 卡号 */
+        /* 卡号（左下角，与卡面显示位置一致，固定不跑位） */
         x.font = '30px Arial';
         x.fillStyle = '#fff';
-        x.textAlign = 'right';
-        x.fillText(currentNo, W - 130, H - 85);
+        x.textAlign = 'left';
+        x.fillText(currentNo, 130, H - 70);
 
         c.toBlob((blob) => {
             if (!blob) { alert('导出失败，请重试'); return; }
