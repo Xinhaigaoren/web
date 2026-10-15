@@ -300,7 +300,6 @@
     const photoEl = document.getElementById('cardPhoto');
     const photoBox = document.getElementById('cardPhotoBox');
     const photoInput = document.getElementById('photoInput');
-    const exportBtn = document.getElementById('exportBtn');
     let currentName = '';
     let currentNo = 'NO.————';
     function applyCard(data) {
@@ -490,6 +489,9 @@
                 backgroundColor: null,
                 logging: false,
                 onclone: (d) => {
+                    /* 导出图片中不包含"领取校友电子卡"按钮 */
+                    const btn = d.querySelector('#exportBtn');
+                    if (btn) btn.style.display = 'none';
                     /* 左侧竖排文字：字母向左倾斜 90 度、单词内紧凑、单词间留空、从下往上读出 Alumni Card */
                     const el = d.querySelector('.card-left-letters');
                     if (el) {
@@ -528,18 +530,11 @@
             a.href = canvas.toDataURL('image/png');
             a.download = (currentName || '校友') + '校友卡.png';
             a.click();
-            /* 领取成功：按钮自动擦除（已领取状态持久化） */
-            exportBtn.style.display = 'none';
-            localStorage.setItem('alumniCardClaimed', '1');
         } catch (err) {
             alert('导出失败，请重试');
         }
     });
     (async () => {
-        /* 已领取过校友电子卡：按钮自动擦除，不再显示 */
-        if (localStorage.getItem('alumniCardClaimed') === '1') {
-            exportBtn.style.display = 'none';
-        }
         const token = localStorage.getItem('alumniToken');
         const local = readUser() || {};
         if (!token) { applyCard(local); return; }
