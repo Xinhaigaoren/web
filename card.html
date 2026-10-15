@@ -608,8 +608,10 @@
                 const p = data.profile || {};
                 const merged = {
                     name: u.display_name || p.name || local.name || '',
+                    enrollYear: p.enrollment_year || u.enrollment_year || local.enrollYear || '',
                     graduateYear: p.graduation_year || u.graduation_year || local.graduateYear || '',
                     className: p.class_name || u.class_name || local.className || '',
+                    region: p.current_city || p.city || u.current_city || local.region || '',
                     photoUrl: p.avatar_url || ''
                 };
                 localStorage.setItem('alumniUser', JSON.stringify(merged));
