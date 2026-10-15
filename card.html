@@ -640,6 +640,7 @@
                     graduateYear: p.graduation_year || u.graduation_year || local.graduateYear || '',
                     className: p.class_name || u.class_name || local.className || '',
                     region: p.current_city || p.city || u.current_city || local.region || '',
+                    cardNo: u.card_number || '',
                     photoUrl: p.avatar_url || ''
                 };
                 localStorage.setItem('alumniUser', JSON.stringify(merged));
