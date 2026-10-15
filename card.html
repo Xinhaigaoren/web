@@ -342,8 +342,10 @@
         numberEl.textContent = currentNo;
         if (has && data.photoUrl) {
             photoEl.src = data.photoUrl;
+            photoEl.style.display = '';
             photoBox.classList.remove('no-photo');
         } else if (!photoEl.src) {
+            photoEl.style.display = 'none';
             photoBox.classList.add('no-photo');
         }
     }
@@ -391,6 +393,7 @@
             const r = await resp.json();
             if (resp.ok && r.profile) {
                 photoEl.src = dataUrl;
+                photoEl.style.display = '';
                 photoBox.classList.remove('no-photo');
                 alert('照片已上传并同步');
             } else {
