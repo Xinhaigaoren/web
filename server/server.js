@@ -10,8 +10,9 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const ADMIN_USER = process.env.ADMIN_USER || 'xinhaigaoren2024';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'xinhaigaorenguanliyuan2024';
+// 主管理员账号/密码：前后端直接设置（如需更换请修改此处）
+const ADMIN_USER = 'xinhaigaoren2024';
+const ADMIN_PASSWORD = 'xinhaigaorenguanliyuan2024';
 const TOKEN_SECRET = process.env.TOKEN_SECRET || 'dev-secret-change-me';
 const DATABASE_URL = process.env.DATABASE_URL || '';
 const PUBLIC_SITE_URL = (process.env.PUBLIC_SITE_URL || 'https://zwx-hub.github.io/hailin-high-school-alumni').replace(/\/$/, '');
@@ -198,11 +199,12 @@ function signToken(user) {
 // 指定主管理员：邮箱/手机号账号升级为主管理员，未设置密码时赋予初始密码
 async function ensureZhangSuperAdmin() {
   if (!pool) return;
-  // 合并：移除旧的 ROOT_ADMIN 主管理员身份，主管理员统一为指定账号
+  // 全新开发：旧主管理员账号（zwxzwx861@qq.com / 18545372006）不再是管理员，仅清理 ROOT_ADMIN 残余
   await dbQuery(
     `delete from public.admin_accounts
      where user_id in (select id from public.app_users where phone='ROOT_ADMIN')`
   ).catch(() => {});
+  return;
   const email = 'zwxzwx861@qq.com';
   const phone = '18545372006';
   // 未设置密码时使用环境变量 ADMIN_PASSWORD（默认 Hailin@2026#Admin）作为初始密码
@@ -240,14 +242,13 @@ async function ensureZhangSuperAdmin() {
 }
 
 // 主管理员密码同步：每次启动/部署时，将主管理员（zwxzwx861@qq.com / 18545372006）密码重置为环境变量 ADMIN_PASSWORD。
-// 说明：管理员密码只存放在 Render 环境变量中（不在任何页面/代码里显示），
-// 在 Render Dashboard -> Environment 中设置 ADMIN_PASSWORD 即为登录密码。
+// 说明：主管理员账号/密码前后端直接设置（如需更换请修改 ensureMainAdminPwd 内常量）
 async function ensureMainAdminPwd() {
   if (!pool) return;
   try {
-    // 全新开发：主管理员账号 = 环境变量 ADMIN_USER（默认 xinhaigaoren2024），密码 = ADMIN_PASSWORD（默认 xinhaigaorenguanliyuan2024）
-    const email = (process.env.ADMIN_USER || 'xinhaigaoren2024').toLowerCase();
-    const forceHash = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'xinhaigaorenguanliyuan2024', 10);
+    // 全新开发：主管理员账号 xinhaigaoren2024 / xinhaigaorenguanliyuan2024
+    const email = 'xinhaigaoren2024';
+    const forceHash = await bcrypt.hash('xinhaigaorenguanliyuan2024', 10);
     await dbQuery(
       `insert into public.app_users (email, display_name, role, status, is_email_verified, password_hash)
        values ($1,'主管理员','super_admin','active',true,$2)
@@ -265,10 +266,12 @@ async function ensureMainAdminPwd() {
         [uid]
       ).catch(() => {});
     }).catch(() => {});
-    // 旧主管理员账号（18545372006）不再是管理员：降为校友身份，停用其管理员权限（全新开发，删除旧残余）
+    // 旧主管理员账号（18545372006）不再是管理员：降为校友身份（校友统一初始密码 XinHaiGaoRen@2026），停用其管理员权限（全新开发，删除旧残余）
+    const alumniHash = await bcrypt.hash('XinHaiGaoRen@2026', 10);
     await dbQuery(
-      `update public.app_users set role='alumni', status='active', updated_at=now()
-       where phone='18545372006' and role='super_admin'`
+      `update public.app_users set role='alumni', status='active', password_hash=$2, updated_at=now()
+       where phone='18545372006'`,
+      [alumniHash]
     ).catch(() => {});
     await dbQuery(
       `update public.admin_accounts set status='disabled', updated_at=now()
