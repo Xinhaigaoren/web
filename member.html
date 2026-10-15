@@ -532,6 +532,11 @@
             else { nums[0].textContent = '1'; nums[1].textContent = '0'; }
             nums[2].textContent = '0';
             if (p.avatar_url) setAvatar(p.avatar_url);
+            /* 管理员身份标识 */
+            const nameSpan = document.getElementById('userName');
+            if (role === 'super_admin' || role === 'admin') {
+                nameSpan.textContent = nameSpan.textContent.replace(/\s*（管理员）$/, '') + '（管理员）';
+            }
         }
         const fav = await apiCall('GET', '/api/favorites');
         if (fav && fav.favorites && fav.favorites.indexOf('card') !== -1) favCard.classList.add('on');
