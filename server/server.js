@@ -10,8 +10,8 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-this-password';
+const ADMIN_USER = process.env.ADMIN_USER || 'xinhaigaoren2024';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'xinhaigaorenguanliyuan2024';
 const TOKEN_SECRET = process.env.TOKEN_SECRET || 'dev-secret-change-me';
 const DATABASE_URL = process.env.DATABASE_URL || '';
 const PUBLIC_SITE_URL = (process.env.PUBLIC_SITE_URL || 'https://zwx-hub.github.io/hailin-high-school-alumni').replace(/\/$/, '');
@@ -245,17 +245,34 @@ async function ensureZhangSuperAdmin() {
 async function ensureMainAdminPwd() {
   if (!pool) return;
   try {
-    const email = 'zwxzwx861@qq.com';
-    const forceHash = await bcrypt.hash(ADMIN_PASSWORD || 'Hailin@2026#Admin', 10);
+    // 全新开发：主管理员账号 = 环境变量 ADMIN_USER（默认 xinhaigaoren2024），密码 = ADMIN_PASSWORD（默认 xinhaigaorenguanliyuan2024）
+    const email = (process.env.ADMIN_USER || 'xinhaigaoren2024').toLowerCase();
+    const forceHash = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'xinhaigaorenguanliyuan2024', 10);
     await dbQuery(
-      `update public.app_users set password_hash=$2, updated_at=now()
-       where lower(email)=lower($1) or phone=$1`,
+      `insert into public.app_users (email, display_name, role, status, is_email_verified, password_hash)
+       values ($1,'主管理员','super_admin','active',true,$2)
+       on conflict (email) do update set role='super_admin', status='active',
+         password_hash=coalesce(excluded.password_hash, public.app_users.password_hash), updated_at=now()
+       returning id`,
       [email, forceHash]
+    ).then(async (ins) => {
+      const uid = ins.rows && ins.rows[0] && ins.rows[0].id;
+      if (!uid) return;
+      await dbQuery(
+        `insert into public.admin_accounts (user_id, title, status, admin_level)
+         values ($1,'主管理员','approved','super')
+         on conflict (user_id) do update set status='approved', updated_at=now()`,
+        [uid]
+      ).catch(() => {});
+    }).catch(() => {});
+    // 旧主管理员账号（18545372006）不再是管理员：降为校友身份，停用其管理员权限（全新开发，删除旧残余）
+    await dbQuery(
+      `update public.app_users set role='alumni', status='active', updated_at=now()
+       where phone='18545372006' and role='super_admin'`
     ).catch(() => {});
     await dbQuery(
-      `update public.admin_accounts set must_change_password=false, updated_at=now()
-       where user_id in (select id from public.app_users where lower(email)=lower($1) or phone=$1)`,
-      [email]
+      `update public.admin_accounts set status='disabled', updated_at=now()
+       where user_id in (select id from public.app_users where phone='18545372006')`
     ).catch(() => {});
   } catch (_) { /* 同步失败不影响启动 */ }
 }
