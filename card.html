@@ -460,6 +460,20 @@
     }
     document.getElementById('exportBtn').addEventListener('click', async () => {
         await ensureCardData();
+        /* 导出前固定卡号：优先后端卡号，避免导出旧号/随机号 */
+        const expTok = localStorage.getItem('alumniToken');
+        if (expTok) {
+            try {
+                const resp = await fetch(API_BASE_URL + '/api/alumni/me', {
+                    headers: { 'Authorization': 'Bearer ' + expTok }
+                });
+                const data = await resp.json();
+                if (resp.ok && data.user && data.user.card_number && /^[0-9]+$/.test(String(data.user.card_number)) && String(data.user.card_number).length >= 13) {
+                    currentNo = 'NO.' + data.user.card_number;
+                    numberEl.textContent = currentNo;
+                }
+            } catch (e) { /* 后端不可达时用当前卡号 */ }
+        }
         const W = 1160, H = 720;
         const c = document.createElement('canvas');
         c.width = W; c.height = H;
@@ -538,6 +552,7 @@
             x.drawImage(photo, px, py, pw, ph);
             x.restore();
         }
+        /* 卡号（左下角，与卡面显示位置一致，固定不跑位） */
         x.font = '30px Arial';
         x.fillStyle = '#fff';
         x.textAlign = 'left';
