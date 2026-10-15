@@ -878,6 +878,46 @@ app.delete(['/api/applications/:id', '/api/admin/applications/:id'], requireAuth
   }
 });
 
+// 管理员从审计日志恢复误删的认证记录（仅恢复 phone+name 与 approved 状态，其余详情字段需重新补充）
+app.post('/api/admin/restore-verifications', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const logs = await dbQuery(
+      `select target_id, detail, created_at from public.audit_logs
+       where action='alumni_verification_deleted'
+       order by created_at`
+    );
+    let restored = 0;
+    const restoredItems = [];
+    for (const log of logs.rows) {
+      let d = {};
+      try { d = JSON.parse(log.detail || '{}'); } catch (e) { d = {}; }
+      if (!d.phone || !d.name) continue;
+      const exists = await dbQuery(`select id from public.alumni_verifications where phone=$1`, [d.phone]);
+      if (exists.rows[0]) continue;
+      await dbQuery(
+        `insert into public.alumni_verifications (name, phone, status, reviewed_at, updated_at, created_at)
+         values ($1,$2,'approved', now(), now(), now())`,
+        [d.name, d.phone]
+      );
+      const u = await dbQuery(`select id from public.app_users where phone=$1`, [d.phone]).catch(() => ({ rows: [] }));
+      if (u.rows[0]) {
+        await dbQuery(
+          `insert into public.alumni_profiles (user_id, name, phone, status, updated_at)
+           values ($1,$2,$3,'active',now())
+           on conflict (user_id) do update set name=excluded.name, phone=excluded.phone, status='active', updated_at=now()`,
+          [u.rows[0].id, d.name, d.phone]
+        ).catch(() => {});
+      }
+      restored++;
+      restoredItems.push({ name: d.name, phone: d.phone });
+    }
+    return ok(res, { restored, restoredItems });
+  } catch (e) {
+    console.error(e);
+    return fail(res, 500, '恢复失败', { error: e.message });
+  }
+});
+
 // 实时读取数据库中的最新角色：认证通过后无需重新登录即可解锁会员模块
 async function currentRole(req) {
   if (!req.user || !req.user.user_id) return req.user ? (req.user.role || null) : null;
