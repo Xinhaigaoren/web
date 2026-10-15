@@ -271,10 +271,6 @@
                     <span class="value" id="cardPeriod">—</span>
                 </div>
                 <div class="info-row">
-                    <span class="label">毕业班级</span>
-                    <span class="value" id="cardClass">—</span>
-                </div>
-                <div class="info-row">
                     <span class="label">所在地区</span>
                     <span class="value" id="cardRegion">—</span>
                 </div>
@@ -289,7 +285,7 @@
                     <img src="" alt="校友照片" id="cardPhoto">
                     <span class="photo-hint">点击上传照片</span>
                 </div>
-                <button id="exportBtn" class="export-btn" type="button">导出图片 PNG</button>
+                <button id="exportBtn" class="export-btn" type="button">领取校友电子卡</button>
             </div>
         </div>
 
@@ -314,25 +310,22 @@
         }
     }
 
-    /* 卡号：入学年份 + 毕业年份 + 毕业班级号 + 5 位随机数（例：202120241468774）；生成一次后本地缓存保持稳定 */
+    /* 卡号：入学年份 + 毕业年份 + 5 位随机数（例：2021202412345）；生成一次后本地缓存保持稳定 */
     function buildCardNumber(data) {
-        if (data && data.cardNo) return 'NO.' + String(data.cardNo).replace(/^NO\./i, '');
+        if (data && data.cardNo && /^[0-9]+$/.test(String(data.cardNo)) && String(data.cardNo).length >= 13) return 'NO.' + String(data.cardNo).replace(/^NO\./i, '');
         const key = 'alumniCardNo';
         const cached = localStorage.getItem(key);
-        if (cached) return 'NO.' + cached;
+        if (cached && /^[0-9]+$/.test(cached) && cached.length >= 13) return 'NO.' + cached;
         const enroll = data.enrollYear || '';
         const year = data.graduateYear || '';
-        const clsMatch = String(data.className || '').match(/\d+/);
-        const clsNum = clsMatch ? clsMatch[0] : '';
         const rand = String(Math.floor(10000 + Math.random() * 90000));
-        const no = enroll + year + clsNum + rand;
+        const no = enroll + year + rand;
         if (no) localStorage.setItem(key, no);
         return 'NO.' + no;
     }
 
     const nameEl = document.getElementById('cardName');
     const periodEl = document.getElementById('cardPeriod');
-    const classEl = document.getElementById('cardClass');
     const regionEl = document.getElementById('cardRegion');
     const numberEl = document.getElementById('cardNumber');
     const photoEl = document.getElementById('cardPhoto');
@@ -349,7 +342,6 @@
         const enroll = has ? (data.enrollYear || '') : '';
         const grad = has ? (data.graduateYear || '') : '';
         periodEl.textContent = has ? (enroll && grad ? enroll + '-' + grad : (grad || '—')) : '—';
-        classEl.textContent = has ? (data.className || '—') : '—';
         regionEl.textContent = has ? (data.region || '—') : '—';
         currentNo = has ? buildCardNumber(data) : 'NO.————';
         numberEl.textContent = currentNo;
@@ -552,17 +544,13 @@
         x.fillStyle = '#fff';
         x.fillText(periodEl.textContent, 440, 405);
         x.fillStyle = 'rgba(255,255,255,.92)';
-        x.fillText('毕业班级', 250, 455);
+        x.fillText('所在地区', 250, 455);
         x.fillStyle = '#fff';
-        x.fillText(classEl.textContent, 440, 455);
+        x.fillText(regionEl.textContent, 440, 455);
         x.fillStyle = 'rgba(255,255,255,.92)';
-        x.fillText('所在地区', 250, 505);
+        x.fillText('毕业学校', 250, 505);
         x.fillStyle = '#fff';
-        x.fillText(regionEl.textContent, 440, 505);
-        x.fillStyle = 'rgba(255,255,255,.92)';
-        x.fillText('毕业学校', 250, 555);
-        x.fillStyle = '#fff';
-        x.fillText('海林市高级中学', 440, 555);
+        x.fillText('海林市高级中学', 440, 505);
 
         /* 右侧照片 */
         const px = W - 250 - 240, py = 240, pw = 240, ph = 300;
