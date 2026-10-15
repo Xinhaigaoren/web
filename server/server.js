@@ -861,6 +861,23 @@ app.patch(['/api/applications/:id/status', '/api/admin/applications/:id/status',
   }
 });
 
+// 管理员删除认证记录（彻底清理测试/残留数据）
+app.delete(['/api/applications/:id', '/api/admin/applications/:id'], requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const found = await dbQuery(`select * from public.alumni_verifications where id=$1`, [id]);
+    if (!found.rows[0]) return fail(res, 404, '认证记录不存在');
+    const v = found.rows[0];
+    await dbQuery(`delete from public.alumni_profiles where phone=$1`, [v.phone]).catch(() => {});
+    await dbQuery(`delete from public.alumni_verifications where id=$1`, [id]);
+    await audit(req, 'alumni_verification_deleted', 'alumni_verification', id, { phone: v.phone, name: v.name }).catch(() => {});
+    return ok(res, { message: '已删除该认证记录' });
+  } catch (e) {
+    console.error(e);
+    return fail(res, 500, '删除失败', { error: e.message });
+  }
+});
+
 // 实时读取数据库中的最新角色：认证通过后无需重新登录即可解锁会员模块
 async function currentRole(req) {
   if (!req.user || !req.user.user_id) return req.user ? (req.user.role || null) : null;

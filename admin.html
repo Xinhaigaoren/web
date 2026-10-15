@@ -114,6 +114,13 @@
     .data-table tr { cursor: pointer; transition: background 0.2s; }
     .data-table tr:hover { background-color: #fafafa; }
     .data-table tr.selected { background-color: #fff5f5; }
+    .approval-tabs { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+    .approval-tabs .atab {
+        padding: 0.35rem 1rem; border: 1px solid #d9d9d9; border-radius: 0.25rem;
+        background: #fff; color: #555; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
+    }
+    .approval-tabs .atab:hover { border-color: #a81114; color: #a81114; }
+    .approval-tabs .atab.active { background: #a81114; border-color: #a81114; color: #fff; }
 
     .approve-btn {
         padding: 0.4rem 0.9rem; font-size: 0.85rem; border-radius: 0.2rem;
@@ -234,7 +241,7 @@
         </table>
 
         <!-- 通过 / 拒绝按钮 -->
-        <div class="btn-row">
+        <div class="btn-row" id="actionButtons">
             <button class="btn btn-pass" id="approveBtn">
                 <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                 通过审批
@@ -243,6 +250,13 @@
                 <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                 拒绝
             </button>
+        </div>
+
+        <!-- 状态切换：待审批 / 已通过 / 已拒绝 -->
+        <div class="approval-tabs">
+            <button class="atab active" data-status="pending" type="button">待审批</button>
+            <button class="atab" data-status="approved" type="button">已通过</button>
+            <button class="atab" data-status="rejected" type="button">已拒绝</button>
         </div>
 
         <!-- 数据表格 -->
@@ -282,9 +296,7 @@
                 页
                 <button class="page-btn" id="jumpBtn">跳转</button>
                 <button class="page-btn disabled" id="prevBtn">上一页</button>
-                <button class="page-btn active" data-page="1">1</button>
-                <button class="page-btn" data-page="2">2</button>
-                <button class="page-btn" data-page="3">3</button>
+                <span id="pageBtns"></span>
                 <button class="page-btn" id="nextBtn">下一页</button>
             </div>
         </div>
@@ -304,11 +316,13 @@ const tableBody = document.getElementById('tableBody');
 let applications = [];
 let selectedIndex = 0;
 let pageSize = 20;
+let page = 1;
+let currentStatus = 'pending';
 
-/* 从后端加载待审批列表 */
+/* 从后端加载审批列表（按当前状态） */
 async function loadApplications() {
     try {
-        const resp = await fetch(API_BASE_URL + '/api/applications?status=pending', {
+        const resp = await fetch(API_BASE_URL + '/api/applications?status=' + currentStatus, {
             headers: { 'Authorization': 'Bearer ' + adminToken }
         });
         const data = await resp.json();
@@ -323,13 +337,16 @@ async function loadApplications() {
 /* 渲染表格 */
 function renderTable() {
     tableBody.innerHTML = '';
-    const pageData = applications.slice(0, pageSize);
+    const totalPages = Math.max(1, Math.ceil(applications.length / pageSize));
+    if (page > totalPages) page = totalPages;
+    if (page < 1) page = 1;
+    const pageData = applications.slice((page - 1) * pageSize, page * pageSize);
     pageData.forEach((item, i) => {
         const tr = document.createElement('tr');
-        tr.dataset.index = i;
+        tr.dataset.index = (page - 1) * pageSize + i;
         const statusText = item.status === 'approved' ? '已通过' : (item.status === 'rejected' ? '已拒绝' : '待审批');
         tr.innerHTML = `
-            <td>${i + 1}</td>
+            <td>${(page - 1) * pageSize + i + 1}</td>
             <td>${item.name || '-'}</td>
             <td>${item.graduation_year ? item.graduation_year + ' 届' : '-'}</td>
             <td>${item.class_name || '-'}</td>
@@ -337,21 +354,74 @@ function renderTable() {
             <td>${(item.created_at || '').slice(0, 10) || '-'}</td>
             <td>${statusText}</td>
             <td>
-                <button class="approve-btn pass">通过</button>
-                <button class="approve-btn reject">拒绝</button>
+                ${currentStatus === 'pending' ?
+                    `<button class="approve-btn pass">通过</button>
+                <button class="approve-btn reject">拒绝</button>` :
+                    `<button class="approve-btn del">删除</button>`}
             </td>
         `;
         tr.addEventListener('click', (e) => {
             if (e.target.classList.contains('approve-btn')) return;
-            selectRow(i);
+            selectRow((page - 1) * pageSize + i);
         });
         tableBody.appendChild(tr);
     });
     const totalCount = document.getElementById('totalCount');
     totalCount.textContent = applications.length;
     const pageRange = document.getElementById('pageRange');
-    pageRange.textContent = applications.length ? `1 - ${Math.min(pageSize, applications.length)}` : '0 - 0';
+    pageRange.textContent = applications.length ? `${(page - 1) * pageSize + 1} - ${Math.min(page * pageSize, applications.length)}` : '0 - 0';
+    renderPagination();
     if (applications.length) selectRow(0); else clearForm();
+}
+
+/* 动态分页按钮 */
+function renderPagination() {
+    const totalPages = Math.max(1, Math.ceil(applications.length / pageSize));
+    const box = document.getElementById('pageBtns');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    let html = '';
+    let start = Math.max(1, page - 2);
+    let end = Math.min(totalPages, page + 2);
+    if (start > 1) html += `<button class="page-btn" data-page="1">1</button>`;
+    if (start > 2) html += `<span class="page-ellipsis">…</span>`;
+    for (let i = start; i <= end; i++) {
+        html += `<button class="page-btn ${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    if (end < totalPages - 1) html += `<span class="page-ellipsis">…</span>`;
+    if (end < totalPages) html += `<button class="page-btn" data-page="${totalPages}">${totalPages}</button>`;
+    box.innerHTML = html;
+    prevBtn.classList.toggle('disabled', page <= 1);
+    nextBtn.classList.toggle('disabled', page >= totalPages);
+    box.querySelectorAll('.page-btn').forEach(btn => {
+        btn.addEventListener('click', () => { page = Number(btn.dataset.page); renderTable(); });
+    });
+    prevBtn.onclick = () => { if (page > 1) { page--; renderTable(); } };
+    nextBtn.onclick = () => { if (page < totalPages) { page++; renderTable(); } };
+    document.getElementById('jumpBtn').onclick = () => {
+        const n = Number(document.getElementById('jumpInput').value);
+        if (n >= 1 && n <= totalPages) { page = n; renderTable(); }
+        else { alert(`页码应在 1 - ${totalPages} 之间`); }
+    };
+}
+
+/* 删除记录（已通过/已拒绝列表） */
+async function deleteApplication() {
+    const data = applications[selectedIndex];
+    if (!data) return;
+    if (!confirm('确认删除 ' + (data.name || '') + ' 的认证记录？此操作不可恢复。')) return;
+    try {
+        const resp = await fetch(API_BASE_URL + '/api/applications/' + data.id, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + adminToken }
+        });
+        const result = await resp.json();
+        if (!resp.ok) { alert(result.message || '删除失败'); return; }
+        alert('已删除 ' + (data.name || '') + ' 的认证记录');
+        await loadApplications();
+    } catch (err) {
+        alert('网络异常，删除失败（' + err.message + '）');
+    }
 }
 
 function clearForm() {
@@ -407,10 +477,42 @@ document.getElementById('rejectBtn').addEventListener('click', () => {
     reviewApplication('rejected', reason);
 });
 
+/* 表格内操作按钮：通过 / 拒绝 / 删除（事件委托） */
+tableBody.addEventListener('click', (e) => {
+    const btn = e.target.closest('.approve-btn');
+    if (!btn) return;
+    const tr = e.target.closest('tr');
+    if (!tr) return;
+    selectedIndex = Number(tr.dataset.index);
+    if (btn.classList.contains('pass')) {
+        reviewApplication('approved');
+    } else if (btn.classList.contains('reject')) {
+        const reason = prompt('请输入拒绝原因（可留空）：');
+        if (reason === null) return;
+        reviewApplication('rejected', reason);
+    } else if (btn.classList.contains('del')) {
+        deleteApplication();
+    }
+});
+
+/* 状态切换时：重置页码、控制顶部审批按钮显隐 */
+document.querySelectorAll('.approval-tabs .atab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.approval-tabs .atab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentStatus = btn.dataset.status;
+        page = 1;
+        document.getElementById('pageSizeSelect').value = pageSize;
+        document.getElementById('actionButtons').style.display = currentStatus === 'pending' ? '' : 'none';
+        loadApplications();
+    });
+});
+
 /* 每页条数 */
 const pageSizeSelect = document.getElementById('pageSizeSelect');
 pageSizeSelect.addEventListener('change', () => {
     pageSize = Number(pageSizeSelect.value);
+    page = 1;
     renderTable();
 });
 
