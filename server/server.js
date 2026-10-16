@@ -4770,15 +4770,21 @@ app.get('/api/mail/contacts', requireAuth, requireAlumni, async (req, res) => {
       `select * from public.alumni_contacts where owner_user_id=$1 order by group_name, name`,
       [me]
     );
-    // 以管理员审批数据（alumni_verifications approved）为准，不合并同名，排除自己
+    // 以管理员审批数据（alumni_verifications approved）为准，不合并同名，排除自己（含按手机号）
+    let myPhone = null;
+    try {
+      const mp = await dbQuery(`select phone from public.app_users where id=$1`, [me]);
+      if (mp.rows[0]) myPhone = mp.rows[0].phone;
+    } catch (_) {}
     const alumni = await dbQuery(
       `select v.id as ver_id, v.user_id, v.name, v.graduation_year, v.current_city,
               a.mail_address
        from public.alumni_verifications v
        left join public.alumni_mail_accounts a on a.user_id = v.user_id
        where v.status = 'approved' and (v.user_id is null or v.user_id <> $1)
+         and (v.phone is null or $2::text is null or v.phone <> $2)
        order by v.name`,
-      [me]
+      [me, myPhone]
     );
     const alumniList = [];
     for (const x of alumni.rows) {
