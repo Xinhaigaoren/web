@@ -6,9 +6,20 @@
 <title>已发送 - 电子邮件系统</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: clamp(12px, 1vw, 18px); }
-    body { font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif; background-color: #f4f4f4; min-height: 100vh; display: flex; flex-direction: column; }
-    .topbar { width: 100%; height: 5.5rem; background-color: #94070A; display: flex; align-items: center; padding: 0 2rem; gap: 0.5rem; }
+    html { font-size: 1vw; }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .topbar {
+        width: 100%; height: 5.5rem;
+        background-color: #94070A;
+        display: flex; align-items: center;
+        padding: 0 2rem; gap: 0.5rem;
+    }
     .topbar-left { display: flex; align-items: center; gap: 0.8rem; white-space: nowrap; }
     .topbar-left img { height: 3rem; width: 3rem; border-radius: 50%; object-fit: contain; background-color: rgba(255,255,255,0.08); }
     .topbar-left .logo-text { display: flex; flex-direction: column; color: #fff; }
@@ -20,7 +31,7 @@
     .topbar-tools { display: flex; align-items: center; gap: 1.2rem; color: #fff; font-size: 0.9rem; white-space: nowrap; }
     .topbar-tools a { color: #fff; text-decoration: none; display: flex; align-items: center; gap: 0.3rem; opacity: 0.9; transition: opacity 0.3s; }
     .topbar-tools a:hover { opacity: 1; }
-    .topbar-menu { display: flex; align-items: center; gap: 1.8rem; font-size: 1.05rem; color: #fff; white-space: nowrap; }
+    .topbar-menu { display: flex; align-items: center; gap: 1.8rem; font-size: 1.3rem; color: #fff; white-space: nowrap; }
     .topbar-menu a { color: #fff; text-decoration: none; position: relative; padding-bottom: 0.3rem; border-bottom: 1px solid transparent; opacity: 0.92; transition: border-color 0.3s, opacity 0.3s; }
     .topbar-menu a:hover { border-bottom-color: #fff; opacity: 1; }
     .topbar-menu a.active { opacity: 1; }
@@ -33,7 +44,7 @@
     .sidebar-btn .badge { margin-left: auto; background-color: #94070A; color: #fff; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 0.6rem; min-width: 1rem; height: 1rem; display: inline-block; }
     .content-area { flex: 1; padding: 1rem 1.5rem; overflow-y: auto; }
     .toolbar { display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.8rem; border-bottom: 1px solid #e8e8e8; margin-bottom: 1rem; flex-wrap: wrap; }
-    .toolbar button { padding: 0.4rem 0.8rem; font-size: 0.85rem; border: 1px solid #d0d0d0; border-radius: 0.2rem; background-color: #fff; color: #333; cursor: pointer; font-family: inherit; transition: all 0.3s; }
+    .toolbar button { padding: 0.4rem 0.8rem; font-size: 0.85rem; border: 1px solid #d0d0d0; border-radius: 0.2rem; background-color: #fff; color: #333; cursor: pointer; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; transition: all 0.3s; }
     .toolbar button:hover { border-color: #94070A; color: #94070A; }
     .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: #666; }
     .mail-table { width: 100%; border-collapse: collapse; }
@@ -48,67 +59,122 @@
 </style>
 </head>
 <body>
+
 <header class="topbar">
     <div class="topbar-left">
         <img src="assets/haigao-logo.jpg" alt="Logo">
-        <div class="logo-text"><span class="zh">海林市高级中学校友（新海高人）</span><span class="en">Hailin Senior High School Alumni Association</span></div>
+        <div class="logo-text">
+            <span class="zh">海林市高级中学校友（新海高人）</span>
+            <span class="en">Hailin Senior High School Alumni Association</span>
+        </div>
         <span class="system-name-big">电子邮件系统</span>
     </div>
     <div class="topbar-spacer"></div>
     <div class="topbar-right">
-        <div class="topbar-tools"><a href="user-electronic.html">内网系统</a><a href="index.html">校友官网</a></div>
-        <nav class="topbar-menu"><a href="mail-inbox.html">收件箱</a><a href="mail-sent.html" class="active">已发送</a><a href="mail-compose.html">写信</a><a href="mail-contact.html">其他文件夹</a></nav>
+        <div class="topbar-tools">
+            <a href="member.html">内网系统</a>
+            <a href="index.html">校友官网</a>
+        </div>
+        <nav class="topbar-menu">
+            <a href="mail-inbox.html">收件箱</a>
+            <a href="mail-sent.html" class="active">已发送</a>
+            <a href="mail-compose.html">写信</a>
+            <a href="mail-contact.html">其他文件夹</a>
+        </nav>
     </div>
 </header>
+
 <div class="main-layout">
     <aside class="sidebar">
-        <a href="mail-compose.html" class="sidebar-btn"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>写信</a>
-        <a href="mail-inbox.html" class="sidebar-btn inbox"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/></svg>收件箱</a>
-        <a href="mail-sent.html" class="sidebar-btn active sent"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>已发送</a>
-        <a href="mail-contact.html" class="sidebar-btn"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>联系人</a>
+        <a href="mail-compose.html" class="sidebar-btn">
+            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>
+            写信
+        </a>
+        <a href="mail-inbox.html" class="sidebar-btn inbox">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/></svg>
+            收件箱
+        </a>
+        <a href="mail-sent.html" class="sidebar-btn active sent">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            已发送
+        </a>
+        <a href="mail-contact.html" class="sidebar-btn">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            联系人
+        </a>
         <a href="mail-contact.html" class="sidebar-btn">其他文件夹</a>
     </aside>
+
     <section class="content-area">
-        <div class="toolbar"><button id="refreshBtn">刷新</button><div class="toolbar-right"><span id="pageInfo">共 0 封</span></div></div>
+        <div class="toolbar">
+            <button id="refreshBtn">刷新</button>
+            <div class="toolbar-right"><span id="pageInfo">共 0 封</span></div>
+        </div>
         <table class="mail-table">
-            <thead><tr><th class="to">收件人</th><th>主题</th><th>回执</th><th class="date">日期</th></tr></thead>
+            <thead>
+                <tr>
+                    <th class="to">收件人</th>
+                    <th>主题</th>
+                    <th>回执</th>
+                    <th class="date">日期</th>
+                </tr>
+            </thead>
             <tbody id="mailBody"></tbody>
         </table>
         <div class="empty-tip" id="emptyTip" style="display:none;">还没有发送过邮件</div>
     </section>
 </div>
+
 <div class="toast" id="toast"></div>
+
 <script>
 (function(){
     var API = 'https://hailin-alumni-api.onrender.com';
     function getToken(){ return localStorage.getItem('alumniToken') || ''; }
     if (!getToken()) { location.href = 'login.html?redirect=mail-sent.html'; return; }
+
     var mailBody = document.getElementById('mailBody');
     var toast = document.getElementById('toast');
     function showToast(t){ toast.textContent = t; toast.style.display = 'block'; clearTimeout(showToast._t); showToast._t = setTimeout(function(){ toast.style.display = 'none'; }, 2200); }
-    function fmtDate(iso){ if (!iso) return ''; var d = new Date(iso); var p = function(n){ return (n < 10 ? '0' : '') + n; }; return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+    function fmtDate(iso){
+        if (!iso) return '';
+        var d = new Date(iso);
+        var p = function(n){ return (n < 10 ? '0' : '') + n; };
+        return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+
     function render(mails){
         mailBody.innerHTML = '';
         document.getElementById('emptyTip').style.display = mails.length ? 'none' : 'block';
         document.getElementById('pageInfo').textContent = '共 ' + mails.length + ' 封';
         mails.forEach(function(m){
-            var tr = document.createElement('tr'); tr.className = 'mail-row'; tr.dataset.id = m.id;
+            var tr = document.createElement('tr');
+            tr.className = 'mail-row';
+            tr.dataset.id = m.id;
             var tdTo = document.createElement('td'); tdTo.className = 'to'; tdTo.textContent = (m.to_display || '').slice(0, 40);
             var tdS = document.createElement('td'); tdS.className = 'subject'; tdS.textContent = m.subject || '（无主题）';
             var tdR = document.createElement('td');
-            if (m.read_receipt) { tdR.textContent = (m.read_count > 0 ? '已读 ' + m.read_count + '/' + m.to_count : '未读'); tdR.style.color = m.read_count > 0 ? '#0a8043' : '#999'; } else { tdR.textContent = '—'; tdR.style.color = '#ccc'; }
+            if (m.read_receipt) {
+                tdR.textContent = (m.read_count > 0 ? '已读 ' + m.read_count + '/' + m.to_count : '未读');
+                tdR.style.color = m.read_count > 0 ? '#0a8043' : '#999';
+            } else { tdR.textContent = '—'; tdR.style.color = '#ccc'; }
             var tdD = document.createElement('td'); tdD.className = 'date'; tdD.textContent = fmtDate(m.sent_at);
             tr.appendChild(tdTo); tr.appendChild(tdS); tr.appendChild(tdR); tr.appendChild(tdD);
             tr.addEventListener('click', function(){ location.href = 'mail-detail.html?id=' + m.id; });
             mailBody.appendChild(tr);
         });
     }
+
     function load(){
         fetch(API + '/api/mail/sent', { headers: { 'Authorization': 'Bearer ' + getToken() } })
             .then(function(r){ return r.json(); })
-            .then(function(j){ if (!j.ok) { showToast(j.message || '加载失败'); return; } render(j.mails || []); })
+            .then(function(j){
+                if (!j.ok) { showToast(j.message || '加载失败'); return; }
+                render(j.mails || []);
+            })
             .catch(function(){ showToast('网络异常，请稍后重试'); });
     }
+
     document.getElementById('refreshBtn').addEventListener('click', load);
     load();
 })();

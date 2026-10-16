@@ -6,8 +6,14 @@
 <title>写信 - 电子邮件系统</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: clamp(12px, 1vw, 18px); }
-    body { font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif; background-color: #f4f4f4; min-height: 100vh; display: flex; flex-direction: column; }
+    html { font-size: 1vw; }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
     .topbar { width: 100%; height: 5.5rem; background-color: #94070A; display: flex; align-items: center; padding: 0 2rem; gap: 0.5rem; }
     .topbar-left { display: flex; align-items: center; gap: 0.8rem; white-space: nowrap; }
     .topbar-left img { height: 3rem; width: 3rem; border-radius: 50%; object-fit: contain; background-color: rgba(255,255,255,0.08); }
@@ -20,7 +26,7 @@
     .topbar-tools { display: flex; align-items: center; gap: 1.2rem; color: #fff; font-size: 0.9rem; white-space: nowrap; }
     .topbar-tools a { color: #fff; text-decoration: none; display: flex; align-items: center; gap: 0.3rem; opacity: 0.9; transition: opacity 0.3s; }
     .topbar-tools a:hover { opacity: 1; }
-    .topbar-menu { display: flex; align-items: center; gap: 1.8rem; font-size: 1.05rem; color: #fff; white-space: nowrap; }
+    .topbar-menu { display: flex; align-items: center; gap: 1.8rem; font-size: 1.3rem; color: #fff; white-space: nowrap; }
     .topbar-menu a { color: #fff; text-decoration: none; position: relative; padding-bottom: 0.3rem; border-bottom: 1px solid transparent; opacity: 0.92; transition: border-color 0.3s, opacity 0.3s; }
     .topbar-menu a:hover { border-bottom-color: #fff; opacity: 1; }
     .topbar-menu a.active { opacity: 1; }
@@ -31,6 +37,7 @@
     .sidebar-btn.active { background-color: #ffffff; border-left-color: #94070A; color: #94070A; font-weight: bold; }
     .sidebar-btn svg { width: 1rem; height: 1rem; fill: currentColor; }
     .content-area { flex: 1; padding: 1.5rem 2rem; overflow-y: auto; background: #fff; }
+
     .compose-form { max-width: 900px; margin: 0 auto; }
     .compose-actions { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
     .btn-send { background: #94070A; color: #fff; border: none; padding: 0.55rem 1.6rem; font-size: 1rem; border-radius: 0.25rem; cursor: pointer; font-family: inherit; }
@@ -52,26 +59,52 @@
 </style>
 </head>
 <body>
+
 <header class="topbar">
     <div class="topbar-left">
         <img src="assets/haigao-logo.jpg" alt="Logo">
-        <div class="logo-text"><span class="zh">海林市高级中学校友（新海高人）</span><span class="en">Hailin Senior High School Alumni Association</span></div>
+        <div class="logo-text">
+            <span class="zh">海林市高级中学校友（新海高人）</span>
+            <span class="en">Hailin Senior High School Alumni Association</span>
+        </div>
         <span class="system-name-big">电子邮件系统</span>
     </div>
     <div class="topbar-spacer"></div>
     <div class="topbar-right">
-        <div class="topbar-tools"><a href="user-electronic.html">内网系统</a><a href="index.html">校友官网</a></div>
-        <nav class="topbar-menu"><a href="mail-inbox.html">收件箱</a><a href="mail-sent.html">已发送</a><a href="mail-compose.html" class="active">写信</a><a href="mail-contact.html">其他文件夹</a></nav>
+        <div class="topbar-tools">
+            <a href="member.html">内网系统</a>
+            <a href="index.html">校友官网</a>
+        </div>
+        <nav class="topbar-menu">
+            <a href="mail-inbox.html">收件箱</a>
+            <a href="mail-sent.html">已发送</a>
+            <a href="mail-compose.html" class="active">写信</a>
+            <a href="mail-contact.html">其他文件夹</a>
+        </nav>
     </div>
 </header>
+
 <div class="main-layout">
     <aside class="sidebar">
-        <a href="mail-compose.html" class="sidebar-btn active"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>写信</a>
-        <a href="mail-inbox.html" class="sidebar-btn inbox"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/></svg>收件箱</a>
-        <a href="mail-sent.html" class="sidebar-btn sent"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>已发送</a>
-        <a href="mail-contact.html" class="sidebar-btn"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>联系人</a>
+        <a href="mail-compose.html" class="sidebar-btn active">
+            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>
+            写信
+        </a>
+        <a href="mail-inbox.html" class="sidebar-btn inbox">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/></svg>
+            收件箱
+        </a>
+        <a href="mail-sent.html" class="sidebar-btn sent">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            已发送
+        </a>
+        <a href="mail-contact.html" class="sidebar-btn">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            联系人
+        </a>
         <a href="mail-contact.html" class="sidebar-btn">其他文件夹</a>
     </aside>
+
     <section class="content-area">
         <div class="compose-form">
             <div class="compose-actions">
@@ -79,21 +112,38 @@
                 <button class="btn-plain" id="previewBtn">预览</button>
                 <button class="btn-plain" id="cancelBtn">取消</button>
             </div>
-            <div class="compose-row"><label>发件人：</label><input type="text" id="fromInput" readonly></div>
-            <div class="compose-row"><label>收件人：</label><input type="text" id="toInput" placeholder="输入校友邮箱，多个用逗号分隔"></div>
-            <div class="compose-row"><label>抄送：</label><input type="text" id="ccInput" placeholder="可选，多个用逗号分隔"></div>
-            <div class="compose-row"><label>主题：</label><input type="text" id="subjectInput" placeholder=""></div>
+
+            <div class="compose-row">
+                <label>发件人：</label>
+                <input type="text" id="fromInput" readonly>
+            </div>
+            <div class="compose-row">
+                <label>收件人：</label>
+                <input type="text" id="toInput" placeholder="输入校友邮箱，多个用逗号分隔">
+            </div>
+            <div class="compose-row">
+                <label>抄送：</label>
+                <input type="text" id="ccInput" placeholder="可选，多个用逗号分隔">
+            </div>
+            <div class="compose-row">
+                <label>主题：</label>
+                <input type="text" id="subjectInput" placeholder="">
+            </div>
+
             <div class="compose-toolbar">
                 <button type="button" onclick="return false;">↶ 撤销</button>
                 <button type="button" onclick="return false;">↷ 重做</button>
                 <button type="button" onclick="return false;">📎 添加附件</button>
-                <select><option>正文</option></select><select><option>五号</option></select>
+                <select><option>正文</option></select>
+                <select><option>五号</option></select>
                 <button type="button" onclick="return false;"><b>B</b></button>
                 <button type="button" onclick="return false;"><i>I</i></button>
                 <button type="button" onclick="return false;"><u>U</u></button>
                 <span style="flex:1"></span>
             </div>
+
             <textarea class="compose-body" id="bodyInput" placeholder=""></textarea>
+
             <div class="compose-footer">
                 <label><input type="checkbox" id="urgentCb"> 设为“紧急”</label>
                 <label><input type="checkbox" id="receiptCb" checked> 已读回执</label>
@@ -101,37 +151,64 @@
         </div>
     </section>
 </div>
+
 <div class="toast" id="toast"></div>
+
 <script>
 (function(){
     var API = 'https://hailin-alumni-api.onrender.com';
     function getToken(){ return localStorage.getItem('alumniToken') || ''; }
     if (!getToken()) { location.href = 'login.html?redirect=mail-compose.html'; return; }
+
     var toast = document.getElementById('toast');
     function showToast(t){ toast.textContent = t; toast.style.display = 'block'; clearTimeout(showToast._t); showToast._t = setTimeout(function(){ toast.style.display = 'none'; }, 2600); }
+
+    // 读取发件人地址
     fetch(API + '/api/mail/account', { headers: { 'Authorization': 'Bearer ' + getToken() } })
         .then(function(r){ return r.json(); })
         .then(function(j){ if (j.ok && j.account) document.getElementById('fromInput').value = j.account.mail_address; })
         .catch(function(){});
+
     document.getElementById('sendBtn').addEventListener('click', function(){
         var toRaw = document.getElementById('toInput').value.trim();
         if (!toRaw) { showToast('请填写收件人'); return; }
         var to = toRaw.split(/[,，;；]/).map(function(s){ return s.trim(); }).filter(Boolean);
         var ccRaw = document.getElementById('ccInput').value.trim();
         var cc = ccRaw ? ccRaw.split(/[,，;；]/).map(function(s){ return s.trim(); }).filter(Boolean) : [];
-        var payload = { to: to, cc: cc, subject: document.getElementById('subjectInput').value.trim(), body: document.getElementById('bodyInput').value, priority: document.getElementById('urgentCb').checked ? 'urgent' : 'normal', read_receipt: document.getElementById('receiptCb').checked };
-        var btn = document.getElementById('sendBtn'); btn.disabled = true;
-        fetch(API + '/api/mail/send', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }, body: JSON.stringify(payload) })
+        var payload = {
+            to: to,
+            cc: cc,
+            subject: document.getElementById('subjectInput').value.trim(),
+            body: document.getElementById('bodyInput').value,
+            priority: document.getElementById('urgentCb').checked ? 'urgent' : 'normal',
+            read_receipt: document.getElementById('receiptCb').checked
+        };
+        var btn = document.getElementById('sendBtn');
+        btn.disabled = true;
+        fetch(API + '/api/mail/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+            body: JSON.stringify(payload)
+        })
         .then(function(r){ return r.json(); })
-        .then(function(j){ btn.disabled = false; if (!j.ok) { showToast(j.message || '发送失败'); return; } showToast('邮件已发送'); setTimeout(function(){ location.href = 'mail-sent.html'; }, 900); })
+        .then(function(j){
+            btn.disabled = false;
+            if (!j.ok) { showToast(j.message || '发送失败'); return; }
+            showToast('邮件已发送');
+            setTimeout(function(){ location.href = 'mail-sent.html'; }, 900);
+        })
         .catch(function(){ btn.disabled = false; showToast('网络异常，发送失败'); });
     });
+
     document.getElementById('previewBtn').addEventListener('click', function(){
         var subj = document.getElementById('subjectInput').value.trim() || '（无主题）';
         var body = document.getElementById('bodyInput').value || '（空）';
         alert('主题：' + subj + '\n\n' + body.slice(0, 500));
     });
-    document.getElementById('cancelBtn').addEventListener('click', function(){ location.href = 'mail-inbox.html'; });
+
+    document.getElementById('cancelBtn').addEventListener('click', function(){
+        location.href = 'mail-inbox.html';
+    });
 })();
 </script>
 </body>

@@ -6,8 +6,14 @@
 <title>个人通讯录 - 电子邮件系统</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: clamp(12px, 1vw, 18px); }
-    body { font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif; background-color: #f4f4f4; min-height: 100vh; display: flex; flex-direction: column; }
+    html { font-size: 1vw; }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
     .topbar { width: 100%; height: 5.5rem; background-color: #94070A; display: flex; align-items: center; padding: 0 2rem; gap: 0.5rem; }
     .topbar-left { display: flex; align-items: center; gap: 0.8rem; white-space: nowrap; }
     .topbar-left img { height: 3rem; width: 3rem; border-radius: 50%; object-fit: contain; background-color: rgba(255,255,255,0.08); }
@@ -20,7 +26,7 @@
     .topbar-tools { display: flex; align-items: center; gap: 1.2rem; color: #fff; font-size: 0.9rem; white-space: nowrap; }
     .topbar-tools a { color: #fff; text-decoration: none; display: flex; align-items: center; gap: 0.3rem; opacity: 0.9; transition: opacity 0.3s; }
     .topbar-tools a:hover { opacity: 1; }
-    .topbar-menu { display: flex; align-items: center; gap: 1.8rem; font-size: 1.05rem; color: #fff; white-space: nowrap; }
+    .topbar-menu { display: flex; align-items: center; gap: 1.8rem; font-size: 1.3rem; color: #fff; white-space: nowrap; }
     .topbar-menu a { color: #fff; text-decoration: none; position: relative; padding-bottom: 0.3rem; border-bottom: 1px solid transparent; opacity: 0.92; transition: border-color 0.3s, opacity 0.3s; }
     .topbar-menu a:hover { border-bottom-color: #fff; opacity: 1; }
     .topbar-menu a.active { opacity: 1; }
@@ -30,7 +36,9 @@
     .sidebar-btn:hover { background-color: #ebebeb; color: #94070A; }
     .sidebar-btn.active { background-color: #ffffff; border-left-color: #94070A; color: #94070A; font-weight: bold; }
     .sidebar-btn svg { width: 1rem; height: 1rem; fill: currentColor; }
+
     .content-area { flex: 1; padding: 1.2rem 1.5rem; overflow-y: auto; background: #fff; }
+
     .contact-header { display: flex; align-items: center; gap: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid #e8e8e8; margin-bottom: 1rem; flex-wrap: wrap; }
     .contact-header h2 { font-size: 1.2rem; color: #333; font-weight: normal; }
     .btn-add { background: #94070A; color: #fff; border: none; padding: 0.45rem 1.1rem; font-size: 0.9rem; border-radius: 0.25rem; cursor: pointer; font-family: inherit; }
@@ -38,6 +46,7 @@
     .btn-add-ghost { background: #fff; color: #94070A; border: 1px solid #94070A; padding: 0.45rem 1.1rem; font-size: 0.9rem; border-radius: 0.25rem; cursor: pointer; font-family: inherit; }
     .btn-add-ghost:hover { background: #fdf1f1; }
     .contact-header .count { color: #999; font-size: 0.85rem; }
+
     .contact-table { width: 100%; border-collapse: collapse; }
     .contact-table th { text-align: left; padding: 0.6rem 0.8rem; font-size: 0.85rem; color: #666; font-weight: normal; border-bottom: 1px solid #e0e0e0; }
     .contact-table td { padding: 0.7rem 0.8rem; font-size: 0.9rem; border-bottom: 1px solid #f0f0f0; color: #333; }
@@ -49,6 +58,8 @@
     .del-link { color: #999; font-size: 0.8rem; cursor: pointer; text-decoration: underline; }
     .del-link:hover { color: #94070A; }
     .empty-tip { text-align: center; color: #999; padding: 3rem 0; font-size: 0.95rem; }
+
+    /* 弹窗 */
     .modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 98; display: none; align-items: center; justify-content: center; }
     .modal { background: #fff; border-radius: 0.4rem; width: 420px; max-width: 92vw; padding: 1.4rem 1.6rem; box-shadow: 0 6px 24px rgba(0,0,0,0.18); }
     .modal h3 { font-size: 1.1rem; color: #333; font-weight: normal; margin-bottom: 1rem; }
@@ -66,26 +77,52 @@
 </style>
 </head>
 <body>
+
 <header class="topbar">
     <div class="topbar-left">
         <img src="assets/haigao-logo.jpg" alt="Logo">
-        <div class="logo-text"><span class="zh">海林市高级中学校友（新海高人）</span><span class="en">Hailin Senior High School Alumni Association</span></div>
+        <div class="logo-text">
+            <span class="zh">海林市高级中学校友（新海高人）</span>
+            <span class="en">Hailin Senior High School Alumni Association</span>
+        </div>
         <span class="system-name-big">电子邮件系统</span>
     </div>
     <div class="topbar-spacer"></div>
     <div class="topbar-right">
-        <div class="topbar-tools"><a href="user-electronic.html">内网系统</a><a href="index.html">校友官网</a></div>
-        <nav class="topbar-menu"><a href="mail-inbox.html">收件箱</a><a href="mail-sent.html">已发送</a><a href="mail-compose.html">写信</a><a href="mail-contact.html" class="active">其他文件夹</a></nav>
+        <div class="topbar-tools">
+            <a href="member.html">内网系统</a>
+            <a href="index.html">校友官网</a>
+        </div>
+        <nav class="topbar-menu">
+            <a href="mail-inbox.html">收件箱</a>
+            <a href="mail-sent.html">已发送</a>
+            <a href="mail-compose.html">写信</a>
+            <a href="mail-contact.html" class="active">其他文件夹</a>
+        </nav>
     </div>
 </header>
+
 <div class="main-layout">
     <aside class="sidebar">
-        <a href="mail-compose.html" class="sidebar-btn"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>写信</a>
-        <a href="mail-inbox.html" class="sidebar-btn inbox"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/></svg>收件箱</a>
-        <a href="mail-sent.html" class="sidebar-btn sent"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>已发送</a>
-        <a href="mail-contact.html" class="sidebar-btn active"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>联系人</a>
+        <a href="mail-compose.html" class="sidebar-btn">
+            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>
+            写信
+        </a>
+        <a href="mail-inbox.html" class="sidebar-btn inbox">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/></svg>
+            收件箱
+        </a>
+        <a href="mail-sent.html" class="sidebar-btn sent">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            已发送
+        </a>
+        <a href="mail-contact.html" class="sidebar-btn active">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            联系人
+        </a>
         <a href="mail-contact.html" class="sidebar-btn">其他文件夹</a>
     </aside>
+
     <section class="content-area">
         <div class="contact-header">
             <h2>所有联系人</h2>
@@ -94,13 +131,24 @@
             <button class="btn-add-ghost" id="newGroupBtn">新建联系组</button>
             <button class="btn-add" id="newContactBtn">新建联系人</button>
         </div>
+
         <table class="contact-table">
-            <thead><tr><th style="width:10rem;">姓名</th><th>邮箱</th><th>电话</th><th>所在地 / 分组</th><th style="width:5rem;"></th></tr></thead>
+            <thead>
+                <tr>
+                    <th style="width:10rem;">姓名</th>
+                    <th>邮箱</th>
+                    <th>电话</th>
+                    <th>所在地 / 分组</th>
+                    <th style="width:5rem;"></th>
+                </tr>
+            </thead>
             <tbody id="contactBody"></tbody>
         </table>
         <div class="empty-tip" id="emptyTip" style="display:none;">暂无联系人</div>
     </section>
 </div>
+
+<!-- 新建联系人弹窗 -->
 <div class="modal-mask" id="modalContact">
     <div class="modal">
         <h3>新建联系人</h3>
@@ -109,27 +157,39 @@
         <div class="field"><label>手机：</label><input type="text" id="cPhone"></div>
         <div class="field"><label>联系组：</label><select id="cGroup"><option value="">未分组联系人</option></select></div>
         <div class="field"><label>备注：</label><input type="text" id="cNote"></div>
-        <div class="modal-actions"><button class="btn-cancel" id="cCancel">取消</button><button class="btn-ok" id="cSave">保存</button></div>
+        <div class="modal-actions">
+            <button class="btn-cancel" id="cCancel">取消</button>
+            <button class="btn-ok" id="cSave">保存</button>
+        </div>
     </div>
 </div>
+
+<!-- 新建联系组弹窗 -->
 <div class="modal-mask" id="modalGroup">
     <div class="modal">
         <h3>新建联系组</h3>
         <div class="field"><label>组名：</label><input type="text" id="gName" placeholder="如：同班同学"></div>
-        <div class="modal-actions"><button class="btn-cancel" id="gCancel">取消</button><button class="btn-ok" id="gSave">保存</button></div>
+        <div class="modal-actions">
+            <button class="btn-cancel" id="gCancel">取消</button>
+            <button class="btn-ok" id="gSave">保存</button>
+        </div>
     </div>
 </div>
+
 <div class="toast" id="toast"></div>
+
 <script>
 (function(){
     var API = 'https://hailin-alumni-api.onrender.com';
     var GROUPS_KEY = 'mail_my_groups';
     function getToken(){ return localStorage.getItem('alumniToken') || ''; }
     if (!getToken()) { location.href = 'login.html?redirect=mail-contact.html'; return; }
+
     var toast = document.getElementById('toast');
     function showToast(t){ toast.textContent = t; toast.style.display = 'block'; clearTimeout(showToast._t); showToast._t = setTimeout(function(){ toast.style.display = 'none'; }, 2400); }
     function getMyGroups(){ try { return JSON.parse(localStorage.getItem(GROUPS_KEY) || '[]'); } catch(e) { return []; } }
     function saveMyGroups(g){ localStorage.setItem(GROUPS_KEY, JSON.stringify(g)); }
+
     function load(){
         fetch(API + '/api/mail/contacts', { headers: { 'Authorization': 'Bearer ' + getToken() } })
             .then(function(r){ return r.json(); })
@@ -164,6 +224,7 @@
                     tr.appendChild(tdN); tr.appendChild(tdE); tr.appendChild(tdP); tr.appendChild(tdM); tr.appendChild(tdX);
                     body.appendChild(tr);
                 });
+                // 更新新建联系人分组下拉
                 var sel = document.getElementById('cGroup');
                 var groups = getMyGroups();
                 var cur = sel.value;
@@ -173,32 +234,59 @@
             })
             .catch(function(){ showToast('网络异常，请稍后重试'); });
     }
+
+    // 新建联系人
     document.getElementById('newContactBtn').addEventListener('click', function(){
-        document.getElementById('cName').value = ''; document.getElementById('cEmail').value = ''; document.getElementById('cPhone').value = ''; document.getElementById('cNote').value = '';
+        document.getElementById('cName').value = '';
+        document.getElementById('cEmail').value = '';
+        document.getElementById('cPhone').value = '';
+        document.getElementById('cNote').value = '';
         document.getElementById('modalContact').style.display = 'flex';
     });
     document.getElementById('cCancel').addEventListener('click', function(){ document.getElementById('modalContact').style.display = 'none'; });
     document.getElementById('cSave').addEventListener('click', function(){
         var name = document.getElementById('cName').value.trim();
         if (!name) { showToast('请输入联系人姓名'); return; }
-        var payload = { name: name, email: document.getElementById('cEmail').value.trim(), phone: document.getElementById('cPhone').value.trim(), group_name: document.getElementById('cGroup').value || '未分组联系人', note: document.getElementById('cNote').value.trim() };
-        fetch(API + '/api/mail/contacts', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }, body: JSON.stringify(payload) })
+        var payload = {
+            name: name,
+            email: document.getElementById('cEmail').value.trim(),
+            phone: document.getElementById('cPhone').value.trim(),
+            group_name: document.getElementById('cGroup').value || '未分组联系人',
+            note: document.getElementById('cNote').value.trim()
+        };
+        fetch(API + '/api/mail/contacts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+            body: JSON.stringify(payload)
+        })
         .then(function(r){ return r.json(); })
-        .then(function(j){ if (!j.ok) { showToast(j.message || '添加失败'); return; } showToast('联系人已添加'); document.getElementById('modalContact').style.display = 'none'; load(); })
+        .then(function(j){
+            if (!j.ok) { showToast(j.message || '添加失败'); return; }
+            showToast('联系人已添加');
+            document.getElementById('modalContact').style.display = 'none';
+            load();
+        })
         .catch(function(){ showToast('网络异常，添加失败'); });
     });
-    document.getElementById('newGroupBtn').addEventListener('click', function(){ document.getElementById('gName').value = ''; document.getElementById('modalGroup').style.display = 'flex'; });
+
+    // 新建联系组
+    document.getElementById('newGroupBtn').addEventListener('click', function(){
+        document.getElementById('gName').value = '';
+        document.getElementById('modalGroup').style.display = 'flex';
+    });
     document.getElementById('gCancel').addEventListener('click', function(){ document.getElementById('modalGroup').style.display = 'none'; });
     document.getElementById('gSave').addEventListener('click', function(){
         var g = document.getElementById('gName').value.trim();
         if (!g) { showToast('请输入联系组名称'); return; }
         var groups = getMyGroups();
         if (groups.indexOf(g) >= 0) { showToast('该联系组已存在'); return; }
-        groups.push(g); saveMyGroups(groups);
+        groups.push(g);
+        saveMyGroups(groups);
         showToast('联系组「' + g + '」已创建');
         document.getElementById('modalGroup').style.display = 'none';
         load();
     });
+
     load();
 })();
 </script>

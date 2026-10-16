@@ -6,8 +6,14 @@
 <title>邮件详情 - 电子邮件系统</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: clamp(12px, 1vw, 18px); }
-    body { font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif; background-color: #f4f4f4; min-height: 100vh; display: flex; flex-direction: column; }
+    html { font-size: 1vw; }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
     .topbar { width: 100%; height: 5.5rem; background-color: #94070A; display: flex; align-items: center; padding: 0 2rem; gap: 0.5rem; }
     .topbar-left { display: flex; align-items: center; gap: 0.8rem; white-space: nowrap; }
     .topbar-left img { height: 3rem; width: 3rem; border-radius: 50%; object-fit: contain; background-color: rgba(255,255,255,0.08); }
@@ -20,7 +26,7 @@
     .topbar-tools { display: flex; align-items: center; gap: 1.2rem; color: #fff; font-size: 0.9rem; white-space: nowrap; }
     .topbar-tools a { color: #fff; text-decoration: none; display: flex; align-items: center; gap: 0.3rem; opacity: 0.9; transition: opacity 0.3s; }
     .topbar-tools a:hover { opacity: 1; }
-    .topbar-menu { display: flex; align-items: center; gap: 1.8rem; font-size: 1.05rem; color: #fff; white-space: nowrap; }
+    .topbar-menu { display: flex; align-items: center; gap: 1.8rem; font-size: 1.3rem; color: #fff; white-space: nowrap; }
     .topbar-menu a { color: #fff; text-decoration: none; position: relative; padding-bottom: 0.3rem; border-bottom: 1px solid transparent; opacity: 0.92; transition: border-color 0.3s, opacity 0.3s; }
     .topbar-menu a:hover { border-bottom-color: #fff; opacity: 1; }
     .main-layout { flex: 1; display: flex; background-color: #ffffff; }
@@ -30,14 +36,18 @@
     .sidebar-btn.active { background-color: #ffffff; border-left-color: #94070A; color: #94070A; font-weight: bold; }
     .sidebar-btn svg { width: 1rem; height: 1rem; fill: currentColor; }
     .content-area { flex: 1; padding: 1.5rem 2rem; overflow-y: auto; background: #fff; }
+
     .detail-card { max-width: 900px; margin: 0 auto; }
     .detail-actions { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
     .btn-plain { background: #fff; color: #333; border: 1px solid #d0d0d0; padding: 0.45rem 1.2rem; font-size: 0.9rem; border-radius: 0.25rem; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-block; }
     .btn-plain:hover { border-color: #94070A; color: #94070A; }
     .btn-reply { background: #94070A; color: #fff; border: none; padding: 0.45rem 1.2rem; font-size: 0.9rem; border-radius: 0.25rem; cursor: pointer; font-family: inherit; }
     .btn-reply:hover { background: #7a0609; }
+
     .receipt-box { background: #fdf6e9; border: 1px solid #f0e2be; color: #7a5c00; border-radius: 0.3rem; padding: 0.8rem 1rem; margin-bottom: 1rem; font-size: 0.95rem; line-height: 1.6; }
     .receipt-box .status-done { color: #0a8043; font-weight: bold; }
+    .receipt-box .status-wait { color: #999; }
+
     .mail-head { border-bottom: 1px solid #eee; padding-bottom: 1rem; margin-bottom: 1rem; }
     .mail-subject { font-size: 1.35rem; color: #333; margin-bottom: 0.6rem; }
     .mail-meta { display: flex; flex-wrap: wrap; gap: 0.4rem 1.6rem; font-size: 0.9rem; color: #666; }
@@ -53,39 +63,77 @@
 </style>
 </head>
 <body>
+
 <header class="topbar">
     <div class="topbar-left">
         <img src="assets/haigao-logo.jpg" alt="Logo">
-        <div class="logo-text"><span class="zh">海林市高级中学校友（新海高人）</span><span class="en">Hailin Senior High School Alumni Association</span></div>
+        <div class="logo-text">
+            <span class="zh">海林市高级中学校友（新海高人）</span>
+            <span class="en">Hailin Senior High School Alumni Association</span>
+        </div>
         <span class="system-name-big">电子邮件系统</span>
     </div>
     <div class="topbar-spacer"></div>
     <div class="topbar-right">
-        <div class="topbar-tools"><a href="user-electronic.html">内网系统</a><a href="index.html">校友官网</a></div>
-        <nav class="topbar-menu"><a href="mail-inbox.html">收件箱</a><a href="mail-sent.html">已发送</a><a href="mail-compose.html">写信</a><a href="mail-contact.html">其他文件夹</a></nav>
+        <div class="topbar-tools">
+            <a href="member.html">内网系统</a>
+            <a href="index.html">校友官网</a>
+        </div>
+        <nav class="topbar-menu">
+            <a href="mail-inbox.html">收件箱</a>
+            <a href="mail-sent.html">已发送</a>
+            <a href="mail-compose.html">写信</a>
+            <a href="mail-contact.html">其他文件夹</a>
+        </nav>
     </div>
 </header>
+
 <div class="main-layout">
     <aside class="sidebar">
-        <a href="mail-compose.html" class="sidebar-btn"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>写信</a>
-        <a href="mail-inbox.html" class="sidebar-btn inbox"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/></svg>收件箱</a>
-        <a href="mail-sent.html" class="sidebar-btn sent"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>已发送</a>
-        <a href="mail-contact.html" class="sidebar-btn"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>联系人</a>
+        <a href="mail-compose.html" class="sidebar-btn">
+            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>
+            写信
+        </a>
+        <a href="mail-inbox.html" class="sidebar-btn inbox">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/></svg>
+            收件箱
+        </a>
+        <a href="mail-sent.html" class="sidebar-btn sent">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            已发送
+        </a>
+        <a href="mail-contact.html" class="sidebar-btn">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            联系人
+        </a>
         <a href="mail-contact.html" class="sidebar-btn">其他文件夹</a>
     </aside>
+
     <section class="content-area">
-        <div class="detail-card" id="detailCard"><div class="empty-tip" id="loading">加载中…</div></div>
+        <div class="detail-card" id="detailCard">
+            <div class="empty-tip" id="loading">加载中…</div>
+        </div>
     </section>
 </div>
+
 <div class="toast" id="toast"></div>
+
 <script>
 (function(){
     var API = 'https://hailin-alumni-api.onrender.com';
     function getToken(){ return localStorage.getItem('alumniToken') || ''; }
     if (!getToken()) { location.href = 'login.html?redirect=mail-inbox.html'; return; }
+
     var id = new URLSearchParams(location.search).get('id');
     var toast = document.getElementById('toast');
-    function fmt(iso){ if (!iso) return ''; var d = new Date(iso); var p = function(n){ return (n < 10 ? '0' : '') + n; }; return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+    function showToast(t){ toast.textContent = t; toast.style.display = 'block'; clearTimeout(showToast._t); showToast._t = setTimeout(function(){ toast.style.display = 'none'; }, 2400); }
+    function fmt(iso){
+        if (!iso) return '';
+        var d = new Date(iso);
+        var p = function(n){ return (n < 10 ? '0' : '') + n; };
+        return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+
     fetch(API + '/api/mail/' + id, { headers: { 'Authorization': 'Bearer ' + getToken() } })
         .then(function(r){ return r.json(); })
         .then(function(j){
@@ -94,12 +142,18 @@
             var html = '';
             html += '<div class="detail-actions">';
             html += '<a class="btn-plain" href="mail-inbox.html">← 返回收件箱</a>';
-            if (j.is_sender) { html += '<a class="btn-plain" href="mail-sent.html">已发送</a>'; }
-            else { html += '<a class="btn-reply" href="mail-compose.html?to=' + encodeURIComponent(j.mail.sender_address) + '&subject=' + encodeURIComponent('回复: ' + (j.mail.subject || '')) + '">回复</a>'; }
+            if (j.is_sender) {
+                html += '<a class="btn-plain" href="mail-sent.html">已发送</a>';
+            } else {
+                html += '<a class="btn-reply" href="mail-compose.html?to=' + encodeURIComponent(j.mail.sender_address) + '&subject=' + encodeURIComponent('回复: ' + (j.mail.subject || '')) + '">回复</a>';
+            }
             html += '</div>';
+
+            // 已读回执（发件人视角，开启已读回执时显示）
             if (j.is_sender && j.mail.read_receipt) {
                 html += '<div class="receipt-box">对方已阅读 — 共发给 <b>' + j.to_count + '</b> 个收件人，其中 <b>' + j.read_count + '</b> 个信件已被对方阅读</div>';
             }
+
             html += '<div class="mail-head">';
             html += '<div class="mail-subject">' + (j.mail.subject || '（无主题）') + '</div>';
             html += '<div class="mail-meta">';
@@ -108,13 +162,19 @@
             if (j.mail.priority === 'urgent') html += '<span style="color:#c0392b;">【紧急】</span>';
             html += '</div></div>';
             html += '<div class="mail-body">' + (j.mail.body || '') + '</div>';
+
+            // 收件人/抄送列表（发件人视角显示已读状态）
             if (j.recipients && j.recipients.length) {
                 html += '<table class="recipient-table"><thead><tr><th>姓名</th><th>收件人</th><th>类型</th><th>状态</th><th>阅读时间</th></tr></thead><tbody>';
                 (j.recipients || []).forEach(function(r){
                     html += '<tr><td>' + (r.name || '—') + '</td><td>' + (r.address || '') + '</td><td>' + (r.kind === 'to' ? '收件人' : '抄送') + '</td>';
-                    if (j.is_sender) { html += '<td>' + (r.is_read ? '<span class="status-done">信件已被对方阅读</span>' : '<span class="status-wait">尚未阅读</span>') + '</td>'; }
-                    else { html += '<td>' + (r.is_read ? '<span class="status-done">已读</span>' : '<span class="status-wait">未读</span>') + '</td>'; }
-                    html += '<td>' + (r.read_at ? fmt(r.read_at) : '—') + '</td></tr>';
+                    if (j.is_sender) {
+                        html += '<td>' + (r.is_read ? '<span class="status-done">信件已被对方阅读</span>' : '<span class="status-wait">尚未阅读</span>') + '</td>';
+                        html += '<td>' + (r.read_at ? fmt(r.read_at) : '—') + '</td>';
+                    } else {
+                        html += '<td>' + (r.is_read ? '<span class="status-done">已读</span>' : '<span class="status-wait">未读</span>') + '</td><td>' + (r.read_at ? fmt(r.read_at) : '—') + '</td>';
+                    }
+                    html += '</tr>';
                 });
                 html += '</tbody></table>';
             }
