@@ -2362,6 +2362,28 @@ app.patch('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) =>
   }
 });
 
+// 管理员删除用户（级联清理校友档案/邮箱账户/邮件/联系人/认证记录）
+app.delete('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const current = await dbQuery(`select * from public.app_users where id=$1 limit 1`, [id]);
+    if (!current.rows[0]) return fail(res, 404, '用户不存在');
+    if (current.rows[0].phone === 'ROOT_ADMIN') return fail(res, 403, '不能删除主管理员账号');
+    await dbQuery(`delete from public.alumni_mail_contacts where owner_user_id=$1`, [id]).catch(() => {});
+    await dbQuery(`delete from public.alumni_mail_recipients where user_id=$1`, [id]).catch(() => {});
+    await dbQuery(`delete from public.alumni_mail_recipients where mail_id in (select id from public.alumni_mails where sender_user_id=$1)`, [id]).catch(() => {});
+    await dbQuery(`delete from public.alumni_mails where sender_user_id=$1`, [id]).catch(() => {});
+    await dbQuery(`delete from public.alumni_mail_accounts where user_id=$1`, [id]).catch(() => {});
+    await dbQuery(`delete from public.alumni_profiles where user_id=$1`, [id]).catch(() => {});
+    await dbQuery(`delete from public.alumni_verifications where user_id=$1 or phone=(select phone from public.app_users where id=$1)`, [id]).catch(() => {});
+    await dbQuery(`delete from public.app_users where id=$1`, [id]).catch(() => {});
+    await audit(req, 'user_delete', 'app_user', id, {});
+    return ok(res, { message: '用户已删除' });
+  } catch (e) {
+    return fail(res, 500, '删除用户失败', { error: e.message });
+  }
+});
+
 app.post('/api/admin/users/:id/reset-password', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
