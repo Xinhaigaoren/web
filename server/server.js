@@ -4855,10 +4855,14 @@ app.post('/api/mail/send', requireAuth, requireAlumni, async (req, res) => {
   }
 });
 
-// 个人通讯录 + 校友联系人
+// 个人通讯录 + 校友联系人（按用户缓存 30s，避免免费库多轮查询慢）
+const contactsCache = new Map();
+const CONTACTS_TTL = 30000;
 app.get('/api/mail/contacts', requireAuth, requireAlumni, async (req, res) => {
   try {
     const me = req.user.user_id;
+    const cc = contactsCache.get(String(me));
+    if (cc && Date.now() - cc.at < CONTACTS_TTL) return ok(res, cc.data);
     const my = await dbQuery(
       `select * from public.alumni_contacts where owner_user_id=$1 order by group_name, name`,
       [me]
@@ -4950,11 +4954,13 @@ app.get('/api/mail/contacts', requireAuth, requireAlumni, async (req, res) => {
       if (!groups[g]) groups[g] = [];
       groups[g].push({ id: c.id, name: c.name, email: c.email, phone: c.phone, note: c.note });
     }
-    return ok(res, {
+    const result = {
       personal: my.rows,
       groups,
       alumni: alumniList
-    });
+    };
+    contactsCache.set(String(me), { at: Date.now(), data: result });
+    return ok(res, result);
   } catch (e) {
     return fail(res, 500, '获取通讯录失败', { error: e.message });
   }
