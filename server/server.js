@@ -884,6 +884,8 @@ app.patch(['/api/applications/:id/status', '/api/admin/applications/:id/status',
           status='active', updated_at=now()`,
         [profileUserId, v.id, v.name, v.phone, v.province, v.city, v.county, v.current_province, v.current_city, v.current_county, v.graduation_year, v.class_name, v.homeroom_teacher, v.enrollment_year]
       );
+      // 实时互通：审批通过即生成校友邮箱账户，该校友立即出现在所有校友的通讯录（含邮箱）
+      await getOrCreateMailAccount(profileUserId).catch(() => {});
     } else if (status === 'rejected') {
       // 拒绝认证：停止校友权限并删除个人信息（档案），账号保留可登录查看认证状态
       const v = updated.rows[0];
