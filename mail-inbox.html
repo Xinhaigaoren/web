@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>收件箱 - 校友电子邮件系统 - 新海高人</title>
-<link rel="icon" href="assets/favicon.png">
+<title>收件箱 - 电子邮件系统</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: clamp(12px, 1vw, 18px); }
@@ -12,115 +11,58 @@
         font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
         background-color: #f4f4f4;
         min-height: 100vh;
+        display: flex;
+        flex-direction: column;
     }
-
-    /* ===== 顶部导航 ===== */
     .topbar {
         width: 100%; height: 5.5rem;
         background-color: #94070A;
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 0 3rem;
+        display: flex; align-items: center;
+        padding: 0 2rem; gap: 0.5rem;
     }
-    .topbar-left { display: flex; align-items: center; gap: 1rem; white-space: nowrap; }
-    .topbar-left img { height: 3.2rem; width: 3.2rem; border-radius: 50%; object-fit: contain; background-color: rgba(255,255,255,0.08); }
+    .topbar-left { display: flex; align-items: center; gap: 0.8rem; white-space: nowrap; }
+    .topbar-left img { height: 3rem; width: 3rem; border-radius: 50%; object-fit: contain; background-color: rgba(255,255,255,0.08); }
     .topbar-left .logo-text { display: flex; flex-direction: column; color: #fff; }
-    .topbar-left .logo-text .zh { font-size: 1.1rem; line-height: 1.3; }
-    .topbar-left .logo-text .en { font-size: 0.75rem; opacity: 0.85; line-height: 1.3; }
-    .topbar-left .system-name-big { font-size: 2rem; color: #fff; font-weight: normal; letter-spacing: 0.05rem; margin-left: 1.5rem; }
-    .topbar-user { display: flex; align-items: center; gap: 0.6rem; color: #fff; font-size: 0.9rem; }
-    .topbar-user .user-avatar {
-        width: 2.2rem; height: 2.2rem; border-radius: 50%;
-        background-color: #fff; display: flex; align-items: center; justify-content: center;
-        color: #94070A; font-weight: bold; font-size: 0.95rem;
-    }
-
-    /* ===== 主体布局 ===== */
-    .layout { display: flex; max-width: 95rem; margin: 0 auto; padding: 1.5rem 2rem; gap: 1.5rem; align-items: flex-start; }
-    .sidebar {
-        width: 12.5rem; flex-shrink: 0;
-        background-color: #fff; border-radius: 0.5rem;
-        border: 1px solid #e8e8e8; padding: 1.2rem 0.8rem;
-        position: sticky; top: 1.5rem;
-    }
-    .sidebar .compose-btn {
-        display: block; width: 100%; text-align: center;
-        background: linear-gradient(135deg, #94070A 0%, #c41e22 100%);
-        color: #fff; text-decoration: none; border-radius: 0.35rem;
-        padding: 0.75rem 0; font-size: 1rem; letter-spacing: 0.1rem;
-        margin-bottom: 1.2rem;
-    }
-    .sidebar .compose-btn:hover { opacity: 0.9; }
-    .sidebar .nav-item {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 0.65rem 0.9rem; border-radius: 0.35rem;
-        color: #333; text-decoration: none; font-size: 0.95rem;
-        margin-bottom: 0.25rem; cursor: pointer;
-    }
-    .sidebar .nav-item:hover { background-color: #fbe5e5; color: #94070A; }
-    .sidebar .nav-item.active { background-color: #94070A; color: #fff; }
-    .sidebar .nav-item .badge {
-        background-color: #e00; color: #fff; font-size: 0.7rem;
-        border-radius: 0.8rem; padding: 0.05rem 0.45rem; min-width: 1.2rem; text-align: center;
-    }
-    .sidebar .nav-item.active .badge { background-color: #fff; color: #94070A; }
-    .sidebar .side-title { font-size: 0.8rem; color: #999; padding: 0.6rem 0.9rem 0.3rem; }
-    .sidebar .back-link {
-        display: block; margin-top: 1rem; padding: 0.6rem 0.9rem;
-        font-size: 0.85rem; color: #666; text-decoration: none;
-        border-top: 1px solid #eee;
-    }
-    .sidebar .back-link:hover { color: #94070A; }
-
-    .main { flex: 1; min-width: 0; background-color: #fff; border-radius: 0.5rem; border: 1px solid #e8e8e8; }
-
-    /* ===== 收件箱 ===== */
-    .mail-header { display: flex; align-items: center; gap: 1rem; padding: 1.1rem 1.5rem; border-bottom: 1px solid #e8e8e8; }
-    .mail-header h2 { font-size: 1.2rem; font-weight: normal; color: #333; }
-    .mail-header .tool { background: none; border: none; color: #94070A; font-size: 0.9rem; cursor: pointer; font-family: inherit; padding: 0.3rem 0.5rem; border-radius: 0.3rem; }
-    .mail-header .tool:hover { background-color: #fbe5e5; }
-    .mail-header .spacer { flex: 1; }
-
-    .mail-list { width: 100%; }
-    .mail-row {
-        display: grid; grid-template-columns: 2.4rem 11rem 1fr 8rem;
-        align-items: center; gap: 0.6rem;
-        padding: 0.8rem 1.5rem; border-bottom: 1px solid #f0f0f0;
-        text-decoration: none; color: #333; cursor: pointer;
-    }
-    .mail-row:hover { background-color: #faf5f5; }
-    .mail-row.unread { background-color: #fdf4f4; }
-    .mail-row .check { width: 1.1rem; height: 1.1rem; accent-color: #94070A; cursor: pointer; }
-    .mail-row .from { font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .mail-row.unread .from { font-weight: bold; }
-    .mail-row .subject-cell { overflow: hidden; }
-    .mail-row .subject-line { font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .mail-row.unread .subject-line { font-weight: bold; }
-    .mail-row .subject-line .dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; background-color: #e00; margin-right: 0.5rem; vertical-align: middle; }
-    .mail-row .preview { font-size: 0.8rem; color: #999; margin-top: 0.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .mail-row .time { font-size: 0.85rem; color: #888; text-align: right; white-space: nowrap; }
-
-    .empty { padding: 4rem 2rem; text-align: center; color: #999; font-size: 1rem; }
-
-    /* ===== 响应式 ===== */
-    @media (max-width: 900px) {
-        .topbar { padding: 0 1.5rem; }
-        .layout { flex-direction: column; padding: 1rem; }
-        .sidebar { width: 100%; position: static; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
-        .sidebar .compose-btn { width: auto; padding: 0.6rem 1.2rem; margin-bottom: 0; }
-        .sidebar .nav-item { margin-bottom: 0; padding: 0.5rem 0.8rem; }
-        .sidebar .side-title, .sidebar .back-link { display: none; }
-        .mail-row { grid-template-columns: 2rem 9rem 1fr 6rem; padding: 0.7rem 1rem; }
-    }
-    @media (max-width: 600px) {
-        .topbar-left .system-name-big { display: none; }
-        .mail-row { grid-template-columns: 2rem 1fr 5.5rem; }
-        .mail-row .from { display: none; }
-        .mail-row .time { font-size: 0.75rem; }
-    }
+    .topbar-left .logo-text .zh { font-size: 1rem; line-height: 1.3; }
+    .topbar-left .logo-text .en { font-size: 0.7rem; opacity: 0.85; line-height: 1.3; }
+    .topbar-left .system-name-big { font-size: 1.8rem; color: #fff; font-weight: normal; letter-spacing: 0.05rem; margin-left: 1rem; }
+    .topbar-spacer { flex: 1; }
+    .topbar-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; }
+    .topbar-tools { display: flex; align-items: center; gap: 1.2rem; color: #fff; font-size: 0.9rem; white-space: nowrap; }
+    .topbar-tools a { color: #fff; text-decoration: none; display: flex; align-items: center; gap: 0.3rem; opacity: 0.9; transition: opacity 0.3s; }
+    .topbar-tools a:hover { opacity: 1; }
+    .topbar-menu { display: flex; align-items: center; gap: 1.8rem; font-size: 1.05rem; color: #fff; white-space: nowrap; }
+    .topbar-menu a { color: #fff; text-decoration: none; position: relative; padding-bottom: 0.3rem; border-bottom: 1px solid transparent; opacity: 0.92; transition: border-color 0.3s, opacity 0.3s; }
+    .topbar-menu a:hover { border-bottom-color: #fff; opacity: 1; }
+    .topbar-menu a.active { opacity: 1; }
+    .main-layout { flex: 1; display: flex; background-color: #ffffff; }
+    .sidebar { width: 12rem; background-color: #f5f5f5; border-right: 1px solid #e0e0e0; padding: 1rem 0; display: flex; flex-direction: column; }
+    .sidebar-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1rem; font-size: 0.9rem; color: #333; text-decoration: none; border-left: 3px solid transparent; transition: all 0.3s; }
+    .sidebar-btn:hover { background-color: #ebebeb; color: #94070A; }
+    .sidebar-btn.active { background-color: #ffffff; border-left-color: #94070A; color: #94070A; font-weight: bold; }
+    .sidebar-btn svg { width: 1rem; height: 1rem; fill: currentColor; }
+    .sidebar-btn .badge { margin-left: auto; background-color: #94070A; color: #fff; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 0.6rem; min-width: 1rem; height: 1rem; display: inline-block; }
+    .content-area { flex: 1; padding: 1rem 1.5rem; overflow-y: auto; }
+    .toolbar { display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.8rem; border-bottom: 1px solid #e8e8e8; margin-bottom: 1rem; flex-wrap: wrap; }
+    .toolbar button { padding: 0.4rem 0.8rem; font-size: 0.85rem; border: 1px solid #d0d0d0; border-radius: 0.2rem; background-color: #fff; color: #333; cursor: pointer; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; transition: all 0.3s; }
+    .toolbar button:hover { border-color: #94070A; color: #94070A; }
+    .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: #666; }
+    .mail-table { width: 100%; border-collapse: collapse; }
+    .mail-table th { text-align: left; padding: 0.6rem 0.8rem; font-size: 0.85rem; color: #666; font-weight: normal; border-bottom: 1px solid #e0e0e0; }
+    .mail-table td { padding: 0.8rem; font-size: 0.9rem; border-bottom: 1px solid #f0f0f0; vertical-align: middle; color: #333; }
+    .mail-table tr.mail-row { cursor: pointer; }
+    .mail-table tr.mail-row:hover { background-color: #fafafa; }
+    .mail-table tr.unread td { font-weight: bold; }
+    .mail-table .from { width: 14rem; }
+    .mail-table .subject { color: #333; }
+    .mail-table .preview { color: #999; font-weight: normal; margin-left: 0.4rem; font-size: 0.8rem; }
+    .mail-table .date { text-align: right; color: #999; font-size: 0.8rem; width: 6rem; }
+    .mail-table .checkbox { width: 2rem; }
+    .empty-tip { text-align: center; color: #999; padding: 3rem 0; font-size: 0.95rem; }
+    .toast { position: fixed; top: 6rem; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 0.6rem 1.4rem; border-radius: 0.3rem; font-size: 0.9rem; z-index: 99; display: none; }
 </style>
 </head>
 <body>
-
 <header class="topbar">
     <div class="topbar-left">
         <img src="assets/haigao-logo.jpg" alt="Logo">
@@ -128,111 +70,106 @@
             <span class="zh">海林市高级中学校友（新海高人）</span>
             <span class="en">Hailin Senior High School Alumni Association</span>
         </div>
-        <span class="system-name-big">校友电子邮件系统</span>
+        <span class="system-name-big">电子邮件系统</span>
     </div>
-    <div class="topbar-user">
-        <div class="user-avatar" id="userAvatar">—</div>
-        <span id="userName">—</span>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-right">
+        <div class="topbar-tools">
+            <a href="user-electronic.html">内网系统</a>
+            <a href="index.html">校友官网</a>
+        </div>
+        <nav class="topbar-menu">
+            <a href="mail-inbox.html" class="active">收件箱</a>
+            <a href="mail-sent.html">已发送</a>
+            <a href="mail-compose.html">写信</a>
+            <a href="mail-contact.html">其他文件夹</a>
+        </nav>
     </div>
 </header>
-
-<div class="layout">
+<div class="main-layout">
     <aside class="sidebar">
-        <a href="mail-compose.html" class="compose-btn">写信</a>
-        <a href="mail-inbox.html" class="nav-item active">收件箱<span class="badge" id="inboxBadge" style="display:none">0</span></a>
-        <a href="mail-sent.html" class="nav-item">已发送</a>
-        <div class="side-title">通讯录</div>
-        <a href="mail-contact.html" class="nav-item">个人通讯录</a>
-        <a href="member.html" class="back-link">← 返回内网</a>
+        <a href="mail-compose.html" class="sidebar-btn"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>写信</a>
+        <a href="mail-inbox.html" class="sidebar-btn active inbox"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/></svg>收件箱<span class="badge" id="inboxBadge" style="display:none;"></span></a>
+        <a href="mail-sent.html" class="sidebar-btn sent"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>已发送</a>
+        <a href="mail-contact.html" class="sidebar-btn"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>联系人</a>
+        <a href="mail-contact.html" class="sidebar-btn">其他文件夹</a>
     </aside>
-
-    <div class="main">
-        <div class="mail-header">
-            <h2>收件箱</h2>
-            <button class="tool" onclick="loadInbox()">刷新</button>
-            <span class="spacer"></span>
-            <button class="tool" onclick="markSelectedRead()">标记已读</button>
-            <button class="tool" onclick="deleteSelected()">删除</button>
+    <section class="content-area">
+        <div class="toolbar">
+            <button id="refreshBtn">刷新</button>
+            <button id="markReadBtn">标记为已读</button>
+            <button id="deleteBtn">删除</button>
+            <div class="toolbar-right"><span id="pageInfo">共 0 封</span></div>
         </div>
-        <div id="mailList"></div>
-    </div>
+        <table class="mail-table">
+            <thead><tr><th class="checkbox"><input type="checkbox" id="checkAll"></th><th class="from">发件人</th><th class="subject">主题</th><th class="date">日期</th></tr></thead>
+            <tbody id="mailBody"></tbody>
+        </table>
+        <div class="empty-tip" id="emptyTip" style="display:none;">收件箱为空，暂无邮件</div>
+    </section>
 </div>
-
+<div class="toast" id="toast"></div>
 <script>
-const API_BASE_URL = 'https://hailin-alumni-api.onrender.com';
-const token = localStorage.getItem('alumniToken');
-if (!token) { location.href = 'login.html?redirect=mail-inbox.html'; }
-
-function authHeaders() {
-    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('alumniToken') || '') };
-}
-function fmtTime(iso) {
-    if (!iso) return '';
-    const d = new Date(iso);
-    const pad = n => String(n).padStart(2, '0');
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-}
-function applyUser() {
-    try {
-        const u = JSON.parse(localStorage.getItem('alumniUser') || '{}');
-        if (u.name) { document.getElementById('userAvatar').textContent = u.name.slice(-1); document.getElementById('userName').textContent = u.name; }
-    } catch (e) {}
-}
-applyUser();
-
-async function loadInbox() {
-    const listEl = document.getElementById('mailList');
-    try {
-        const resp = await fetch(API_BASE_URL + '/api/mail/inbox', { headers: authHeaders() });
-        const data = await resp.json();
-        if (!resp.ok) { listEl.innerHTML = '<div class="empty">' + (data.message || '加载失败') + '</div>'; return; }
-        const mails = data.mails || [];
-        const badge = document.getElementById('inboxBadge');
-        if (data.unread_count > 0) { badge.style.display = 'inline'; badge.textContent = data.unread_count; }
-        else { badge.style.display = 'none'; }
-        if (!mails.length) { listEl.innerHTML = '<div class="empty">收件箱为空，暂无邮件</div>'; return; }
-        let html = '';
-        for (const m of mails) {
-            const cls = m.is_read ? '' : 'unread';
-            const subjectHtml = (m.is_read ? '' : '<span class="dot"></span>') + (m.subject || '(无主题)');
-            const preview = String(m.body || '').replace(/<[^>]*>/g, '').slice(0, 60);
-            html += '<a class="mail-row ' + cls + '" href="mail-detail.html?id=' + m.id + '">'
-                + '<input type="checkbox" class="check" data-id="' + m.id + '" onclick="event.stopPropagation()">'
-                + '<div class="from">' + (m.from || '未知') + '</div>'
-                + '<div class="subject-cell"><div class="subject-line">' + subjectHtml + '</div>'
-                + (preview ? '<div class="preview">' + preview + '</div>' : '') + '</div>'
-                + '<div class="time">' + fmtTime(m.sent_at) + '</div></a>';
-        }
-        listEl.innerHTML = html;
-    } catch (e) {
-        listEl.innerHTML = '<div class="empty">网络异常：' + e.message + '</div>';
+(function(){
+    var API = 'https://hailin-alumni-api.onrender.com';
+    function getToken(){ return localStorage.getItem('alumniToken') || ''; }
+    if (!getToken()) { location.href = 'login.html?redirect=mail-inbox.html'; return; }
+    var checkedIds = new Set();
+    var mailBody = document.getElementById('mailBody');
+    var emptyTip = document.getElementById('emptyTip');
+    var toast = document.getElementById('toast');
+    function showToast(t){ toast.textContent = t; toast.style.display = 'block'; clearTimeout(showToast._t); showToast._t = setTimeout(function(){ toast.style.display = 'none'; }, 2200); }
+    function fmtDate(iso){ if (!iso) return ''; var d = new Date(iso); var p = function(n){ return (n < 10 ? '0' : '') + n; }; return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+    function render(mails){
+        checkedIds.clear();
+        mailBody.innerHTML = '';
+        emptyTip.style.display = mails.length ? 'none' : 'block';
+        document.getElementById('pageInfo').textContent = '共 ' + mails.length + ' 封';
+        var unread = mails.filter(function(m){ return !m.is_read; }).length;
+        var badge = document.getElementById('inboxBadge');
+        if (unread > 0) { badge.textContent = unread; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; }
+        mails.forEach(function(m){
+            var tr = document.createElement('tr');
+            tr.className = 'mail-row' + (m.is_read ? '' : ' unread');
+            tr.dataset.id = m.id;
+            var cb = document.createElement('input'); cb.type = 'checkbox';
+            cb.addEventListener('click', function(e){ e.stopPropagation(); if (cb.checked) checkedIds.add(m.id); else checkedIds.delete(m.id); });
+            var tdCb = document.createElement('td'); tdCb.className = 'checkbox'; tdCb.appendChild(cb);
+            var tdF = document.createElement('td'); tdF.className = 'from'; tdF.textContent = m.from || '';
+            var tdS = document.createElement('td'); tdS.className = 'subject'; tdS.textContent = m.subject || '（无主题）';
+            var span = document.createElement('span'); span.className = 'preview'; span.textContent = m.body ? (String(m.body).slice(0,40)) : '';
+            tdS.appendChild(span);
+            var tdD = document.createElement('td'); tdD.className = 'date'; tdD.textContent = fmtDate(m.sent_at);
+            tr.appendChild(tdCb); tr.appendChild(tdF); tr.appendChild(tdS); tr.appendChild(tdD);
+            tr.addEventListener('click', function(){ location.href = 'mail-detail.html?id=' + m.id; });
+            mailBody.appendChild(tr);
+        });
     }
-}
-
-function selectedIds() {
-    return Array.from(document.querySelectorAll('.check:checked')).map(el => Number(el.dataset.id));
-}
-
-async function markSelectedRead() {
-    const ids = selectedIds();
-    if (!ids.length) { alert('请先勾选要标记的邮件'); return; }
-    for (const id of ids) {
-        try { await fetch(API_BASE_URL + '/api/mail/' + id, { headers: authHeaders() }); } catch (e) {}
+    function load(){
+        fetch(API + '/api/mail/inbox', { headers: { 'Authorization': 'Bearer ' + getToken() } })
+            .then(function(r){ return r.json(); })
+            .then(function(j){ if (!j.ok) { showToast(j.message || '加载失败'); return; } render(j.mails || []); })
+            .catch(function(){ showToast('网络异常，请稍后重试'); });
     }
-    loadInbox();
-}
-
-async function deleteSelected() {
-    const ids = selectedIds();
-    if (!ids.length) { alert('请先勾选要删除的邮件'); return; }
-    if (!confirm('确定删除选中的 ' + ids.length + ' 封邮件吗？')) return;
-    for (const id of ids) {
-        try { await fetch(API_BASE_URL + '/api/mail/' + id + '/delete', { method: 'DELETE', headers: authHeaders() }); } catch (e) {}
-    }
-    loadInbox();
-}
-
-loadInbox();
+    document.getElementById('refreshBtn').addEventListener('click', load);
+    document.getElementById('checkAll').addEventListener('change', function(){
+        var all = document.querySelectorAll('#mailBody input[type=checkbox]');
+        var self = this;
+        all.forEach(function(cb){ cb.checked = self.checked; var id = Number(cb.closest('tr').dataset.id); if (self.checked) checkedIds.add(id); else checkedIds.delete(id); });
+    });
+    document.getElementById('deleteBtn').addEventListener('click', function(){
+        if (!checkedIds.size) { showToast('请先勾选要删除的邮件'); return; }
+        var arr = Array.from(checkedIds);
+        Promise.all(arr.map(function(id){ return fetch(API + '/api/mail/' + id + '/delete', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getToken() } }); })).then(function(){ showToast('已删除 ' + arr.length + ' 封邮件'); load(); });
+    });
+    document.getElementById('markReadBtn').addEventListener('click', function(){
+        if (!checkedIds.size) { showToast('请先勾选邮件'); return; }
+        var arr = Array.from(checkedIds); var i = 0;
+        function next(){ if (i >= arr.length) { showToast('已标记为已读'); load(); return; } fetch(API + '/api/mail/' + arr[i], { headers: { 'Authorization': 'Bearer ' + getToken() } }).then(function(){ i++; next(); }); }
+        next();
+    });
+    load();
+})();
 </script>
 </body>
 </html>
