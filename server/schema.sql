@@ -277,3 +277,55 @@ create table if not exists public.site_stats (
 );
 insert into public.site_stats (stat_key, stat_value) values ('site_visits', 0)
   on conflict (stat_key) do nothing;
+
+-- ---------- 校友电子邮件系统 ----------
+-- 校友邮箱账号（认证校友自动生成：姓名首拼+毕业年份@xinhaigaoren.org.cn）
+create table if not exists public.alumni_mail_accounts (
+  user_id bigint primary key references public.app_users(id) on delete cascade,
+  mail_address text unique not null,
+  display_name text not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+-- 邮件主记录
+create table if not exists public.alumni_mails (
+  id bigserial primary key,
+  sender_user_id bigint not null references public.app_users(id) on delete cascade,
+  sender_address text not null,
+  sender_name text not null,
+  subject text default '',
+  body text default '',
+  priority text default 'normal',
+  read_receipt boolean default false,
+  sent_at timestamptz default now(),
+  created_at timestamptz default now()
+);
+-- 邮件收件人（含阅读状态）
+create table if not exists public.alumni_mail_recipients (
+  id bigserial primary key,
+  mail_id bigint not null references public.alumni_mails(id) on delete cascade,
+  user_id bigint references public.app_users(id) on delete set null,
+  address text not null,
+  name text,
+  kind text default 'to',
+  is_read boolean default false,
+  read_at timestamptz,
+  unique (mail_id, address, kind)
+);
+-- 个人通讯录
+create table if not exists public.alumni_contacts (
+  id bigserial primary key,
+  owner_user_id bigint not null references public.app_users(id) on delete cascade,
+  name text not null,
+  email text,
+  phone text,
+  group_name text default '未分组联系人',
+  note text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+create index if not exists idx_mail_accounts_user on public.alumni_mail_accounts(user_id);
+create index if not exists idx_mails_sender on public.alumni_mails(sender_user_id, sent_at desc);
+create index if not exists idx_mail_recipients_mail on public.alumni_mail_recipients(mail_id);
+create index if not exists idx_mail_recipients_user on public.alumni_mail_recipients(user_id, is_read);
+create index if not exists idx_contacts_owner on public.alumni_contacts(owner_user_id);
