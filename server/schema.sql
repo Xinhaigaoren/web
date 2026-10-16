@@ -329,3 +329,17 @@ create index if not exists idx_mails_sender on public.alumni_mails(sender_user_i
 create index if not exists idx_mail_recipients_mail on public.alumni_mail_recipients(mail_id);
 create index if not exists idx_mail_recipients_user on public.alumni_mail_recipients(user_id, is_read);
 create index if not exists idx_contacts_owner on public.alumni_contacts(owner_user_id);
+-- 邮件草稿
+create table if not exists public.alumni_mail_drafts (
+  id bigserial primary key,
+  owner_user_id bigint not null references public.app_users(id) on delete cascade,
+  to_list text default '',
+  cc_list text default '',
+  subject text default '',
+  body text default '',
+  priority text default 'normal',
+  read_receipt boolean default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+create index if not exists idx_mail_drafts_owner on public.alumni_mail_drafts(owner_user_id, updated_at desc);

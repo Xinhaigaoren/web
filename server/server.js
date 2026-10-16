@@ -4718,6 +4718,99 @@ app.get('/api/mail/unread-count', requireAuth, requireAlumni, async (req, res) =
   }
 });
 
+// ---------- 草稿箱 ----------
+function safeParseJson(s) { try { const v = JSON.parse(s); return Array.isArray(v) ? v : []; } catch (_) { return []; } }
+
+// 保存草稿（draft_id 存在时更新，否则新建）
+app.post('/api/mail/drafts', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const uid = req.user.user_id;
+    const toList = JSON.stringify(Array.isArray(b.to) ? b.to : []);
+    const ccList = JSON.stringify(Array.isArray(b.cc) ? b.cc : []);
+    const subject = String(b.subject || '').trim();
+    const body = String(b.body || '');
+    const priority = b.priority === 'urgent' ? 'urgent' : 'normal';
+    const readReceipt = b.read_receipt !== false;
+    const draftId = b.draft_id ? Number(b.draft_id) : null;
+    if (draftId) {
+      await dbQuery(
+        `update public.alumni_mail_drafts
+         set to_list=$1, cc_list=$2, subject=$3, body=$4, priority=$5, read_receipt=$6, updated_at=now()
+         where id=$7 and owner_user_id=$8`,
+        [toList, ccList, subject, body, priority, readReceipt, draftId, uid]
+      );
+      return ok(res, { draft_id: draftId });
+    }
+    const ins = await dbQuery(
+      `insert into public.alumni_mail_drafts (owner_user_id, to_list, cc_list, subject, body, priority, read_receipt)
+       values ($1,$2,$3,$4,$5,$6,$7) returning id`,
+      [uid, toList, ccList, subject, body, priority, readReceipt]
+    );
+    return ok(res, { draft_id: ins.rows[0].id });
+  } catch (e) { return fail(res, 500, '保存草稿失败'); }
+});
+
+// 草稿列表
+app.get('/api/mail/drafts', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const uid = req.user.user_id;
+    const r = await dbQuery(
+      `select id, to_list, cc_list, subject, body, priority, read_receipt, updated_at
+       from public.alumni_mail_drafts
+       where owner_user_id=$1
+       order by updated_at desc`,
+      [uid]
+    );
+    const items = (r.rows || []).map(x => ({
+      id: x.id,
+      to: safeParseJson(x.to_list) || [],
+      cc: safeParseJson(x.cc_list) || [],
+      subject: x.subject || '',
+      body: x.body || '',
+      priority: x.priority || 'normal',
+      read_receipt: !!x.read_receipt,
+      updated_at: x.updated_at
+    }));
+    return ok(res, { drafts: items });
+  } catch (e) { return fail(res, 500, '读取草稿失败'); }
+});
+
+// 单条草稿
+app.get('/api/mail/drafts/:id', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const uid = req.user.user_id;
+    const id = Number(req.params.id);
+    const r = await dbQuery(
+      `select id, to_list, cc_list, subject, body, priority, read_receipt, updated_at
+       from public.alumni_mail_drafts where id=$1 and owner_user_id=$2`,
+      [id, uid]
+    );
+    if (!r.rows[0]) return fail(res, 404, '草稿不存在');
+    const x = r.rows[0];
+    return ok(res, { draft: {
+      id: x.id,
+      to: safeParseJson(x.to_list) || [],
+      cc: safeParseJson(x.cc_list) || [],
+      subject: x.subject || '',
+      body: x.body || '',
+      priority: x.priority || 'normal',
+      read_receipt: !!x.read_receipt,
+      updated_at: x.updated_at
+    }});
+  } catch (e) { return fail(res, 500, '读取草稿失败'); }
+});
+
+// 删除草稿
+app.delete('/api/mail/drafts/:id', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const uid = req.user.user_id;
+    const id = Number(req.params.id);
+    await dbQuery(`delete from public.alumni_mail_drafts where id=$1 and owner_user_id=$2`, [id, uid]);
+    return ok(res, { deleted: true });
+  } catch (e) { return fail(res, 500, '删除草稿失败'); }
+});
+
 // 发信
 app.post('/api/mail/send', requireAuth, requireAlumni, async (req, res) => {
   try {
@@ -4786,29 +4879,67 @@ app.get('/api/mail/contacts', requireAuth, requireAlumni, async (req, res) => {
        order by v.name`,
       [me, myPhone]
     );
+    // 批量：未绑定账号的按同名匹配已认证校友账号（排除自己）
+    const rows = alumni.rows;
+    const needMatch = rows.filter(x => !x.user_id).map(x => (x.name || '').trim()).filter(Boolean);
+    const nameToUid = {};
+    if (needMatch.length) {
+      try {
+        const mr = await dbQuery(
+          `select u.id, u.display_name from public.app_users u
+           where u.role='alumni' and u.id <> $1 and lower(u.display_name) = any($2::text[])
+           order by u.id`,
+          [me, needMatch.map(n => n.toLowerCase())]
+        );
+        for (const r of mr.rows) { if (!(r.display_name in nameToUid)) nameToUid[r.display_name] = r.id; }
+      } catch (_) {}
+    }
+    // 批量：缺失邮箱的账号一次性补建
+    const needAcct = [];
+    for (const x of rows) {
+      if (!x.user_id && nameToUid[x.name]) x.user_id = nameToUid[x.name];
+      if (x.user_id && !x.mail_address) needAcct.push(x.user_id);
+    }
+    if (needAcct.length) {
+      try {
+        const ur = await dbQuery(
+          `select u.id, u.display_name, p.graduation_year, p.enrollment_year, u.created_at
+           from public.app_users u left join public.alumni_profiles p on p.user_id=u.id
+           where u.id = any($1::bigint[])`,
+          [needAcct]
+        );
+        const usedRows = await dbQuery(`select lower(mail_address) as a from public.alumni_mail_accounts`);
+        const used = new Set(usedRows.rows.map(r => r.a));
+        for (const row of ur.rows) {
+          const initials = nameInitials(row.display_name) || 'xy';
+          let year = String(row.graduation_year || row.enrollment_year || '').trim().replace(/[^\d]/g, '');
+          if (year.length >= 4) year = year.slice(-2);
+          if (!year) year = String(new Date(row.created_at || Date.now()).getFullYear()).slice(-2);
+          let base = `${initials}${year}`;
+          let address = `${base}@xinhaigaoren.org.cn`;
+          let idx = 1;
+          while (used.has(address.toLowerCase())) { idx += 1; address = `${base}${idx}@xinhaigaoren.org.cn`; }
+          used.add(address.toLowerCase());
+          await dbQuery(
+            `insert into public.alumni_mail_accounts (user_id, mail_address, display_name)
+             values ($1,$2,$3) on conflict (user_id) do nothing`,
+            [row.id, address, row.display_name]
+          ).catch(() => {});
+        }
+        const re = await dbQuery(
+          `select user_id, mail_address from public.alumni_mail_accounts where user_id = any($1::bigint[])`,
+          [needAcct]
+        );
+        const addrByUid = {};
+        re.rows.forEach(r => { addrByUid[String(r.user_id)] = r.mail_address; });
+        for (const x of rows) { if (x.user_id && addrByUid[String(x.user_id)]) x.mail_address = addrByUid[String(x.user_id)]; }
+      } catch (_) {}
+    }
     const alumniList = [];
-    for (const x of alumni.rows) {
-      let uid = x.user_id;
-      let address = x.mail_address;
-      const name = x.name || '校友';
-      // 认证记录未绑定账号时，按同名在已认证校友账号中匹配（排除自己）
-      if (!uid) {
-        try {
-          const m = await dbQuery(
-            `select u.id from public.app_users u
-             where u.role='alumni' and u.id <> $1 and lower(u.display_name)=lower($2)
-             limit 1`,
-            [me, name]
-          );
-          if (m.rows[0]) uid = m.rows[0].id;
-        } catch (_) {}
-      }
-      if (uid && !address) {
-        try { address = (await getOrCreateMailAccount(uid)).mail_address; } catch (_) {}
-      }
+    for (const x of rows) {
       alumniList.push({
-        name,
-        email: address || '',
+        name: x.name || '校友',
+        email: x.mail_address || '',
         city: x.current_city || '',
         graduation_year: x.graduation_year || ''
       });
