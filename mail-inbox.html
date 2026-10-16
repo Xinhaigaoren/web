@@ -306,7 +306,7 @@
         checkedIds.clear();
         mailBody.innerHTML = '';
         emptyTip.textContent = '收件箱为空，暂无邮件';
-mails.length ? 'none' : 'block';
+        emptyTip.style.display = mails.length ? 'none' : 'block';
         document.getElementById('pageInfo').textContent = '共 ' + mails.length + ' 封';
         var unread = mails.filter(function(m){ return !m.is_read; }).length;
         var badge = document.getElementById('inboxBadge');
