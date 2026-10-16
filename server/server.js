@@ -4770,36 +4770,33 @@ app.get('/api/mail/contacts', requireAuth, requireAlumni, async (req, res) => {
       `select * from public.alumni_contacts where owner_user_id=$1 order by group_name, name`,
       [me]
     );
-    // 所有已审批校友（以管理员审批数据 alumni_verifications approved 为准）
+    // 以管理员审批数据（alumni_verifications approved）为准，不合并同名，排除自己
     const alumni = await dbQuery(
       `select v.id as ver_id, v.user_id, v.name, v.graduation_year, v.current_city,
               a.mail_address
        from public.alumni_verifications v
        left join public.alumni_mail_accounts a on a.user_id = v.user_id
-       where v.status = 'approved'
+       where v.status = 'approved' and (v.user_id is null or v.user_id <> $1)
        order by v.name`,
-      []
+      [me]
     );
     const alumniList = [];
-    const seenUid = new Set();
     for (const x of alumni.rows) {
       let uid = x.user_id;
       let address = x.mail_address;
       const name = x.name || '校友';
-      // 认证记录未绑定账号时，按同名在已认证校友账号中匹配
+      // 认证记录未绑定账号时，按同名在已认证校友账号中匹配（排除自己）
       if (!uid) {
         try {
           const m = await dbQuery(
             `select u.id from public.app_users u
-             where u.role='alumni' and lower(u.display_name)=lower($1)
+             where u.role='alumni' and u.id <> $1 and lower(u.display_name)=lower($2)
              limit 1`,
-            [name]
+            [me, name]
           );
           if (m.rows[0]) uid = m.rows[0].id;
         } catch (_) {}
       }
-      if (uid && seenUid.has(String(uid))) continue; // 同一账号只出现一次
-      if (uid) seenUid.add(String(uid));
       if (uid && !address) {
         try { address = (await getOrCreateMailAccount(uid)).mail_address; } catch (_) {}
       }
