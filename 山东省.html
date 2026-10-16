@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>山东地区校友 - 海林市高级中学校友（新海高人）</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 16px; }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+    }
+
+    /* ==========================================
+       顶部导航栏
+       ========================================== */
+    .topbar {
+        width: 100%;
+        height: 4.5rem;
+        background-color: #94070A;
+        display: flex;
+        align-items: center;
+        padding: 0 2rem;
+        gap: 0.5rem;
+    }
+    .topbar-left {
+        display: flex; align-items: center; gap: 0.8rem;
+        white-space: nowrap;
+    }
+    .topbar-left img {
+        height: 2.6rem; width: 2.6rem;
+        border-radius: 50%; object-fit: contain;
+        background-color: rgba(255,255,255,0.08);
+    }
+    .topbar-left .logo-text { display: flex; flex-direction: column; color: #fff; }
+    .topbar-left .logo-text .zh { font-size: 1rem; line-height: 1.3; }
+    .topbar-left .logo-text .en { font-size: 0.7rem; opacity: 0.85; line-height: 1.3; }
+    .topbar-left .system-name-big {
+        font-size: 1.3rem; color: #fff;
+        font-weight: normal; letter-spacing: 0.05rem;
+        margin-left: 1rem;
+    }
+    .topbar-spacer { flex: 1; }
+    .topbar-right {
+        display: flex; flex-direction: column;
+        align-items: flex-end; gap: 0.2rem;
+    }
+    .topbar-tools {
+        display: flex; align-items: center; gap: 1.2rem;
+        color: #fff; font-size: 0.9rem; white-space: nowrap;
+    }
+    .topbar-tools a {
+        color: #fff; text-decoration: none;
+        display: flex; align-items: center; gap: 0.3rem;
+        opacity: 0.9; transition: opacity 0.3s;
+    }
+    .topbar-tools a:hover { opacity: 1; }
+    .topbar-tools svg { width: 0.95rem; height: 0.95rem; fill: #fff; }
+
+    /* ★ 主菜单：只有悬停时才显示下划线 */
+    .topbar-menu {
+        display: flex; align-items: center; gap: 1.5rem;
+        font-size: 1rem; color: #fff; white-space: nowrap;
+    }
+    .topbar-menu a {
+        color: #fff; text-decoration: none;
+        position: relative;
+        padding-bottom: 0.3rem;
+        border-bottom: 1px solid transparent;   /* 默认透明，看不见 */
+        opacity: 0.92;
+        transition: border-color 0.3s, opacity 0.3s;
+    }
+    .topbar-menu a:hover {
+        border-bottom-color: #fff;   /* 悬停时变白 */
+        opacity: 1;
+    }
+    /* ★ 当前页：仅文字提亮，不下划线（横线只在悬停时出现） */
+    .topbar-menu a.active {
+        opacity: 1;
+    }
+
+    /* ==========================================
+       主体内容区
+       ========================================== */
+    .main-content {
+        padding: 3rem 0;
+    }
+    .section-title-wrap {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    .section-title {
+        font-size: 2.2rem;
+        color: #333;
+        font-weight: normal;
+        letter-spacing: 0.1rem;
+    }
+    .section-subtitle {
+        font-size: 1.1rem;
+        color: #94070A;
+        margin-top: 0.8rem;
+        letter-spacing: 0.15rem;
+        font-weight: normal;
+    }
+
+    .cards-wrapper {
+        max-width: 95rem;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+    .region-card {
+        background-color: #ffffff;
+        border-radius: 0.3rem;
+        box-shadow: 0 0.3rem 1rem rgba(0,0,0,0.08);
+        overflow: hidden;
+        position: relative;
+    }
+    .card-top-bar {
+        width: 100%; height: 3.5rem;
+        background-color: #94070A;
+        background-image:
+            radial-gradient(circle at 10% 50%, rgba(255,255,255,0.08) 0%, transparent 20%),
+            radial-gradient(circle at 30% 50%, rgba(255,255,255,0.06) 0%, transparent 20%),
+            radial-gradient(circle at 70% 50%, rgba(255,255,255,0.08) 0%, transparent 20%),
+            radial-gradient(circle at 90% 50%, rgba(255,255,255,0.06) 0%, transparent 20%);
+    }
+    .card-content { padding: 2rem 2.5rem 2.5rem; }
+    .card-header {
+        display: flex; align-items: center; gap: 1rem;
+        margin-bottom: 1.8rem; padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    .card-icon {
+        width: 3.2rem; height: 3.2rem;
+        background-color: #94070A;
+        border-radius: 0.3rem;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 1.4rem; font-weight: bold;
+    }
+    .card-title {
+        font-size: 1.4rem; color: #333;
+        font-weight: normal; letter-spacing: 0.05rem;
+    }
+    .school-list {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 0.8rem 1.5rem;
+    }
+    .school-list a {
+        color: #333; text-decoration: none;
+        font-size: 0.9rem; line-height: 1.5;
+        padding-left: 1rem; position: relative;
+        transition: color 0.3s;
+    }
+    .school-list a::before {
+        content: '→'; position: absolute; left: 0;
+        color: #94070A; font-size: 0.9rem;
+    }
+    .school-list a:hover { color: #94070A; }
+
+    /* =========================================
+       底部页脚（与官网首页 index.html 完全一致）
+       ========================================= */
+    .site-footer { width: 100%; margin-top: 3rem; position: relative; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
+    .footer-container {
+        width: 100%; max-width: 95rem;
+        margin: 0 auto; padding: 0 2rem;
+        position: relative; z-index: 1;
+    }
+    .footer-top-white { background-color: #ffffff; padding: 4rem 0 3rem 0; }
+    .footer-top-inner { display: flex; justify-content: space-between; align-items: flex-start; }
+    .footer-links-area { flex: 1; max-width: 65%; }
+    .footer-title { font-size: 2rem; font-weight: 400; margin-bottom: 2.5rem; color: #333; }
+    .links-grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 4rem; row-gap: 1.2rem; }
+    .link-item {
+        display: block; color: #666; text-decoration: none;
+        font-size: 0.95rem; padding-bottom: 0.8rem;
+        border-bottom: 1px solid #e0e0e0; transition: all 0.3s;
+    }
+    .link-item:hover { color: #94070A; border-bottom-color: #94070A; }
+    .footer-qr-area { display: flex; flex-direction: column; align-items: center; margin-left: 2rem; }
+    .qr-code { width: 12rem; height: 12rem; object-fit: cover; }
+    .qr-text {
+        font-size: 0.85rem; color: #666; margin-top: 1rem;
+        text-align: center; white-space: normal; max-width: 14rem; line-height: 1.5;
+    }
+    .footer-bottom-red { background-color: #94070A; color: #fff; padding: 3rem 0 2rem 0; }
+    .footer-bottom-inner { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; }
+    .footer-logo-area { display: flex; align-items: center; flex: 0 0 auto; margin-right: 2rem; }
+    .footer-logo-img { width: 4.5rem; height: 4.5rem; object-fit: cover; border-radius: 50%; margin-right: 1rem; }
+    .footer-logo-text { display: flex; flex-direction: column; white-space: nowrap; }
+    .footer-logo-text .zh { font-size: 1.3rem; font-weight: 500; line-height: 1.4; }
+    .footer-logo-text .en { font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); margin-top: 0.1rem; }
+    .site-footer .contact-grid {
+        display: flex; flex-direction: column;
+        gap: 1rem; font-size: 0.9rem;
+        flex: 1; justify-content: center;
+    }
+    .contact-row { display: flex; align-items: center; gap: 3rem; }
+    .contact-item { display: flex; align-items: center; color: rgba(255, 255, 255, 0.9); white-space: nowrap; }
+    .contact-item .icon { width: 1.1rem; height: 1.1rem; fill: #fff; margin-right: 0.6rem; }
+    .contact-item a.value { color: rgba(255, 255, 255, 0.9); text-decoration: none; transition: color 0.3s; }
+    .contact-item a.value:hover { color: #fff; text-decoration: underline; }
+    .pencil-icon-box {
+        width: 1.1rem; height: 1.1rem;
+        background-color: #ffffff; border-radius: 0.15rem;
+        display: flex; align-items: center; justify-content: center;
+        margin-right: 0.6rem; flex-shrink: 0;
+    }
+    .pencil-icon { width: 0.8rem; height: 0.8rem; fill: #94070A; }
+    .copyright-bar {
+        display: flex; justify-content: space-between;
+        align-items: center; font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.6);
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .stats { display: flex; align-items: center; gap: 0.4rem; }
+    .eye-icon { width: 1rem; height: 1rem; fill: rgba(255, 255, 255, 0.6); }
+    .view-count { font-size: 0.8rem; }
+
+    /* =========================================
+       响应式：常规断点适配屏幕
+       ========================================= */
+    /* 中屏：菜单/顶栏收紧 */
+    @media (max-width: 1280px) {
+        .topbar { padding: 0 1.5rem; }
+        .topbar-menu { gap: 1.2rem; }
+        .cards-wrapper { padding: 0 1.5rem; }
+    }
+    /* 窄中屏：顶栏换行、内容区单列 */
+    @media (max-width: 1100px) {
+        .cards-wrapper { grid-template-columns: 1fr; gap: 1.8rem; }
+        .topbar { flex-wrap: wrap; height: auto; padding: 1rem 1.5rem; gap: 0.8rem; }
+        .topbar-right { align-items: flex-start; }
+        .topbar-menu { flex-wrap: wrap; gap: 1rem 1.5rem; }
+    }
+    @media (max-width: 768px) {
+        .topbar { flex-wrap: wrap; height: auto; padding: 1rem; gap: 0.8rem; }
+        .topbar-menu { flex-wrap: wrap; gap: 1rem; font-size: 1rem; }
+        .main-content { padding: 2rem 0; }
+        .section-title { font-size: 1.7rem; }
+        .school-list { grid-template-columns: 1fr; }
+        .card-content { padding: 1.5rem 1.5rem 2rem; }
+        .footer-top-inner { flex-direction: column; align-items: center; }
+        .footer-links-area { max-width: 100%; width: 100%; }
+        .footer-title { text-align: center; }
+        .footer-qr-area { margin-left: 0; margin-top: 2rem; }
+        .footer-bottom-inner { flex-direction: column; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
+        .footer-logo-area { margin-right: 0; }
+        .contact-row { flex-wrap: wrap; justify-content: center; gap: 1rem; }
+        .copyright-bar { flex-direction: column; gap: 0.6rem; text-align: center; }
+    }
+</style>
+  <link rel="icon" href="assets/favicon.png" />
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-left">
+        <img src="assets/haigao-logo.jpg" alt="海林市高级中学校友会 Logo">
+        <div class="logo-text">
+            <span class="zh">海林市高级中学校友（新海高人）</span>
+            <span class="en">Hailin Senior High School Alumni Association</span>
+        </div>
+        <span class="system-name-big">山东地区校友</span>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="topbar-right">
+        <div class="topbar-tools">
+            <a href="#">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                English
+            </a>
+            <a href="index.html">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                校友官网
+            </a>
+            <a href="#">
+                <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            </a>
+        </div>
+        <nav class="topbar-menu">
+            <a href="index.html" class="active">首页</a>
+            <a href="#">地区概况</a>
+            <a href="#">校友名录</a>
+            <a href="#">活动动态</a>
+            <a href="#">校友风采</a>
+            <a href="#">合作交流</a>
+        </nav>
+    </div>
+</header>
+
+<!-- ==========================================
+     主体内容区
+     ========================================== -->
+<div class="main-content">
+
+    <div class="section-title-wrap">
+        <h1 class="section-title">山东省 大学校友联络</h1>
+        <p class="section-subtitle">含在校师生校友</p>
+    </div>
+
+    <div class="cards-wrapper">
+
+        <!-- 济南市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">济</div>
+                    <h2 class="card-title">济南市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">山东大学</a>
+                    <a href="#">济南大学</a>
+                    <a href="#">山东建筑大学</a>
+                    <a href="#">齐鲁工业大学</a>
+                    <a href="#">山东第一医科大学</a>
+                    <a href="#">山东中医药大学</a>
+                    <a href="#">山东师范大学</a>
+                    <a href="#">山东财经大学</a>
+                    <a href="#">山东体育学院</a>
+                    <a href="#">山东艺术学院</a>
+                    <a href="#">山东工艺美术学院</a>
+                    <a href="#">山东警察学院</a>
+                    <a href="#">山东交通学院</a>
+                    <a href="#">山东女子学院</a>
+                    <a href="#">山东英才学院</a>
+                    <a href="#">山东现代学院</a>
+                    <a href="#">山东协和学院</a>
+                    <a href="#">山东工程职业技术大学</a>
+                    <a href="#">山东财经大学燕山学院</a>
+                    <a href="#">齐鲁理工学院</a>
+                    <a href="#">山东政法学院</a>
+                    <a href="#">齐鲁师范学院</a>
+                    <a href="#">山东青年政治学院</a>
+                    <a href="#">山东管理学院</a>
+                    <a href="#">山东农业工程学院</a>
+                    <a href="#">山东商业职业技术大学</a>
+                    <a href="#">山东电力高等专科学校</a>
+                    <a href="#">山东职业学院</a>
+                    <a href="#">山东劳动职业技术学院</a>
+                    <a href="#">莱芜职业技术学院</a>
+                    <a href="#">山东圣翰财贸职业学院</a>
+                    <a href="#">济南职业学院</a>
+                    <a href="#">济南工程职业技术学院</a>
+                    <a href="#">山东电子职业技术学院</a>
+                    <a href="#">山东旅游职业学院</a>
+                    <a href="#">山东城市建设职业学院</a>
+                    <a href="#">山东司法警官职业学院</a>
+                    <a href="#">山东传媒职业学院</a>
+                    <a href="#">济南幼儿师范高等专科学校</a>
+                    <a href="#">济南护理职业学院</a>
+                    <a href="#">山东艺术设计职业学院</a>
+                    <a href="#">山东特殊教育职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 青岛市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">青</div>
+                    <h2 class="card-title">青岛市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">中国海洋大学</a>
+                    <a href="#">山东科技大学</a>
+                    <a href="#">中国石油大学（华东）</a>
+                    <a href="#">青岛科技大学</a>
+                    <a href="#">青岛理工大学</a>
+                    <a href="#">青岛农业大学</a>
+                    <a href="#">青岛滨海学院</a>
+                    <a href="#">青岛大学</a>
+                    <a href="#">青岛恒星科技学院</a>
+                    <a href="#">青岛黄海学院</a>
+                    <a href="#">青岛城市学院</a>
+                    <a href="#">青岛工学院</a>
+                    <a href="#">青岛电影学院</a>
+                    <a href="#">康复大学</a>
+                    <a href="#">青岛职业技术学院</a>
+                    <a href="#">青岛飞洋职业技术学院</a>
+                    <a href="#">山东外贸职业学院</a>
+                    <a href="#">青岛酒店管理职业技术学院</a>
+                    <a href="#">青岛港湾职业技术学院</a>
+                    <a href="#">青岛求实职业技术学院</a>
+                    <a href="#">山东文化产业职业学院</a>
+                    <a href="#">青岛远洋船员职业学院</a>
+                    <a href="#">青岛工程职业学院</a>
+                    <a href="#">青岛幼儿师范高等专科学校</a>
+                    <a href="#">青岛航空科技职业学院</a>
+                    <a href="#">青岛健康科技职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 淄博市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">淄</div>
+                    <h2 class="card-title">淄博市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">山东理工大学</a>
+                    <a href="#">齐鲁医药学院</a>
+                    <a href="#">淄博职业技术大学</a>
+                    <a href="#">山东工业职业学院</a>
+                    <a href="#">山东化工职业学院</a>
+                    <a href="#">淄博师范高等专科学校</a>
+                    <a href="#">山东铝业职业学院</a>
+                    <a href="#">山东轻工职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 泰安市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">泰</div>
+                    <h2 class="card-title">泰安市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">山东农业大学</a>
+                    <a href="#">泰山学院</a>
+                    <a href="#">泰山科技学院</a>
+                    <a href="#">山东财经大学东方学院</a>
+                    <a href="#">山东服装职业学院</a>
+                    <a href="#">山东力明科技职业学院</a>
+                    <a href="#">泰山职业技术学院</a>
+                    <a href="#">泰山护理职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 潍坊市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">潍</div>
+                    <h2 class="card-title">潍坊市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">山东第二医科大学</a>
+                    <a href="#">潍坊学院</a>
+                    <a href="#">潍坊科技学院</a>
+                    <a href="#">潍坊理工学院</a>
+                    <a href="#">山东科技职业大学</a>
+                    <a href="#">潍坊职业学院</a>
+                    <a href="#">山东畜牧兽医职业学院</a>
+                    <a href="#">山东交通职业学院</a>
+                    <a href="#">山东信息职业技术学院</a>
+                    <a href="#">山东经贸职业学院</a>
+                    <a href="#">潍坊工商职业学院</a>
+                    <a href="#">山东海事职业学院</a>
+                    <a href="#">潍坊护理职业学院</a>
+                    <a href="#">潍坊工程职业学院</a>
+                    <a href="#">潍坊环境工程职业学院</a>
+                    <a href="#">潍坊食品科技职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 滨州市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">滨</div>
+                    <h2 class="card-title">滨州市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">山东医药大学</a>
+                    <a href="#">山东航空学院</a>
+                    <a href="#">滨州职业技术大学</a>
+                    <a href="#">滨州科技职业学院</a>
+                    <a href="#">滨州健康科技职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 济宁市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">济</div>
+                    <h2 class="card-title">济宁市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">济宁医学院</a>
+                    <a href="#">曲阜师范大学</a>
+                    <a href="#">济宁学院</a>
+                    <a href="#">曲阜远东职业技术学院</a>
+                    <a href="#">济宁职业技术学院</a>
+                    <a href="#">山东理工职业学院</a>
+                    <a href="#">济宁汽车工程职业学院</a>
+                    <a href="#">济宁卫生健康职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 聊城市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">聊</div>
+                    <h2 class="card-title">聊城市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">聊城大学</a>
+                    <a href="#">聊城大学东昌学院</a>
+                    <a href="#">聊城职业技术学院</a>
+                    <a href="#">聊城科技职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 德州市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">德</div>
+                    <h2 class="card-title">德州市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">德州学院</a>
+                    <a href="#">山东华宇工学院</a>
+                    <a href="#">德州科技职业学院</a>
+                    <a href="#">德州职业技术学院</a>
+                    <a href="#">德州工程职业学院</a>
+                    <a href="#">山东文化艺术职业学院</a>
+                    <a href="#">德州智能技术职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 烟台市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">烟</div>
+                    <h2 class="card-title">烟台市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">鲁东大学</a>
+                    <a href="#">烟台大学</a>
+                    <a href="#">山东工商学院</a>
+                    <a href="#">烟台南山学院</a>
+                    <a href="#">烟台理工学院</a>
+                    <a href="#">青岛农业大学海都学院</a>
+                    <a href="#">烟台科技学院</a>
+                    <a href="#">烟台职业学院</a>
+                    <a href="#">烟台工程职业技术学院</a>
+                    <a href="#">山东中医药高等专科学校</a>
+                    <a href="#">山东商务职业学院</a>
+                    <a href="#">烟台汽车工程职业学院</a>
+                    <a href="#">烟台黄金职业学院</a>
+                    <a href="#">烟台幼儿师范高等专科学校</a>
+                    <a href="#">烟台文化旅游职业学院</a>
+                    <a href="#">山东城市服务职业学院</a>
+                    <a href="#">烟台城市科技职业学院</a>
+                    <a href="#">烟台卫生健康职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 临沂市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">临</div>
+                    <h2 class="card-title">临沂市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">临沂大学</a>
+                    <a href="#">临沂工学院</a>
+                    <a href="#">山东医学高等专科学校</a>
+                    <a href="#">临沂职业学院</a>
+                    <a href="#">临沂科技职业学院</a>
+                    <a href="#">临沂城市职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 菏泽市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">菏</div>
+                    <h2 class="card-title">菏泽市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">菏泽学院</a>
+                    <a href="#">菏泽医学专科学校</a>
+                    <a href="#">菏泽家政职业学院</a>
+                    <a href="#">菏泽职业学院</a>
+                    <a href="#">菏泽生物医药职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 枣庄市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">枣</div>
+                    <h2 class="card-title">枣庄市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">枣庄学院</a>
+                    <a href="#">枣庄科技职业学院</a>
+                    <a href="#">枣庄职业学院</a>
+                    <a href="#">枣庄应用技术职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 东营市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">东</div>
+                    <h2 class="card-title">东营市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">山东石油化工学院</a>
+                    <a href="#">东营职业学院</a>
+                    <a href="#">东营科技职业学院</a>
+                    <a href="#">山东胜利职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 日照市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">日</div>
+                    <h2 class="card-title">日照市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">山东外国语职业技术大学</a>
+                    <a href="#">日照职业技术大学</a>
+                    <a href="#">山东水利职业学院</a>
+                    <a href="#">日照航海工程职业学院</a>
+                    <a href="#">日照康养职业学院</a>
+                    <a href="#">日照科技职业学院</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 威海市 -->
+        <div class="region-card">
+            <div class="card-top-bar"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">威</div>
+                    <h2 class="card-title">威海市</h2>
+                </div>
+                <div class="school-list">
+                    <a href="#">山东外事职业大学</a>
+                    <a href="#">威海职业学院</a>
+                    <a href="#">山东药品食品职业学院</a>
+                    <a href="#">威海海洋职业学院</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ==========================================
+     底栏
+     ========================================== -->
+<footer class="site-footer" id="contact">
+    <div class="footer-top-white">
+        <div class="footer-container">
+            <div class="footer-top-inner">
+                <div class="footer-links-area">
+                    <h2 class="footer-title">常用链接</h2>
+                    <div class="links-grid">
+                        <a href="#" class="link-item">实用信息</a>
+                        <a href="contact.html" class="link-item">联系我们</a>
+                        <a href="#" class="link-item">宣传资源</a>
+                        <a href="#" class="link-item">校友标志</a>
+                        <a href="#" class="link-item">新海高人标志</a>
+                        <a href="login.html?redirect=journal.html" class="link-item">新海高青年期刊</a>
+                    </div>
+                </div>
+                <div class="footer-qr-area">
+                    <img src="assets/qr-code.png" alt="二维码" class="qr-code">
+                    <p class="qr-text">欢迎关注海林市高级中学校友（新海高人）公众号</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom-red">
+        <div class="footer-container">
+            <div class="footer-bottom-inner">
+                <div class="footer-logo-area">
+                    <img src="assets/haigao-logo.jpg" alt="Logo" class="footer-logo-img">
+                    <div class="footer-logo-text">
+                        <span class="zh">海林市高级中学校友（新海高人）</span>
+                        <span class="en">Hailin Senior High School Alumni Association</span>
+                    </div>
+                </div>
+                <div class="contact-grid">
+                    <div class="contact-row">
+                        <div class="contact-item">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                            <a href="mailto:xinhaigaoren@126.com" class="value">xinhaigaoren@126.com</a>
+                        </div>
+                        <div class="contact-item">
+                            <div class="pencil-icon-box">
+                                <svg viewBox="0 0 24 24" class="pencil-icon"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                            </div>
+                            <a href="#" class="value feedback-link">意见反馈</a>
+                        </div>
+                    </div>
+                    <div class="contact-row">
+                        <div class="contact-item">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            <span class="value">北京市海淀区 | 黑龙江省哈尔滨市南岗区 | 吉林省长春市朝阳区</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright-bar">
+                <p class="copyright-text">版权所有 © 海林市高级中学校友（新海高人）</p>
+                <div class="stats">
+                    <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-3-3-3z"/></svg>
+                    <span id="site-pv-count" class="view-count">加载中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="site.js?v=20261017"></script>
+</body>
+</html>
