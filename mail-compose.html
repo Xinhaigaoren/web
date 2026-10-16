@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>写信 - 校友电子邮件系统 - 新海高人</title>
+<link rel="icon" href="assets/favicon.png">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: clamp(12px, 1vw, 18px); }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+    }
+
+    /* ===== 顶部导航 ===== */
+    .topbar {
+        width: 100%; height: 5.5rem;
+        background-color: #94070A;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 3rem;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 1rem; white-space: nowrap; }
+    .topbar-left img { height: 3.2rem; width: 3.2rem; border-radius: 50%; object-fit: contain; background-color: rgba(255,255,255,0.08); }
+    .topbar-left .logo-text { display: flex; flex-direction: column; color: #fff; }
+    .topbar-left .logo-text .zh { font-size: 1.1rem; line-height: 1.3; }
+    .topbar-left .logo-text .en { font-size: 0.75rem; opacity: 0.85; line-height: 1.3; }
+    .topbar-left .system-name-big { font-size: 2rem; color: #fff; font-weight: normal; letter-spacing: 0.05rem; margin-left: 1.5rem; }
+    .topbar-user { display: flex; align-items: center; gap: 0.6rem; color: #fff; font-size: 0.9rem; }
+    .topbar-user .user-avatar {
+        width: 2.2rem; height: 2.2rem; border-radius: 50%;
+        background-color: #fff; display: flex; align-items: center; justify-content: center;
+        color: #94070A; font-weight: bold; font-size: 0.95rem;
+    }
+
+    /* ===== 主体布局 ===== */
+    .layout { display: flex; max-width: 95rem; margin: 0 auto; padding: 1.5rem 2rem; gap: 1.5rem; align-items: flex-start; }
+    .sidebar {
+        width: 12.5rem; flex-shrink: 0;
+        background-color: #fff; border-radius: 0.5rem;
+        border: 1px solid #e8e8e8; padding: 1.2rem 0.8rem;
+        position: sticky; top: 1.5rem;
+    }
+    .sidebar .compose-btn {
+        display: block; width: 100%; text-align: center;
+        background: linear-gradient(135deg, #94070A 0%, #c41e22 100%);
+        color: #fff; text-decoration: none; border-radius: 0.35rem;
+        padding: 0.75rem 0; font-size: 1rem; letter-spacing: 0.1rem;
+        margin-bottom: 1.2rem;
+    }
+    .sidebar .compose-btn:hover { opacity: 0.9; }
+    .sidebar .nav-item {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0.65rem 0.9rem; border-radius: 0.35rem;
+        color: #333; text-decoration: none; font-size: 0.95rem;
+        margin-bottom: 0.25rem; cursor: pointer;
+    }
+    .sidebar .nav-item:hover { background-color: #fbe5e5; color: #94070A; }
+    .sidebar .nav-item.active { background-color: #94070A; color: #fff; }
+    .sidebar .nav-item .badge {
+        background-color: #e00; color: #fff; font-size: 0.7rem;
+        border-radius: 0.8rem; padding: 0.05rem 0.45rem; min-width: 1.2rem; text-align: center;
+    }
+    .sidebar .side-title { font-size: 0.8rem; color: #999; padding: 0.6rem 0.9rem 0.3rem; }
+    .sidebar .back-link {
+        display: block; margin-top: 1rem; padding: 0.6rem 0.9rem;
+        font-size: 0.85rem; color: #666; text-decoration: none;
+        border-top: 1px solid #eee;
+    }
+    .sidebar .back-link:hover { color: #94070A; }
+
+    .main { flex: 1; min-width: 0; display: flex; gap: 1.2rem; align-items: flex-start; }
+    .compose-card {
+        flex: 1; min-width: 0; background-color: #fff; border-radius: 0.5rem;
+        border: 1px solid #e8e8e8; overflow: hidden;
+    }
+    .contacts-panel {
+        width: 16rem; flex-shrink: 0; background-color: #fff; border-radius: 0.5rem;
+        border: 1px solid #e8e8e8; max-height: 36rem; overflow-y: auto;
+        position: sticky; top: 1.5rem;
+    }
+
+    /* ===== 写信表单 ===== */
+    .compose-actions { display: flex; align-items: center; gap: 0.6rem; padding: 0.9rem 1.2rem; border-bottom: 1px solid #e8e8e8; flex-wrap: wrap; }
+    .btn {
+        padding: 0.5rem 1.1rem; font-size: 0.92rem; border-radius: 0.3rem;
+        border: 1px solid #c9a0a0; background-color: #fff; color: #94070A;
+        cursor: pointer; font-family: inherit;
+    }
+    .btn:hover { background-color: #fbe5e5; }
+    .btn.primary { background: linear-gradient(135deg, #94070A 0%, #c41e22 100%); color: #fff; border: none; }
+    .btn.primary:hover { opacity: 0.9; }
+
+    .field-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1.2rem; border-bottom: 1px solid #f0f0f0; }
+    .field-row .label { flex: 0 0 4.5rem; color: #666; font-size: 0.92rem; }
+    .field-row input[type="text"] {
+        flex: 1; border: none; outline: none; font-size: 0.95rem;
+        font-family: inherit; color: #333; background: transparent;
+    }
+    .field-row .from-addr { flex: 1; font-size: 0.95rem; color: #94070A; }
+    .field-row .cc-toggle { font-size: 0.85rem; color: #999; cursor: pointer; }
+    .field-row .cc-toggle:hover { color: #94070A; }
+
+    .toolbar { display: flex; align-items: center; gap: 0.2rem; padding: 0.5rem 1.2rem; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
+    .toolbar button {
+        min-width: 2rem; height: 2rem; border: none; background: none;
+        font-size: 0.95rem; cursor: pointer; color: #333; border-radius: 0.25rem; font-family: inherit;
+    }
+    .toolbar button:hover { background-color: #fbe5e5; color: #94070A; }
+    .toolbar .sep { width: 1px; height: 1.4rem; background-color: #e8e8e8; margin: 0 0.4rem; }
+
+    .body-editor { padding: 0.9rem 1.2rem; min-height: 16rem; max-height: 32rem; overflow-y: auto; outline: none; font-size: 0.98rem; line-height: 1.7; color: #333; }
+    .body-editor:empty::before { content: attr(data-placeholder); color: #b0b0b0; }
+
+    .compose-footer { display: flex; align-items: center; gap: 1.5rem; padding: 0.9rem 1.2rem; border-top: 1px solid #e8e8e8; flex-wrap: wrap; font-size: 0.9rem; color: #666; }
+    .compose-footer label { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; }
+    .compose-footer input[type="checkbox"] { accent-color: #94070A; width: 1rem; height: 1rem; }
+
+    /* ===== 通讯录面板 ===== */
+    .contacts-panel h3 { font-size: 1rem; font-weight: normal; color: #94070A; padding: 0.9rem 1rem; border-bottom: 1px solid #e8e8e8; }
+    .contact-group { padding: 0.5rem 0; }
+    .contact-group .group-title { font-size: 0.8rem; color: #999; padding: 0.35rem 1rem; }
+    .contact-item {
+        display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;
+        padding: 0.45rem 1rem; font-size: 0.9rem; color: #333; cursor: pointer;
+    }
+    .contact-item:hover { background-color: #fbe5e5; }
+    .contact-item .c-mail { color: #999; font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .contact-item .add { color: #94070A; font-size: 1.1rem; flex-shrink: 0; }
+    .contact-empty { padding: 0.8rem 1rem; font-size: 0.85rem; color: #bbb; }
+
+    @media (max-width: 900px) {
+        .topbar { padding: 0 1.5rem; }
+        .layout { flex-direction: column; padding: 1rem; }
+        .sidebar { width: 100%; position: static; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+        .sidebar .compose-btn { width: auto; padding: 0.6rem 1.2rem; margin-bottom: 0; }
+        .sidebar .nav-item { margin-bottom: 0; padding: 0.5rem 0.8rem; }
+        .sidebar .side-title, .sidebar .back-link { display: none; }
+        .main { flex-direction: column; }
+        .contacts-panel { width: 100%; position: static; max-height: 16rem; }
+    }
+    @media (max-width: 600px) {
+        .topbar-left .system-name-big { display: none; }
+    }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-left">
+        <img src="assets/haigao-logo.jpg" alt="Logo">
+        <div class="logo-text">
+            <span class="zh">海林市高级中学校友（新海高人）</span>
+            <span class="en">Hailin Senior High School Alumni Association</span>
+        </div>
+        <span class="system-name-big">校友电子邮件系统</span>
+    </div>
+    <div class="topbar-user">
+        <div class="user-avatar" id="userAvatar">—</div>
+        <span id="userName">—</span>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="sidebar">
+        <a href="mail-compose.html" class="compose-btn">写信</a>
+        <a href="mail-inbox.html" class="nav-item">收件箱<span class="badge" id="inboxBadge" style="display:none">0</span></a>
+        <a href="mail-sent.html" class="nav-item">已发送</a>
+        <div class="side-title">通讯录</div>
+        <a href="mail-contact.html" class="nav-item">个人通讯录</a>
+        <a href="member.html" class="back-link">← 返回内网</a>
+    </aside>
+
+    <div class="main">
+        <div class="compose-card">
+            <div class="compose-actions">
+                <button class="btn primary" onclick="sendMail()">发送</button>
+                <button class="btn" onclick="previewMail()">预览</button>
+                <button class="btn" onclick="history.back()">取消</button>
+            </div>
+
+            <div class="field-row">
+                <span class="label">发件人</span>
+                <span class="from-addr" id="fromAddr">—</span>
+            </div>
+            <div class="field-row">
+                <span class="label">收件人</span>
+                <input type="text" id="toInput" placeholder="校友邮箱，多个收件人用逗号分隔（支持姓名/邮箱自动匹配）">
+            </div>
+            <div class="field-row" id="ccRow" style="display:none">
+                <span class="label">抄送</span>
+                <input type="text" id="ccInput" placeholder="抄送邮箱，多个用逗号分隔">
+            </div>
+            <div class="field-row">
+                <span class="label">主题</span>
+                <input type="text" id="subjectInput" placeholder="邮件主题">
+                <span class="cc-toggle" onclick="toggleCc()">抄送</span>
+            </div>
+
+            <div class="toolbar">
+                <button type="button" title="加粗" onclick="exec('bold')"><b>B</b></button>
+                <button type="button" title="斜体" onclick="exec('italic')"><i>I</i></button>
+                <button type="button" title="下划线" onclick="exec('underline')"><u>U</u></button>
+                <span class="sep"></span>
+                <button type="button" title="字号增大" onclick="exec('fontSize', 5)">A+</button>
+                <button type="button" title="字号减小" onclick="exec('fontSize', 3)">A-</button>
+                <span class="sep"></span>
+                <button type="button" title="左对齐" onclick="exec('justifyLeft')">≡</button>
+                <button type="button" title="居中" onclick="exec('justifyCenter')">≡</button>
+            </div>
+
+            <div class="body-editor" id="bodyEditor" contenteditable="true" data-placeholder="正文内容"></div>
+
+            <div class="compose-footer">
+                <label><input type="checkbox" id="readReceipt"> 已读回执</label>
+                <span>发送后可查看收件人是否已阅读</span>
+            </div>
+        </div>
+
+        <div class="contacts-panel">
+            <h3>个人通讯录</h3>
+            <div id="contactsBox"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_BASE_URL = 'https://hailin-alumni-api.onrender.com';
+const token = localStorage.getItem('alumniToken');
+if (!token) { location.href = 'login.html?redirect=mail-inbox.html'; }
+
+function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('alumniToken') || '') };
+}
+function applyUser() {
+    try {
+        const u = JSON.parse(localStorage.getItem('alumniUser') || '{}');
+        if (u.name) { document.getElementById('userAvatar').textContent = u.name.slice(-1); document.getElementById('userName').textContent = u.name; }
+    } catch (e) {}
+}
+applyUser();
+
+function exec(cmd, val) {
+    const ed = document.getElementById('bodyEditor');
+    ed.focus();
+    try { document.execCommand(cmd, false, val); } catch (e) {}
+}
+function toggleCc() {
+    const row = document.getElementById('ccRow');
+    row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+}
+
+function applyQueryParams() {
+    const q = new URLSearchParams(location.search);
+    if (q.get('to')) {
+        const existing = document.getElementById('toInput').value;
+        document.getElementById('toInput').value = existing ? existing + ', ' + q.get('to') : q.get('to');
+    }
+    if (q.get('subject')) document.getElementById('subjectInput').value = q.get('subject');
+}
+applyQueryParams();
+
+async function init() {
+    try {
+        const resp = await fetch(API_BASE_URL + '/api/mail/account', { headers: authHeaders() });
+        const data = await resp.json();
+        if (resp.ok && data.account) document.getElementById('fromAddr').textContent = data.account.mail_address;
+    } catch (e) {}
+    try {
+        const resp = await fetch(API_BASE_URL + '/api/mail/contacts', { headers: authHeaders() });
+        const data = await resp.json();
+        if (!resp.ok) return;
+        const box = document.getElementById('contactsBox');
+        let html = '';
+        const groups = data.groups || {};
+        for (const g in groups) {
+            if (!groups[g].length) continue;
+            html += '<div class="contact-group"><div class="group-title">' + g + '（' + groups[g].length + '）</div>';
+            for (const c of groups[g]) {
+                html += '<div class="contact-item" title="点击添加到收件人" onclick="addTo(\'' + c.email + '\')">'
+                    + '<span><span>' + c.name + '</span><br><span class="c-mail">' + (c.email || '') + '</span></span>'
+                    + '<span class="add">+</span></div>';
+            }
+            html += '</div>';
+        }
+        if (data.alumni && data.alumni.length) {
+            html += '<div class="contact-group"><div class="group-title">校友联系人（' + data.alumni.length + '）</div>';
+            for (const c of data.alumni) {
+                html += '<div class="contact-item" title="点击添加到收件人" onclick="addTo(\'' + c.email + '\')">'
+                    + '<span><span>' + c.name + '</span><br><span class="c-mail">' + c.email + '</span></span>'
+                    + '<span class="add">+</span></div>';
+            }
+            html += '</div>';
+        }
+        if (!html) html = '<div class="contact-empty">暂无联系人，可在「个人通讯录」中添加</div>';
+        box.innerHTML = html;
+    } catch (e) {}
+}
+
+function addTo(email) {
+    if (!email) return;
+    const input = document.getElementById('toInput');
+    const val = input.value.trim();
+    input.value = val ? val + ', ' + email : email;
+    input.focus();
+}
+
+function splitAddrs(val) {
+    return String(val || '').split(/[,，;；\s]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+}
+
+async function sendMail() {
+    const to = splitAddrs(document.getElementById('toInput').value);
+    if (!to.length) { alert('请填写收件人（校友邮箱）'); return; }
+    const body = document.getElementById('bodyEditor').innerText || '';
+    const payload = {
+        to: to,
+        subject: document.getElementById('subjectInput').value.trim(),
+        body: body,
+        read_receipt: document.getElementById('readReceipt').checked
+    };
+    const cc = splitAddrs(document.getElementById('ccInput').value);
+    if (cc.length) payload.cc = cc;
+    try {
+        const resp = await fetch(API_BASE_URL + '/api/mail/send', {
+            method: 'POST', headers: authHeaders(), body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        if (!resp.ok) { alert(data.message || '发送失败'); return; }
+        alert('邮件已发送');
+        location.href = 'mail-sent.html';
+    } catch (e) {
+        alert('网络异常：' + e.message);
+    }
+}
+
+function previewMail() {
+    const to = splitAddrs(document.getElementById('toInput').value);
+    const subject = document.getElementById('subjectInput').value.trim();
+    if (!confirm('预览：收件人 ' + (to.join('、') || '(空)') + '\n主题：' + (subject || '(无主题)') + '\n\n确认发送？')) return;
+    sendMail();
+}
+
+async function loadBadge() {
+    try {
+        const resp = await fetch(API_BASE_URL + '/api/mail/unread-count', { headers: authHeaders() });
+        const data = await resp.json();
+        const badge = document.getElementById('inboxBadge');
+        if (data.unread_count > 0) { badge.style.display = 'inline'; badge.textContent = data.unread_count; }
+        else { badge.style.display = 'none'; }
+    } catch (e) {}
+}
+
+loadBadge();
+init();
+</script>
+</body>
+</html>
