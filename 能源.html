@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>能源专业 - 海林市高级中学校友（新海高人）</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 16px; }
+    body {
+        font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+    }
+
+    /* ==========================================
+       顶部导航栏
+       ========================================== */
+    .topbar {
+        width: 100%;
+        height: 4.5rem;
+        background-color: #94070A;
+        display: flex;
+        align-items: center;
+        padding: 0 2rem;
+        gap: 0.5rem;
+    }
+    .topbar-left {
+        display: flex; align-items: center; gap: 0.8rem;
+        white-space: nowrap;
+    }
+    .topbar-left img {
+        height: 2.6rem; width: 2.6rem;
+        border-radius: 50%; object-fit: contain;
+        background-color: rgba(255,255,255,0.08);
+    }
+    .topbar-left .logo-text { display: flex; flex-direction: column; color: #fff; }
+    .topbar-left .logo-text .zh { font-size: 1rem; line-height: 1.3; }
+    .topbar-left .logo-text .en { font-size: 0.7rem; opacity: 0.85; line-height: 1.3; }
+    .topbar-left .system-name-big {
+        font-size: 1.3rem; color: #fff;
+        font-weight: normal; letter-spacing: 0.05rem;
+        margin-left: 1rem;
+    }
+    .topbar-spacer { flex: 1; }
+    .topbar-right {
+        display: flex; flex-direction: column;
+        align-items: flex-end; gap: 0.2rem;
+    }
+    .topbar-tools {
+        display: flex; align-items: center; gap: 1.2rem;
+        color: #fff; font-size: 0.9rem; white-space: nowrap;
+    }
+    .topbar-tools a {
+        color: #fff; text-decoration: none;
+        display: flex; align-items: center; gap: 0.3rem;
+        opacity: 0.9; transition: opacity 0.3s;
+    }
+    .topbar-tools a:hover { opacity: 1; }
+    .topbar-tools svg { width: 0.95rem; height: 0.95rem; fill: #fff; }
+
+    /* ★ 主菜单：只有悬停时才显示下划线 */
+    .topbar-menu {
+        display: flex; align-items: center; gap: 1.5rem;
+        font-size: 1rem; color: #fff; white-space: nowrap;
+    }
+    .topbar-menu a {
+        color: #fff; text-decoration: none;
+        position: relative;
+        padding-bottom: 0.3rem;
+        border-bottom: 1px solid transparent;   /* 默认透明，看不见 */
+        opacity: 0.92;
+        transition: border-color 0.3s, opacity 0.3s;
+    }
+    .topbar-menu a:hover {
+        border-bottom-color: #fff;   /* 悬停时变白 */
+        opacity: 1;
+    }
+    /* ★ 当前页：仅文字提亮，不下划线（横线只在悬停时出现） */
+    .topbar-menu a.active {
+        opacity: 1;
+    }
+
+    /* ==========================================
+       主体内容区
+       ========================================== */
+    .content-wrapper {
+        width: 100%; max-width: 75rem;
+        margin: 2rem auto; padding: 0 1.5rem;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem;
+    }
+    .section-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 2rem; padding-bottom: 1rem;
+        border-bottom: 2px solid #94070A;
+    }
+    .section-title {
+        display: flex; align-items: center; gap: 0.6rem;
+        font-size: 1.6rem; color: #94070A; font-weight: normal;
+    }
+    .section-title svg { width: 1.6rem; height: 1.6rem; fill: #94070A; }
+    .section-more {
+        display: flex; align-items: center; gap: 0.4rem;
+        font-size: 0.9rem; color: #94070A;
+        text-decoration: none; opacity: 0.85; transition: opacity 0.3s;
+    }
+    .section-more:hover { opacity: 1; }
+    .section-more svg { width: 1rem; height: 1rem; fill: #94070A; }
+
+    .feature-news {
+        display: flex; gap: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px dashed #d9b0a8;
+        margin-bottom: 1.5rem;
+    }
+    .news-date { flex: 0 0 5rem; text-align: center; }
+    .news-date .day {
+        font-size: 2.2rem; color: #94070A;
+        font-weight: normal; line-height: 1;
+    }
+    .news-date .year {
+        font-size: 0.85rem; color: #94070A;
+        opacity: 0.7; margin-top: 0.3rem;
+    }
+    .news-body { flex: 1; }
+    .news-body .news-img-placeholder {
+        width: 100%; height: 14rem;
+        background-color: #f5e5e5;
+        border: 1px dashed #d9b0a8;
+        border-radius: 0.3rem;
+        display: flex; align-items: center; justify-content: center;
+        color: #999; font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    .news-body .news-title {
+        font-size: 1.1rem; color: #333;
+        text-decoration: none; line-height: 1.5;
+    }
+    .news-body .news-title:hover { color: #94070A; }
+
+    .news-list { list-style: none; }
+    .news-list li {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0.8rem 0; border-bottom: 1px solid #eee;
+        font-size: 0.95rem;
+    }
+    .news-list li::before {
+        content: ''; width: 0.4rem; height: 0.4rem;
+        background-color: #94070A; border-radius: 50%;
+        margin-right: 0.8rem; flex-shrink: 0;
+    }
+    .news-list li a {
+        color: #333; text-decoration: none;
+        flex: 1; overflow: hidden;
+        text-overflow: ellipsis; white-space: nowrap;
+    }
+    .news-list li a:hover { color: #94070A; }
+    .news-list li .date {
+        color: #999; font-size: 0.85rem;
+        flex-shrink: 0; margin-left: 1rem;
+    }
+
+    .notice-list { list-style: none; }
+    .notice-item {
+        display: flex; align-items: center; gap: 1.5rem;
+        padding: 1.3rem 0;
+        border-bottom: 1px dashed #d9b0a8;
+    }
+    .notice-item:last-child { border-bottom: none; }
+    .notice-date { flex: 0 0 5.5rem; text-align: center; }
+    .notice-date .year { font-size: 0.75rem; color: #94070A; opacity: 0.75; }
+    .notice-date .day {
+        font-size: 1.8rem; color: #94070A;
+        font-weight: normal; line-height: 1.2;
+        border-bottom: 2px solid #94070A;
+        display: inline-block; padding-bottom: 0.2rem;
+    }
+    .notice-body { flex: 1; }
+    .notice-body a {
+        color: #333; text-decoration: none;
+        font-size: 0.95rem; line-height: 1.5; display: block;
+    }
+    .notice-body a:hover { color: #94070A; }
+
+    /* =========================================
+       底部页脚（与官网首页 index.html 完全一致）
+       ========================================= */
+    .site-footer { width: 100%; position: relative; font-family: "Microsoft YaHei", "微软雅黑", sans-serif; }
+    .footer-container {
+        width: 100%; max-width: 95rem;
+        margin: 0 auto; padding: 0 2rem;
+        position: relative; z-index: 1;
+    }
+    .footer-top-white { background-color: #ffffff; padding: 4rem 0 3rem 0; }
+    .footer-top-inner { display: flex; justify-content: space-between; align-items: flex-start; }
+    .footer-links-area { flex: 1; max-width: 65%; }
+    .footer-title { font-size: 2rem; font-weight: 400; margin-bottom: 2.5rem; color: #333; }
+    .links-grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 4rem; row-gap: 1.2rem; }
+    .link-item {
+        display: block; color: #666; text-decoration: none;
+        font-size: 0.95rem; padding-bottom: 0.8rem;
+        border-bottom: 1px solid #e0e0e0; transition: all 0.3s;
+    }
+    .link-item:hover { color: #94070A; border-bottom-color: #94070A; }
+    .footer-qr-area { display: flex; flex-direction: column; align-items: center; margin-left: 2rem; }
+    .qr-code { width: 12rem; height: 12rem; object-fit: cover; }
+    .qr-text {
+        font-size: 0.85rem; color: #666; margin-top: 1rem;
+        text-align: center; white-space: normal; max-width: 14rem; line-height: 1.5;
+    }
+    .footer-bottom-red { background-color: #94070A; color: #fff; padding: 3rem 0 2rem 0; }
+    .footer-bottom-inner { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; }
+    .footer-logo-area { display: flex; align-items: center; flex: 0 0 auto; margin-right: 2rem; }
+    .footer-logo-img { width: 4.5rem; height: 4.5rem; object-fit: cover; border-radius: 50%; margin-right: 1rem; }
+    .footer-logo-text { display: flex; flex-direction: column; white-space: nowrap; }
+    .footer-logo-text .zh { font-size: 1.3rem; font-weight: 500; line-height: 1.4; }
+    .footer-logo-text .en { font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); margin-top: 0.1rem; }
+    .site-footer .contact-grid {
+        display: flex; flex-direction: column;
+        gap: 1rem; font-size: 0.9rem;
+        flex: 1; justify-content: center;
+    }
+    .contact-row { display: flex; align-items: center; gap: 3rem; }
+    .contact-item { display: flex; align-items: center; color: rgba(255, 255, 255, 0.9); white-space: nowrap; }
+    .contact-item .icon { width: 1.1rem; height: 1.1rem; fill: #fff; margin-right: 0.6rem; }
+    .contact-item a.value { color: rgba(255, 255, 255, 0.9); text-decoration: none; transition: color 0.3s; }
+    .contact-item a.value:hover { color: #fff; text-decoration: underline; }
+    .pencil-icon-box {
+        width: 1.1rem; height: 1.1rem;
+        background-color: #ffffff; border-radius: 0.15rem;
+        display: flex; align-items: center; justify-content: center;
+        margin-right: 0.6rem; flex-shrink: 0;
+    }
+    .pencil-icon { width: 0.8rem; height: 0.8rem; fill: #94070A; }
+    .copyright-bar {
+        display: flex; justify-content: space-between;
+        align-items: center; font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.6);
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .stats { display: flex; align-items: center; gap: 0.4rem; }
+    .eye-icon { width: 1rem; height: 1rem; fill: rgba(255, 255, 255, 0.6); }
+    .view-count { font-size: 0.8rem; }
+
+    /* =========================================
+       响应式：常规断点适配屏幕
+       ========================================= */
+    /* 中屏：菜单/顶栏收紧 */
+    @media (max-width: 1280px) {
+        .topbar { padding: 0 1.5rem; }
+        .topbar-menu { gap: 1.2rem; }
+    }
+    /* 窄中屏：顶栏换行、内容区单列 */
+    @media (max-width: 1100px) {
+        .content-wrapper { grid-template-columns: 1fr; gap: 2rem; }
+        .topbar { flex-wrap: wrap; height: auto; padding: 1rem 1.5rem; gap: 0.8rem; }
+        .topbar-right { align-items: flex-start; }
+        .topbar-menu { flex-wrap: wrap; gap: 1rem 1.5rem; }
+    }
+    @media (max-width: 768px) {
+        .topbar { flex-wrap: wrap; height: auto; padding: 1rem; gap: 0.8rem; }
+        .topbar-menu { flex-wrap: wrap; gap: 1rem; font-size: 1rem; }
+        .footer-top-inner { flex-direction: column; align-items: center; }
+        .footer-links-area { max-width: 100%; width: 100%; }
+        .footer-title { text-align: center; }
+        .footer-qr-area { margin-left: 0; margin-top: 2rem; }
+        .footer-bottom-inner { flex-direction: column; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
+        .footer-logo-area { margin-right: 0; }
+        .contact-row { flex-wrap: wrap; justify-content: center; gap: 1rem; }
+        .copyright-bar { flex-direction: column; gap: 0.6rem; text-align: center; }
+    }
+</style>
+  <link rel="icon" href="assets/favicon.png" />
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-left">
+        <img src="assets/haigao-logo.jpg" alt="海林市高级中学校友会 Logo">
+        <div class="logo-text">
+            <span class="zh">海林市高级中学校友（新海高人）</span>
+            <span class="en">Hailin Senior High School Alumni Association</span>
+        </div>
+        <span class="system-name-big">能源专业</span>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="topbar-right">
+        <div class="topbar-tools">
+            <a href="#">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                English
+            </a>
+            <a href="index.html">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                校友官网
+            </a>
+            <a href="#">
+                <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            </a>
+        </div>
+        <nav class="topbar-menu">
+            <a href="index.html" class="active">首页</a>
+            <a href="#">关于能源</a>
+            <a href="#">专业前沿</a>
+            <a href="#">职业发展</a>
+            <a href="#">能源校友</a>
+            <a href="#">合作交流</a>
+        </nav>
+    </div>
+</header>
+
+<div class="content-wrapper">
+    <section class="news-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg>
+                动态新闻
+            </h2>
+            <a href="#" class="section-more">More <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></a>
+        </div>
+        <div class="feature-news">
+            <div class="news-date"><div class="day">--</div><div class="year">----</div></div>
+            <div class="news-body">
+                <div class="news-img-placeholder">新闻图片占位</div>
+                <a href="#" class="news-title">（新闻标题待填充）</a>
+            </div>
+        </div>
+        <ul class="news-list">
+            <li><a href="#">（新闻标题待填充）</a><span class="date">--</span></li>
+            <li><a href="#">（新闻标题待填充）</a><span class="date">--</span></li>
+            <li><a href="#">（新闻标题待填充）</a><span class="date">--</span></li>
+        </ul>
+    </section>
+
+    <section class="notice-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                通知公告
+            </h2>
+            <a href="#" class="section-more">More <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></a>
+        </div>
+        <ul class="notice-list">
+            <li class="notice-item">
+                <div class="notice-date"><div class="year">----</div><div class="day">--</div></div>
+                <div class="notice-body"><a href="#">（通知标题待填充）</a></div>
+            </li>
+            <li class="notice-item">
+                <div class="notice-date"><div class="year">----</div><div class="day">--</div></div>
+                <div class="notice-body"><a href="#">（通知标题待填充）</a></div>
+            </li>
+            <li class="notice-item">
+                <div class="notice-date"><div class="year">----</div><div class="day">--</div></div>
+                <div class="notice-body"><a href="#">（通知标题待填充）</a></div>
+            </li>
+            <li class="notice-item">
+                <div class="notice-date"><div class="year">----</div><div class="day">--</div></div>
+                <div class="notice-body"><a href="#">（通知标题待填充）</a></div>
+            </li>
+        </ul>
+    </section>
+</div>
+
+<footer class="site-footer" id="contact">
+    <div class="footer-top-white">
+        <div class="footer-container">
+            <div class="footer-top-inner">
+                <div class="footer-links-area">
+                    <h2 class="footer-title">常用链接</h2>
+                    <div class="links-grid">
+                        <a href="#" class="link-item">实用信息</a>
+                        <a href="contact.html" class="link-item">联系我们</a>
+                        <a href="#" class="link-item">宣传资源</a>
+                        <a href="#" class="link-item">校友标志</a>
+                        <a href="#" class="link-item">新海高人标志</a>
+                        <a href="login.html?redirect=journal.html" class="link-item">新海高青年期刊</a>
+                    </div>
+                </div>
+                <div class="footer-qr-area">
+                    <img src="assets/qr-code.png" alt="二维码" class="qr-code">
+                    <p class="qr-text">欢迎关注海林市高级中学校友（新海高人）公众号</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom-red">
+        <div class="footer-container">
+            <div class="footer-bottom-inner">
+                <div class="footer-logo-area">
+                    <img src="assets/haigao-logo.jpg" alt="Logo" class="footer-logo-img">
+                    <div class="footer-logo-text">
+                        <span class="zh">海林市高级中学校友（新海高人）</span>
+                        <span class="en">Hailin Senior High School Alumni Association</span>
+                    </div>
+                </div>
+                <div class="contact-grid">
+                    <div class="contact-row">
+                        <div class="contact-item">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                            <a href="mailto:xinhaigaoren@126.com" class="value">xinhaigaoren@126.com</a>
+                        </div>
+                        <div class="contact-item">
+                            <div class="pencil-icon-box">
+                                <svg viewBox="0 0 24 24" class="pencil-icon"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                            </div>
+                            <a href="#" class="value feedback-link">意见反馈</a>
+                        </div>
+                    </div>
+                    <div class="contact-row">
+                        <div class="contact-item">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            <span class="value">北京市海淀区 | 黑龙江省哈尔滨市南岗区 | 吉林省长春市朝阳区</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright-bar">
+                <p class="copyright-text">版权所有 © 海林市高级中学校友（新海高人）</p>
+                <div class="stats">
+                    <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-3-3-3z"/></svg>
+                    <span id="site-pv-count" class="view-count">加载中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="site.js?v=20261017"></script>
+</body>
+</html>
