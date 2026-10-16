@@ -6,7 +6,7 @@
 <title>新海高人人工智能专业委员会 - 海林市高级中学校友（新海高人）</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: 1.25vw; }
+    html { font-size: 16px; }
     body {
         font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
         background-color: #f4f4f4;
@@ -18,7 +18,7 @@
        ========================================== */
     .topbar {
         width: 100%;
-        height: 5.5rem;
+        height: 4.5rem;
         background-color: #94070A;
         display: flex;
         align-items: center;
@@ -30,7 +30,7 @@
         white-space: nowrap;
     }
     .topbar-left img {
-        height: 3rem; width: 3rem;
+        height: 2.6rem; width: 2.6rem;
         border-radius: 50%; object-fit: contain;
         background-color: rgba(255,255,255,0.08);
     }
@@ -38,7 +38,7 @@
     .topbar-left .logo-text .zh { font-size: 1rem; line-height: 1.3; }
     .topbar-left .logo-text .en { font-size: 0.7rem; opacity: 0.85; line-height: 1.3; }
     .topbar-left .system-name-big {
-        font-size: 1.8rem; color: #fff;
+        font-size: 1.3rem; color: #fff;
         font-weight: normal; letter-spacing: 0.05rem;
         margin-left: 1rem;
     }
@@ -61,8 +61,8 @@
 
     /* ★ 主菜单：只有悬停时才显示下划线 */
     .topbar-menu {
-        display: flex; align-items: center; gap: 1.8rem;
-        font-size: 1.3rem; color: #fff; white-space: nowrap;
+        display: flex; align-items: center; gap: 1.5rem;
+        font-size: 1rem; color: #fff; white-space: nowrap;
     }
     .topbar-menu a {
         color: #fff; text-decoration: none;
@@ -85,9 +85,9 @@
        主体内容区
        ========================================== */
     .content-wrapper {
-        width: 100%; max-width: 95rem;
-        margin: 2.5rem auto; padding: 0 2rem;
-        display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
+        width: 100%; max-width: 75rem;
+        margin: 2rem auto; padding: 0 1.5rem;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem;
     }
     .section-header {
         display: flex; align-items: center; justify-content: space-between;
@@ -244,27 +244,23 @@
     .view-count { font-size: 0.8rem; }
 
     /* =========================================
-       响应式：小屏适配 + 大屏封顶
+       响应式：常规断点适配屏幕
        ========================================= */
-    /* 大屏（≥1920px）基准字号封顶，页面不再随屏宽继续放大 */
-    @media (min-width: 1921px) {
-        html { font-size: 24px; }
-    }
     /* 中屏：菜单/顶栏收紧 */
     @media (max-width: 1280px) {
         .topbar { padding: 0 1.5rem; }
-        .topbar-menu { gap: 1.2rem; font-size: 1.15rem; }
+        .topbar-menu { gap: 1.2rem; }
     }
     /* 窄中屏：顶栏换行、内容区单列 */
     @media (max-width: 1100px) {
         .content-wrapper { grid-template-columns: 1fr; gap: 2rem; }
         .topbar { flex-wrap: wrap; height: auto; padding: 1rem 1.5rem; gap: 0.8rem; }
         .topbar-right { align-items: flex-start; }
-        .topbar-menu { flex-wrap: wrap; gap: 1rem 1.5rem; font-size: 1.1rem; }
+        .topbar-menu { flex-wrap: wrap; gap: 1rem 1.5rem; }
     }
     @media (max-width: 768px) {
         .topbar { flex-wrap: wrap; height: auto; padding: 1rem; gap: 0.8rem; }
-        .topbar-menu { flex-wrap: wrap; gap: 1rem; font-size: 1.1rem; }
+        .topbar-menu { flex-wrap: wrap; gap: 1rem; font-size: 1rem; }
         .footer-top-inner { flex-direction: column; align-items: center; }
         .footer-links-area { max-width: 100%; width: 100%; }
         .footer-title { text-align: center; }
@@ -424,7 +420,7 @@
             <div class="copyright-bar">
                 <p class="copyright-text">版权所有 © 海林市高级中学校友（新海高人）</p>
                 <div class="stats">
-                    <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                    <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-3-3-3z"/></svg>
                     <span id="site-pv-count" class="view-count">加载中...</span>
                 </div>
             </div>
