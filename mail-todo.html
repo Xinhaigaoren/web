@@ -147,6 +147,7 @@
     var todoBody = document.getElementById('todoBody');
     function render(mails){
         todoBody.innerHTML = '';
+        document.getElementById('emptyTip').textContent = '没有待办邮件，收件箱全部已读';
         document.getElementById('emptyTip').style.display = mails.length ? 'none' : 'block';
         document.getElementById('pageInfo').textContent = '共 ' + mails.length + ' 封待办';
         var badge = document.getElementById('todoBadge');

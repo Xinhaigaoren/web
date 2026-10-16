@@ -145,6 +145,7 @@
     function render(drafts){
         var body = document.getElementById('draftBody');
         body.innerHTML = '';
+        document.getElementById('emptyTip').textContent = '草稿箱为空，写信时可点击「存草稿」保存';
         document.getElementById('emptyTip').style.display = drafts.length ? 'none' : 'block';
         document.getElementById('pageInfo').textContent = '共 ' + drafts.length + ' 封草稿';
         drafts.forEach(function(d){

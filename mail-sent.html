@@ -181,6 +181,7 @@
 
     function render(mails){
         mailBody.innerHTML = '';
+        document.getElementById('emptyTip').textContent = '还没有发送过邮件';
         document.getElementById('emptyTip').style.display = mails.length ? 'none' : 'block';
         document.getElementById('pageInfo').textContent = '共 ' + mails.length + ' 封';
         mails.forEach(function(m){

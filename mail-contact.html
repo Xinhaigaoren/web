@@ -181,7 +181,7 @@
             </thead>
             <tbody id="contactBody"></tbody>
         </table>
-        <div class="empty-tip" id="emptyTip" style="display:block;">正在加载邮件…</div>
+        <div class="empty-tip" id="emptyTip" style="display:block;">正在加载通讯录…</div>
     </section>
 </div>
 
@@ -237,6 +237,7 @@
                 var alumni = (j.alumni || []).map(function(a){ return { name: a.name, email: a.email, phone: '', meta: (a.city || '') + (a.graduation_year ? ' · ' + a.graduation_year + '届' : ''), group: '已认证校友', isAlumni: true }; });
                 var personal = (j.personal || []).map(function(c){ return { id: c.id, name: c.name, email: c.email, phone: c.phone, meta: c.group_name || '未分组联系人', group: c.group_name || '未分组联系人', isAlumni: false }; });
                 var all = alumni.concat(personal);
+                document.getElementById('emptyTip').textContent = '暂无联系人';
                 document.getElementById('emptyTip').style.display = all.length ? 'none' : 'block';
                 document.getElementById('countTip').textContent = '共 ' + all.length + ' 人（含 ' + alumni.length + ' 位已认证校友）';
                 all.forEach(function(c){
