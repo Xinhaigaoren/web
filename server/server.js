@@ -4770,28 +4770,43 @@ app.get('/api/mail/contacts', requireAuth, requireAlumni, async (req, res) => {
       `select * from public.alumni_contacts where owner_user_id=$1 order by group_name, name`,
       [me]
     );
-    // 所有已审批校友（role=alumni），未建邮箱账户的自动补建，保证实时互通
+    // 所有已审批校友（以管理员审批数据 alumni_verifications approved 为准）
     const alumni = await dbQuery(
-      `select u.id as user_id, u.display_name,
-              coalesce(p.current_city, p.city, '') as city, coalesce(p.graduation_year, '') as graduation_year,
+      `select v.id as ver_id, v.user_id, v.name, v.graduation_year, v.current_city,
               a.mail_address
-       from public.app_users u
-       left join public.alumni_profiles p on p.user_id = u.id
-       left join public.alumni_mail_accounts a on a.user_id = u.id
-       where u.role = 'alumni' and u.id <> $1
-       order by u.display_name`,
-      [me]
+       from public.alumni_verifications v
+       left join public.alumni_mail_accounts a on a.user_id = v.user_id
+       where v.status = 'approved'
+       order by v.name`,
+      []
     );
     const alumniList = [];
+    const seenUid = new Set();
     for (const x of alumni.rows) {
+      let uid = x.user_id;
       let address = x.mail_address;
-      if (!address) {
-        try { address = (await getOrCreateMailAccount(x.user_id)).mail_address; } catch (_) {}
+      const name = x.name || '校友';
+      // 认证记录未绑定账号时，按同名在已认证校友账号中匹配
+      if (!uid) {
+        try {
+          const m = await dbQuery(
+            `select u.id from public.app_users u
+             where u.role='alumni' and lower(u.display_name)=lower($1)
+             limit 1`,
+            [name]
+          );
+          if (m.rows[0]) uid = m.rows[0].id;
+        } catch (_) {}
+      }
+      if (uid && seenUid.has(String(uid))) continue; // 同一账号只出现一次
+      if (uid) seenUid.add(String(uid));
+      if (uid && !address) {
+        try { address = (await getOrCreateMailAccount(uid)).mail_address; } catch (_) {}
       }
       alumniList.push({
-        name: x.display_name,
+        name,
         email: address || '',
-        city: x.city || '',
+        city: x.current_city || '',
         graduation_year: x.graduation_year || ''
       });
     }
