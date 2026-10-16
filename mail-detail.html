@@ -186,9 +186,15 @@
             }
             html += '</div>';
 
-            // 已读回执（发件人视角，开启已读回执时显示）
+            // 已读回执（发件人视角，开启已读回执时显示）——按真实阅读状态展示
             if (j.is_sender && j.mail.read_receipt) {
-                html += '<div class="receipt-box">对方已阅读 — 共发给 <b>' + j.to_count + '</b> 个收件人，其中 <b>' + j.read_count + '</b> 个信件已被对方阅读</div>';
+                var _rc = Number(j.read_count) || 0;
+                var _tc = Number(j.to_count) || 0;
+                var _txt;
+                if (_rc === 0) _txt = '对方尚未阅读 — 共发给 <b>' + _tc + '</b> 个收件人';
+                else if (_rc >= _tc) _txt = '对方已阅读 — 共发给 <b>' + _tc + '</b> 个收件人';
+                else _txt = '对方已阅读 <b>' + _rc + '</b>/<b>' + _tc + '</b> 封 — 共发给 <b>' + _tc + '</b> 个收件人';
+                html += '<div class="receipt-box">' + _txt + '</div>';
             }
 
             html += '<div class="mail-head">';
