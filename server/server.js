@@ -4738,6 +4738,70 @@ app.post('/api/mail/send', requireAuth, requireAlumni, async (req, res) => {
   }
 });
 
+// 个人通讯录 + 校友联系人
+app.get('/api/mail/contacts', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const me = req.user.user_id;
+    const my = await dbQuery(
+      `select * from public.alumni_contacts where owner_user_id=$1 order by group_name, name`,
+      [me]
+    );
+    const alumni = await dbQuery(
+      `select a.user_id, a.mail_address, a.display_name,
+              coalesce(p.current_city, p.city, '') as city, coalesce(p.graduation_year, '') as graduation_year
+       from public.alumni_mail_accounts a
+       left join public.alumni_profiles p on p.user_id = a.user_id
+       where a.user_id <> $1
+       order by a.display_name`,
+      [me]
+    );
+    const groups = {};
+    for (const c of my.rows) {
+      const g = c.group_name || '未分组联系人';
+      if (!groups[g]) groups[g] = [];
+      groups[g].push({ id: c.id, name: c.name, email: c.email, phone: c.phone, note: c.note });
+    }
+    return ok(res, {
+      personal: my.rows,
+      groups,
+      alumni: alumni.rows.map(x => ({
+        name: x.display_name, email: x.mail_address,
+        city: x.city || '', graduation_year: x.graduation_year || ''
+      }))
+    });
+  } catch (e) {
+    return fail(res, 500, '获取通讯录失败', { error: e.message });
+  }
+});
+
+// 新增个人联系人
+app.post('/api/mail/contacts', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const name = String(b.name || '').trim();
+    if (!name) return fail(res, 400, '联系人姓名不能为空');
+    const ins = await dbQuery(
+      `insert into public.alumni_contacts (owner_user_id, name, email, phone, group_name, note)
+       values ($1,$2,$3,$4,$5,$6) returning *`,
+      [req.user.user_id, name, String(b.email || '').trim() || null, String(b.phone || '').trim() || null, String(b.group_name || '未分组联系人').trim(), String(b.note || '').trim() || null]
+    );
+    return ok(res, { contact: ins.rows[0], message: '联系人已添加' });
+  } catch (e) {
+    return fail(res, 500, '添加联系人失败', { error: e.message });
+  }
+});
+
+// 删除个人联系人
+app.delete('/api/mail/contacts/:id', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    await dbQuery(`delete from public.alumni_contacts where id=$1 and owner_user_id=$2`, [id, req.user.user_id]);
+    return ok(res, { message: '联系人已删除' });
+  } catch (e) {
+    return fail(res, 500, '删除联系人失败', { error: e.message });
+  }
+});
+
 // 邮件详情（收件人打开自动标记已读；发件人可见已读回执）
 app.get('/api/mail/:id', requireAuth, requireAlumni, async (req, res) => {
   try {
@@ -4806,70 +4870,6 @@ app.delete('/api/mail/:id/delete', requireAuth, requireAlumni, async (req, res) 
     return ok(res, { message: '邮件已删除' });
   } catch (e) {
     return fail(res, 500, '删除邮件失败', { error: e.message });
-  }
-});
-
-// 个人通讯录 + 校友联系人
-app.get('/api/mail/contacts', requireAuth, requireAlumni, async (req, res) => {
-  try {
-    const me = req.user.user_id;
-    const my = await dbQuery(
-      `select * from public.alumni_contacts where owner_user_id=$1 order by group_name, name`,
-      [me]
-    );
-    const alumni = await dbQuery(
-      `select a.user_id, a.mail_address, a.display_name,
-              coalesce(p.current_city, p.city, '') as city, coalesce(p.graduation_year, '') as graduation_year
-       from public.alumni_mail_accounts a
-       left join public.alumni_profiles p on p.user_id = a.user_id
-       where a.user_id <> $1
-       order by a.display_name`,
-      [me]
-    );
-    const groups = {};
-    for (const c of my.rows) {
-      const g = c.group_name || '未分组联系人';
-      if (!groups[g]) groups[g] = [];
-      groups[g].push({ id: c.id, name: c.name, email: c.email, phone: c.phone, note: c.note });
-    }
-    return ok(res, {
-      personal: my.rows,
-      groups,
-      alumni: alumni.rows.map(x => ({
-        name: x.display_name, email: x.mail_address,
-        city: x.city || '', graduation_year: x.graduation_year || ''
-      }))
-    });
-  } catch (e) {
-    return fail(res, 500, '获取通讯录失败', { error: e.message });
-  }
-});
-
-// 新增个人联系人
-app.post('/api/mail/contacts', requireAuth, requireAlumni, async (req, res) => {
-  try {
-    const b = req.body || {};
-    const name = String(b.name || '').trim();
-    if (!name) return fail(res, 400, '联系人姓名不能为空');
-    const ins = await dbQuery(
-      `insert into public.alumni_contacts (owner_user_id, name, email, phone, group_name, note)
-       values ($1,$2,$3,$4,$5,$6) returning *`,
-      [req.user.user_id, name, String(b.email || '').trim() || null, String(b.phone || '').trim() || null, String(b.group_name || '未分组联系人').trim(), String(b.note || '').trim() || null]
-    );
-    return ok(res, { contact: ins.rows[0], message: '联系人已添加' });
-  } catch (e) {
-    return fail(res, 500, '添加联系人失败', { error: e.message });
-  }
-});
-
-// 删除个人联系人
-app.delete('/api/mail/contacts/:id', requireAuth, requireAlumni, async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    await dbQuery(`delete from public.alumni_contacts where id=$1 and owner_user_id=$2`, [id, req.user.user_id]);
-    return ok(res, { message: '联系人已删除' });
-  } catch (e) {
-    return fail(res, 500, '删除联系人失败', { error: e.message });
   }
 });
 
