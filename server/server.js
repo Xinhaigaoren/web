@@ -4770,15 +4770,31 @@ app.get('/api/mail/contacts', requireAuth, requireAlumni, async (req, res) => {
       `select * from public.alumni_contacts where owner_user_id=$1 order by group_name, name`,
       [me]
     );
+    // 所有已审批校友（role=alumni），未建邮箱账户的自动补建，保证实时互通
     const alumni = await dbQuery(
-      `select a.user_id, a.mail_address, a.display_name,
-              coalesce(p.current_city, p.city, '') as city, coalesce(p.graduation_year, '') as graduation_year
-       from public.alumni_mail_accounts a
-       left join public.alumni_profiles p on p.user_id = a.user_id
-       where a.user_id <> $1
-       order by a.display_name`,
+      `select u.id as user_id, u.display_name,
+              coalesce(p.current_city, p.city, '') as city, coalesce(p.graduation_year, '') as graduation_year,
+              a.mail_address
+       from public.app_users u
+       left join public.alumni_profiles p on p.user_id = u.id
+       left join public.alumni_mail_accounts a on a.user_id = u.id
+       where u.role = 'alumni' and u.id <> $1
+       order by u.display_name`,
       [me]
     );
+    const alumniList = [];
+    for (const x of alumni.rows) {
+      let address = x.mail_address;
+      if (!address) {
+        try { address = (await getOrCreateMailAccount(x.user_id)).mail_address; } catch (_) {}
+      }
+      alumniList.push({
+        name: x.display_name,
+        email: address || '',
+        city: x.city || '',
+        graduation_year: x.graduation_year || ''
+      });
+    }
     const groups = {};
     for (const c of my.rows) {
       const g = c.group_name || '未分组联系人';
@@ -4788,10 +4804,7 @@ app.get('/api/mail/contacts', requireAuth, requireAlumni, async (req, res) => {
     return ok(res, {
       personal: my.rows,
       groups,
-      alumni: alumni.rows.map(x => ({
-        name: x.display_name, email: x.mail_address,
-        city: x.city || '', graduation_year: x.graduation_year || ''
-      }))
+      alumni: alumniList
     });
   } catch (e) {
     return fail(res, 500, '获取通讯录失败', { error: e.message });
