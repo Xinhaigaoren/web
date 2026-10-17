@@ -31,31 +31,148 @@
     .topbar-menu a:hover { border-bottom-color: #fff; opacity: 1; }
     .topbar-menu a.active { opacity: 1; }
     .main-layout { flex: 1; display: flex; background-color: #ffffff; }
-    .sidebar { width: 12rem; background-color: #f5f5f5; border-right: 1px solid #e0e0e0; padding: 1rem 0; display: flex; flex-direction: column; }
+    .sidebar { width: 12rem; background-color: #f5f5f5; border-right: 1px solid #e0e0e0; padding: 1rem 0; display: flex; flex-direction: column; flex-shrink: 0; }
     .sidebar-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1rem; font-size: 0.9rem; color: #333; text-decoration: none; border-left: 3px solid transparent; transition: all 0.3s; }
     .sidebar-btn:hover { background-color: #ebebeb; color: #94070A; }
     .sidebar-btn.active { background-color: #ffffff; border-left-color: #94070A; color: #94070A; font-weight: bold; }
     .sidebar-btn svg { width: 1rem; height: 1rem; fill: currentColor; }
-    .content-area { flex: 1; padding: 1.5rem 2rem; overflow-y: auto; background: #fff; }
+    .content-area { flex: 1; display: flex; min-width: 0; background: #fff; }
 
+    /* ===== 写信主体：左侧表单 + 右侧通讯录面板 ===== */
+    .compose-main { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 1.2rem 1.5rem; }
     .compose-form { width: 100%; }
     .compose-actions { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
-    .btn-send { background: #94070A; color: #fff; border: none; padding: 0.55rem 1.6rem; font-size: 1rem; border-radius: 0.25rem; cursor: pointer; font-family: inherit; }
-    .btn-send:hover { background: #7a0609; }
-    .btn-plain { background: #fff; color: #333; border: 1px solid #d0d0d0; padding: 0.5rem 1.2rem; font-size: 0.9rem; border-radius: 0.25rem; cursor: pointer; font-family: inherit; }
-    .btn-plain:hover { border-color: #94070A; color: #94070A; }
-    .compose-row { display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 0.55rem 0; font-size: 0.95rem; }
+    /* 所有按钮 = 北大红 */
+    .btn-send, .btn-preview, .btn-draft, .btn-cancel {
+        color: #fff; background: #9E0B0F; border: none; padding: 0.55rem 1.6rem; font-size: 1rem;
+        border-radius: 0.25rem; cursor: pointer; font-family: inherit; transition: background 0.2s;
+    }
+    .btn-send:hover, .btn-preview:hover, .btn-draft:hover, .btn-cancel:hover { background: #7d090c; }
+    .compose-actions .btn-send { background: #9E0B0F; font-weight: bold; }
+    .compose-row { display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 0.5rem 0; font-size: 0.95rem; }
     .compose-row label { width: 5.5rem; color: #666; flex-shrink: 0; }
-    .compose-row input { flex: 1; border: none; outline: none; font-size: 0.95rem; font-family: inherit; color: #333; background: transparent; }
-    .compose-toolbar { display: flex; align-items: center; gap: 0.4rem; padding: 0.6rem 0; border-bottom: 1px solid #eee; flex-wrap: wrap; }
-    .compose-toolbar button { background: #fff; border: 1px solid #e0e0e0; border-radius: 0.2rem; padding: 0.3rem 0.7rem; font-size: 0.85rem; color: #444; cursor: pointer; font-family: inherit; }
-    .compose-toolbar button:hover { border-color: #94070A; color: #94070A; }
-    .compose-toolbar select { padding: 0.3rem 0.5rem; font-size: 0.85rem; border: 1px solid #e0e0e0; border-radius: 0.2rem; color: #444; background: #fff; }
-    .compose-body { width: 100%; min-height: clamp(280px, 55vh, 560px); border: none; outline: none; resize: vertical; padding: 1rem 0; font-size: 1rem; line-height: 1.7; font-family: inherit; }
-    .compose-footer { display: flex; align-items: center; gap: 1.4rem; padding-top: 0.8rem; font-size: 0.9rem; color: #555; flex-wrap: wrap; }
+    .compose-row input { flex: 1; border: none; outline: none; font-size: 0.95rem; font-family: inherit; color: #333; background: transparent; min-width: 0; }
+    .row-links { display: flex; align-items: center; gap: 0.6rem; white-space: nowrap; }
+    .row-links a { color: #3b7cff; font-size: 0.85rem; cursor: pointer; text-decoration: none; }
+    .row-links a:hover { text-decoration: underline; }
+    .row-links .sep { color: #ccc; }
+    .row-links a.hide { display: none; }
+    .attach-sign { display: flex; align-items: center; gap: 1.2rem; padding: 0.5rem 0; font-size: 0.9rem; }
+    .attach-sign a { color: #3b7cff; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 0.3rem; }
+    .attach-sign a:hover { text-decoration: underline; }
+    .attach-sign .at { color: #555; }
+    .attach-sign .at b { color: #333; font-weight: normal; }
+    .sign-wrap { position: relative; }
+
+    .compose-toolbar { display: flex; align-items: center; gap: 0.3rem; padding: 0.5rem 0; border-bottom: 1px solid #eee; flex-wrap: wrap; }
+    .compose-toolbar .tb-btn { background: #fff; border: 1px solid #e0e0e0; border-radius: 0.2rem; min-width: 2rem; height: 1.8rem; padding: 0 0.4rem; font-size: 0.85rem; color: #444; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; }
+    .compose-toolbar .tb-btn:hover { border-color: #9E0B0F; color: #9E0B0F; }
+    .compose-toolbar .tb-btn.on { background: #9E0B0F; color: #fff; border-color: #9E0B0F; }
+    .compose-toolbar select { height: 1.8rem; font-size: 0.82rem; border: 1px solid #e0e0e0; border-radius: 0.2rem; color: #444; background: #fff; padding: 0 0.3rem; max-width: 9rem; }
+    .compose-toolbar .sep { width: 1px; height: 1.2rem; background: #ddd; margin: 0 0.2rem; }
+    .compose-toolbar .grow { flex: 1; }
+    .compose-toolbar .fullscreen-btn { background: none; border: none; font-size: 0.9rem; cursor: pointer; color: #666; }
+
+    .body-wrap { position: relative; }
+    .compose-body { width: 100%; min-height: clamp(280px, 52vh, 540px); border: none; outline: none; resize: none; padding: 1rem 0; font-size: 1rem; line-height: 1.7; font-family: inherit; overflow-y: auto; }
+    .compose-footer { display: flex; align-items: center; gap: 1.2rem; padding-top: 0.8rem; font-size: 0.9rem; color: #555; flex-wrap: wrap; }
     .compose-footer label { display: flex; align-items: center; gap: 0.3rem; cursor: pointer; }
-    .compose-footer input[type=checkbox] { accent-color: #94070A; }
+    .compose-footer input[type=checkbox] { accent-color: #9E0B0F; }
+    .compose-footer .ft { display: flex; align-items: center; gap: 0.25rem; cursor: pointer; color: #3b7cff; }
+    .compose-footer .ft:hover { text-decoration: underline; }
+
+    /* 签名下拉 */
+    .sign-menu { position: absolute; top: 1.6rem; left: 0; background: #fff; border: 1px solid #ddd; border-radius: 0.25rem; box-shadow: 0 4px 14px rgba(0,0,0,0.12); z-index: 60; display: none; min-width: 9rem; padding: 0.3rem 0; }
+    .sign-menu.show { display: block; }
+    .sign-menu a { display: block; padding: 0.5rem 1rem; font-size: 0.88rem; color: #333; text-decoration: none; cursor: pointer; }
+    .sign-menu a:hover { background: #f2f3f5; }
+    .sign-menu a.sel { background: #eef3ff; color: #3b7cff; }
+
+    /* 更多菜单 */
+    .more-menu { position: absolute; background: #fff; border: 1px solid #ddd; border-radius: 0.25rem; box-shadow: 0 4px 14px rgba(0,0,0,0.12); z-index: 60; display: none; min-width: 10rem; padding: 0.3rem 0; }
+    .more-menu.show { display: block; }
+    .more-menu a { display: block; padding: 0.45rem 1rem; font-size: 0.88rem; color: #333; text-decoration: none; cursor: pointer; }
+    .more-menu a:hover { background: #f2f3f5; }
+    .more-menu a.plain { color: #9E0B0F; }
+
+    /* 右侧个人通讯录面板 */
+    .contact-panel { width: 14rem; flex-shrink: 0; border-left: 1px solid #eee; background: #fafbfc; display: flex; flex-direction: column; }
+    .cp-head { padding: 0.7rem 0.9rem; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .cp-head .t { font-size: 0.95rem; color: #333; }
+    .cp-head a { font-size: 0.8rem; color: #3b7cff; cursor: pointer; text-decoration: none; }
+    .cp-search { display: flex; align-items: center; gap: 0.3rem; padding: 0.5rem 0.9rem; border-bottom: 1px solid #eee; }
+    .cp-search input { flex: 1; border: 1px solid #d5d9de; border-radius: 0.2rem; padding: 0.3rem 0.5rem; font-size: 0.85rem; font-family: inherit; outline: none; min-width: 0; }
+    .cp-list { flex: 1; overflow-y: auto; padding: 0.4rem 0; }
+    .cp-item { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.9rem; font-size: 0.85rem; color: #333; cursor: pointer; }
+    .cp-item:hover { background: #eef1f4; }
+    .cp-item .c { color: #999; font-size: 0.8rem; }
+    .cp-item.active { background: #fdecec; color: #9E0B0F; font-weight: bold; }
+    .cp-foot { padding: 0.6rem 0.9rem; border-top: 1px solid #eee; font-size: 0.82rem; color: #3b7cff; cursor: pointer; }
+    .cp-foot:hover { text-decoration: underline; }
+
+    /* 邮件预览弹窗 */
+    .preview-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 90; display: none; align-items: center; justify-content: center; }
+    .preview-box { background: #fff; border-radius: 0.3rem; width: 46rem; max-width: 92vw; max-height: 86vh; display: flex; flex-direction: column; box-shadow: 0 10px 36px rgba(0,0,0,0.22); }
+    .pv-head { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.2rem; border-bottom: 1px solid #eee; }
+    .pv-head .t { font-size: 1.05rem; color: #333; }
+    .pv-head .cnt { font-size: 0.85rem; color: #888; }
+    .pv-head .nav { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: #3b7cff; }
+    .pv-head .nav a { cursor: pointer; }
+    .pv-head .nav a:hover { text-decoration: underline; }
+    .pv-head .close { margin-left: auto; cursor: pointer; color: #888; font-size: 1.1rem; }
+    .pv-body { padding: 1.2rem 1.4rem; overflow-y: auto; }
+    .pv-meta { display: flex; align-items: center; gap: 0.8rem; font-size: 0.92rem; color: #444; margin-bottom: 0.8rem; }
+    .pv-meta .from { color: #222; }
+    .pv-meta .time { margin-left: auto; color: #888; }
+    .pv-content { min-height: 12rem; border-top: 1px solid #eee; padding-top: 1rem; font-size: 0.95rem; line-height: 1.7; color: #333; white-space: pre-wrap; word-break: break-word; }
+    .pv-actions { display: flex; justify-content: flex-end; padding: 0.8rem 1.2rem; border-top: 1px solid #eee; }
+    .pv-actions .btn-ok { background: #9E0B0F; color: #fff; border: none; padding: 0.45rem 1.6rem; font-size: 0.92rem; border-radius: 0.25rem; cursor: pointer; font-family: inherit; }
+    .pv-actions .btn-ok:hover { background: #7d090c; }
+
+    /* 签名档设置弹窗 */
+    .sig-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 92; display: none; align-items: center; justify-content: center; }
+    .sig-box { background: #fff; border-radius: 0.3rem; width: 42rem; max-width: 92vw; max-height: 86vh; display: flex; flex-direction: column; box-shadow: 0 10px 36px rgba(0,0,0,0.22); overflow: hidden; }
+    .sig-tabs { display: flex; gap: 1.4rem; padding: 0.8rem 1.4rem; border-bottom: 1px solid #eee; }
+    .sig-tabs a { font-size: 0.95rem; color: #666; cursor: pointer; padding-bottom: 0.3rem; border-bottom: 2px solid transparent; }
+    .sig-tabs a.active { color: #9E0B0F; border-bottom-color: #9E0B0F; }
+    .sig-body { flex: 1; overflow-y: auto; padding: 1.2rem 1.4rem; }
+    .sig-section { margin-bottom: 1.2rem; }
+    .sig-section h4 { font-size: 0.95rem; color: #333; margin-bottom: 0.6rem; }
+    .sig-pos { display: flex; gap: 1rem; }
+    .sig-pos label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; color: #444; cursor: pointer; }
+    .sig-pos input { accent-color: #9E0B0F; }
+    .sig-list .row { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.8rem; border: 1px solid #eee; border-radius: 0.25rem; margin-bottom: 0.5rem; font-size: 0.88rem; }
+    .sig-list .row .nm { color: #333; font-weight: bold; }
+    .sig-list .row .ops a { color: #3b7cff; font-size: 0.82rem; cursor: pointer; margin-left: 0.8rem; text-decoration: none; }
+    .sig-list .row .ops a.del { color: #e5484d; }
+    .sig-new { background: #9E0B0F; color: #fff; border: none; padding: 0.45rem 1.2rem; font-size: 0.88rem; border-radius: 0.25rem; cursor: pointer; font-family: inherit; }
+    .sig-new:hover { background: #7d090c; }
+    .sig-note { font-size: 0.82rem; color: #888; margin-top: 0.5rem; }
+    .sig-tip { position: absolute; top: 0.6rem; right: 1rem; background: #52c41a; color: #fff; padding: 0.35rem 0.9rem; border-radius: 0.2rem; font-size: 0.85rem; display: none; }
+    .sig-tip.show { display: block; }
+
+    /* 新建签名弹窗 */
+    .nsig-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 94; display: none; align-items: center; justify-content: center; }
+    .nsig-box { background: #fff; border-radius: 0.3rem; width: 34rem; max-width: 92vw; padding: 1.2rem 1.4rem; box-shadow: 0 10px 36px rgba(0,0,0,0.22); }
+    .nsig-box h3 { font-size: 1rem; color: #333; margin-bottom: 0.6rem; }
+    .nsig-box .tip { font-size: 0.8rem; color: #888; margin-bottom: 1rem; }
+    .nsig-box .field { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; }
+    .nsig-box .field label { width: 3.5rem; color: #666; font-size: 0.9rem; flex-shrink: 0; }
+    .nsig-box .field input { flex: 1; border: 1px solid #d5d9de; border-radius: 0.25rem; padding: 0.4rem 0.6rem; font-size: 0.9rem; font-family: inherit; outline: none; }
+    .nsig-box .field textarea { flex: 1; border: 1px solid #d5d9de; border-radius: 0.25rem; padding: 0.4rem 0.6rem; font-size: 0.9rem; font-family: inherit; outline: none; min-height: 6rem; resize: vertical; }
+    .nsig-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.8rem; }
+    .nsig-actions button { padding: 0.45rem 1.3rem; font-size: 0.9rem; border-radius: 0.25rem; cursor: pointer; font-family: inherit; }
+    .nsig-actions .ok { background: #9E0B0F; color: #fff; border: none; }
+    .nsig-actions .ok:hover { background: #7d090c; }
+    .nsig-actions .cancel { background: #fff; border: 1px solid #d0d0d0; color: #333; }
+
     .toast { position: fixed; top: 6rem; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 0.6rem 1.4rem; border-radius: 0.3rem; font-size: 0.9rem; z-index: 99; display: none; }
+
+    /* 全屏写信 */
+    body.fullscreen { overflow: hidden; }
+    body.fullscreen .topbar, body.fullscreen .sidebar { display: none; }
+    body.fullscreen .content-area { padding: 1rem 2rem; }
+    body.fullscreen .compose-body { min-height: calc(100vh - 14rem); }
 
     /* ========== 浏览器适配 ========== */
     @media (max-width: 1280px) {
@@ -63,13 +180,14 @@
         .topbar-menu { font-size: 1.2rem; gap: 1.4rem; }
         .system-name-big { font-size: 1.6rem; }
         .sidebar { width: 11rem; }
+        .contact-panel { width: 12.5rem; }
     }
     @media (max-width: 1024px) {
         .topbar { height: 4.6rem; }
         .topbar-menu { font-size: 1.05rem; gap: 1rem; }
         .topbar-left .logo-text .en { display: none; }
         .sidebar { width: 10rem; }
-        .content-area { padding: 1rem 1.2rem; }
+        .compose-main { padding: 1rem 1.2rem; }
     }
     @media (max-width: 820px) {
         .topbar { flex-wrap: wrap; height: auto; padding: 0.6rem 1rem; gap: 0.4rem; }
@@ -81,6 +199,10 @@
         .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid #e0e0e0; padding: 0.5rem; }
         .sidebar-btn { padding: 0.5rem 0.8rem; border-left: none; border-bottom: 2px solid transparent; }
         .sidebar-btn.active { border-bottom-color: #94070A; border-left: none; }
+        .content-area { flex-direction: column; }
+        .contact-panel { width: 100%; border-left: none; border-top: 1px solid #eee; max-height: 12rem; }
+        .compose-main { padding: 0.8rem; }
+        .row-links { flex-wrap: wrap; }
     }
 </style>
 </head>
@@ -142,51 +264,193 @@
     </aside>
 
     <section class="content-area">
-        <div class="compose-form">
-            <div class="compose-actions">
-                <button class="btn-send" id="sendBtn">发送</button>
-                <button class="btn-plain" id="draftBtn">存草稿</button>
-                <button class="btn-plain" id="previewBtn">预览</button>
-                <button class="btn-plain" id="cancelBtn">取消</button>
-            </div>
+        <div class="compose-main">
+            <div class="compose-form">
+                <div class="compose-actions">
+                    <button class="btn-send" id="sendBtn">发送</button>
+                    <button class="btn-preview" id="previewBtn">预览</button>
+                    <button class="btn-draft" id="draftBtn">存草稿</button>
+                    <button class="btn-cancel" id="cancelBtn">取消</button>
+                </div>
 
-            <div class="compose-row">
-                <label>发件人：</label>
-                <input type="text" id="fromInput" readonly>
-            </div>
-            <div class="compose-row">
-                <label>收件人：</label>
-                <input type="text" id="toInput" placeholder="输入校友邮箱，多个用逗号分隔">
-            </div>
-            <div class="compose-row">
-                <label>抄送：</label>
-                <input type="text" id="ccInput" placeholder="可选，多个用逗号分隔">
-            </div>
-            <div class="compose-row">
-                <label>主题：</label>
-                <input type="text" id="subjectInput" placeholder="">
-            </div>
+                <div class="compose-row">
+                    <label>发件人：</label>
+                    <input type="text" id="fromInput" readonly>
+                    <div class="row-links">
+                        <a id="checkNameLink">检查姓名</a><span class="sep">|</span>
+                        <a id="ccToggle">取消抄送</a><span class="sep">|</span>
+                        <a id="bccToggle">密送</a><span class="sep">|</span>
+                        <a id="bcctoggle" style="display:none;">取消密送</a><span class="sep" id="sepBcc" style="display:none;">|</span>
+                        <a id="singleToggle">群发单显</a>
+                        <a id="singleToggle2" style="display:none;">取消群发单显</a>
+                    </div>
+                </div>
+                <div class="compose-row">
+                    <label>收件人：</label>
+                    <input type="text" id="toInput" placeholder="输入校友邮箱，多个用逗号分隔">
+                </div>
+                <div class="compose-row" id="ccRow">
+                    <label>抄送：</label>
+                    <input type="text" id="ccInput" placeholder="可选，多个用逗号分隔">
+                    <a id="ccDel" style="color:#999;font-size:0.82rem;cursor:pointer;display:none;">✕</a>
+                </div>
+                <div class="compose-row" id="bccRow" style="display:none;">
+                    <label>密送：</label>
+                    <input type="text" id="bccInput" placeholder="可选，多个用逗号分隔">
+                </div>
+                <div class="compose-row" id="singleRow" style="display:none;">
+                    <label>群发单显：</label>
+                    <input type="text" id="singleInput" placeholder="每个收件人单独显示您的地址">
+                </div>
+                <div class="compose-row">
+                    <label>主题：</label>
+                    <input type="text" id="subjectInput" placeholder="">
+                </div>
 
-            <div class="compose-toolbar">
-                <button type="button" onclick="return false;">↶ 撤销</button>
-                <button type="button" onclick="return false;">↷ 重做</button>
-                <button type="button" onclick="return false;">📎 添加附件</button>
-                <select><option>正文</option></select>
-                <select><option>五号</option></select>
-                <button type="button" onclick="return false;"><b>B</b></button>
-                <button type="button" onclick="return false;"><i>I</i></button>
-                <button type="button" onclick="return false;"><u>U</u></button>
-                <span style="flex:1"></span>
-            </div>
+                <div class="attach-sign">
+                    <a class="at" id="attachLink">📎 添加附件(单个最大1G)</a>
+                    <span class="sign-wrap">
+                        <a id="signLink">签名 ▾</a>
+                        <div class="sign-menu" id="signMenu">
+                            <a data-sel="0">不使用签名档</a>
+                            <a id="editSignBtn">编辑签名档</a>
+                        </div>
+                    </span>
+                </div>
 
-            <textarea class="compose-body" id="bodyInput" placeholder=""></textarea>
+                <div class="compose-toolbar">
+                    <select id="styleSel" title="样式">
+                        <option value="p">正文</option>
+                        <option value="h1">标题1</option>
+                        <option value="h2">标题2</option>
+                        <option value="h3">标题3</option>
+                        <option value="h4">标题4</option>
+                    </select>
+                    <select id="fontSel" title="字体"><option value="">默认字体</option></select>
+                    <select id="sizeSel" title="字号"><option value="">五号</option></select>
+                    <span class="sep"></span>
+                    <button class="tb-btn" id="boldBtn" title="加粗"><b>B</b></button>
+                    <button class="tb-btn" id="italicBtn" title="斜体"><i>I</i></button>
+                    <button class="tb-btn" id="underlineBtn" title="下划线"><u>U</u></button>
+                    <button class="tb-btn" id="strikeBtn" title="删除线"><s>S</s></button>
+                    <button class="tb-btn" id="subBtn" title="下标">X₂</button>
+                    <button class="tb-btn" id="supBtn" title="上标">X²</button>
+                    <button class="tb-btn" id="colorBtn" title="字体颜色">A</button>
+                    <button class="tb-btn" id="hiliteBtn" title="高亮">A</button>
+                    <span class="sep"></span>
+                    <button class="tb-btn" id="listBtn" title="无序列表">☰</button>
+                    <button class="tb-btn" id="olistBtn" title="有序列表">≡</button>
+                    <span class="grow"></span>
+                    <div style="position:relative;">
+                        <button class="tb-btn" id="moreBtn">更多 ▾</button>
+                        <div class="more-menu" id="moreMenu">
+                            <a data-act="list">无序列表</a>
+                            <a data-act="olist">有序列表</a>
+                            <a data-act="indent">缩进</a>
+                            <a data-act="image">插入图片</a>
+                            <a data-act="table">插入表格</a>
+                            <a data-act="quote">引用</a>
+                            <a data-act="hr">分隔线</a>
+                            <a data-act="print">打印</a>
+                            <a data-act="link">插入链接</a>
+                            <a data-act="code">代码</a>
+                            <a data-act="plain" class="plain">切换为纯文本</a>
+                        </div>
+                    </div>
+                    <button class="fullscreen-btn" id="fullscreenBtn" title="全屏">↗</button>
+                </div>
 
-            <div class="compose-footer">
-                <label><input type="checkbox" id="urgentCb"> 设为“紧急”</label>
-                <label><input type="checkbox" id="receiptCb" checked> 已读回执</label>
+                <div class="body-wrap">
+                    <div class="compose-body" id="bodyInput" contenteditable="true" data-placeholder=""></div>
+                </div>
+
+                <div class="compose-footer">
+                    <label><input type="checkbox" id="urgentCb"> 设为“紧急”</label>
+                    <label><input type="checkbox" id="receiptCb" checked> 已读回执</label>
+                    <span class="ft" id="timedSend">⏱ 定时发送</span>
+                    <span class="ft" id="burnAfter">🔥 阅后即焚</span>
+                    <span class="ft" id="pwdEncrypt">🔒 口令加密</span>
+                </div>
             </div>
         </div>
+
+        <!-- 右侧个人通讯录 -->
+        <div class="contact-panel">
+            <div class="cp-head">
+                <span class="t">个人通讯录</span>
+                <a id="cpMore">信纸</a>
+                <a id="cpTpl">模板信</a>
+            </div>
+            <div class="cp-search">
+                <input type="text" id="cpSearch" placeholder="搜索联系人">
+            </div>
+            <div class="cp-list" id="cpList"></div>
+            <div class="cp-foot" id="cpFoot">通讯录(点击选择更多联系人)</div>
+        </div>
     </section>
+</div>
+
+<!-- 邮件预览弹窗 -->
+<div class="preview-mask" id="previewMask">
+    <div class="preview-box">
+        <div class="pv-head">
+            <span class="t">邮件预览</span>
+            <span class="cnt" id="pvCnt">共1封邮件，当前：1/1</span>
+            <span class="nav"><a id="pvPrev">上一封</a><a id="pvNext">下一封</a></span>
+            <span class="close" id="pvClose">×</span>
+        </div>
+        <div class="pv-body">
+            <div class="pv-meta">
+                <span class="from" id="pvFrom"></span>
+                <span class="time" id="pvTime"></span>
+            </div>
+            <div class="pv-content" id="pvContent"></div>
+        </div>
+        <div class="pv-actions"><button class="btn-ok" id="pvOk">确定</button></div>
+    </div>
+</div>
+
+<!-- 签名档设置弹窗 -->
+<div class="sig-mask" id="sigMask">
+    <div class="sig-box">
+        <div class="sig-tabs">
+            <a id="sigTabPersonal">个人信息</a>
+            <a id="sigTabSig" class="active">签名档</a>
+        </div>
+        <div class="sig-body">
+            <div id="sigPersonalPane" style="display:none;color:#888;font-size:0.9rem;">个人信息设置（姓名、联系方式）即将上线</div>
+            <div id="sigPane">
+                <div class="sig-section">
+                    <h4>签名档设置</h4>
+                    <div class="sig-pos">
+                        <label><input type="radio" name="sigPos" value="bottom" checked> 整个文档的底部</label>
+                        <label><input type="radio" name="sigPos" value="afterBody"> 正文之后，引文之前</label>
+                    </div>
+                </div>
+                <div class="sig-section">
+                    <h4>签名档管理</h4>
+                    <div class="sig-list" id="sigList"></div>
+                    <button class="sig-new" id="sigNewBtn">新建签名</button>
+                    <div class="sig-note" id="sigNote">当前共有0个签名档，您一共可以设置3个签名档。</div>
+                </div>
+            </div>
+        </div>
+        <div class="sig-tip" id="sigTip">设置更改成功</div>
+    </div>
+</div>
+
+<!-- 新建签名弹窗 -->
+<div class="nsig-mask" id="nsigMask">
+    <div class="nsig-box">
+        <h3>新建签名</h3>
+        <div class="tip">您还可以上传 64.0K 的签名档图片，支持jpg、jpeg、png格式等。</div>
+        <div class="field"><label>名称：</label><input type="text" id="nsigName" placeholder="签名名称"></div>
+        <div class="field"><label>内容：</label><textarea id="nsigContent" placeholder="签名内容"></textarea></div>
+        <div class="nsig-actions">
+            <button class="cancel" id="nsigCancel">取消</button>
+            <button class="ok" id="nsigOk">确定</button>
+        </div>
+    </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -200,13 +464,271 @@
     var toast = document.getElementById('toast');
     function showToast(t){ toast.textContent = t; toast.style.display = 'block'; clearTimeout(showToast._t); showToast._t = setTimeout(function(){ toast.style.display = 'none'; }, 2600); }
 
-    // 当前编辑的草稿 id（从 ?draft= 读取）
     var editingDraftId = null;
     try {
         var q = new URLSearchParams(location.search);
         if (q.get('draft')) editingDraftId = Number(q.get('draft'));
     } catch (e) {}
 
+    // ===== 字体 / 字号列表（样板完整清单） =====
+    var FONTS = ['Aptos','Aptos Display','Aptos Mono','Aptos Narrow','Aptos Serif','Arial','Arial Black','Calibri','Calibri Light','Cambria','Candara','Century Gothic','Comic Sans MS','Consolas','Constantia','Corbel','Courier New','Franklin Gothic Book','Franklin Gothic Demi','Franklin Gothic Medium','Garamond','Georgia','Impact','Lucida Console','Lucida Handwriting','Lucida Sans Unicode','Palatino Linotype','Segoe UI','Sitka Heading','Sitka Text','Tahoma','Times','Times New Roman','Trebuchet MS','TW Cen MT','Verdana','宋体','新宋体','仿宋','楷体','黑体','微软雅黑','隶书','細明體','新細明體','標楷體','微軟正黑體','メイリオ','ＭＳ Ｐゴシック','ＭＳ Ｐ明朝','游ゴシック','游明朝','맑은 고딕','굴림','돋움','바탕','바탕체','궁서','Xjlhs Ekran','Xjlhs Ekran Qara','Xjlhs Tor','Xjlhs Tor Qara','Xjlhs Tuz','Xjlhs Tuz Ach','Xjlhs Tuz Mawzu','Xjlhs Tuz Qara','Xjlhs Tuz Qara Ach','Xjlhs Tuz Qara Toq','Xjlhs Tuz Toq','Leelawadee UI','Angsana New','Cordia New','DaunPenh','Nirmala UI','Vrinda','Gautami','Iskoola Pota','Kalinga','Kartika','Latha','Mangal','Raavi','Shruti','Tunga','Nyala','Sylfaen'];
+    var SIZES = ['初号','小初','一号','小一','二号','小二','三号','小三','四号','小四','五号','小五','9px','10px','12px','13px','14px','16px','18px','24px','32px'];
+    var SIZE_PX = {'初号':'42px','小初':'36px','一号':'26px','小一':'24px','二号':'22px','小二':'18px','三号':'16px','小三':'15px','四号':'14px','小四':'12px','五号':'10.5px','小五':'9px'};
+    var fontSel = document.getElementById('fontSel');
+    FONTS.forEach(function(f){ var o = document.createElement('option'); o.value = f; o.textContent = f; fontSel.appendChild(o); });
+    var sizeSel = document.getElementById('sizeSel');
+    SIZES.forEach(function(s){ var o = document.createElement('option'); o.value = s; o.textContent = s; sizeSel.appendChild(o); });
+    sizeSel.value = '五号';
+
+    // ===== 密送 / 群发单显 / 取消抄送 =====
+    var ccVisible = true, bccVisible = false, singleVisible = false;
+    function syncRows(){
+        document.getElementById('ccRow').style.display = ccVisible ? '' : 'none';
+        document.getElementById('bccRow').style.display = bccVisible ? '' : 'none';
+        document.getElementById('singleRow').style.display = singleVisible ? '' : 'none';
+        document.getElementById('ccToggle').style.display = ccVisible ? 'none' : '';
+        document.getElementById('ccDel').style.display = ccVisible ? '' : 'none';
+        document.getElementById('bccToggle').style.display = bccVisible ? 'none' : '';
+        var cc2 = document.getElementById('bcctoggle'), sepBcc = document.getElementById('sepBcc');
+        cc2.style.display = bccVisible ? '' : 'none';
+        sepBcc.style.display = bccVisible ? '' : 'none';
+        document.getElementById('singleToggle').style.display = singleVisible ? 'none' : '';
+        document.getElementById('singleToggle2').style.display = singleVisible ? '' : 'none';
+    }
+    document.getElementById('ccToggle').addEventListener('click', function(){ ccVisible = false; syncRows(); });
+    document.getElementById('ccDel').addEventListener('click', function(){ ccVisible = true; syncRows(); });
+    document.getElementById('bccToggle').addEventListener('click', function(){ bccVisible = true; syncRows(); });
+    document.getElementById('bcctoggle').addEventListener('click', function(){ bccVisible = false; syncRows(); });
+    document.getElementById('singleToggle').addEventListener('click', function(){ singleVisible = true; syncRows(); });
+    document.getElementById('singleToggle2').addEventListener('click', function(){ singleVisible = false; syncRows(); });
+
+    // ===== 富文本工具栏 =====
+    var body = document.getElementById('bodyInput');
+    function exec(cmd, val){ document.execCommand(cmd, false, val || null); body.focus(); }
+    document.getElementById('styleSel').addEventListener('change', function(){
+        var v = this.value;
+        if (v === 'p') exec('formatBlock', 'p');
+        else exec('formatBlock', 'h' + v[1]);
+        this.value = '';
+    });
+    document.getElementById('fontSel').addEventListener('change', function(){ exec('fontName', this.value); this.value = ''; });
+    document.getElementById('sizeSel').addEventListener('change', function(){
+        var v = this.value;
+        exec('fontSize', v.indexOf('px') >= 0 ? v.replace('px','') : (SIZE_PX[v] || '3'));
+        this.value = '五号';
+    });
+    document.getElementById('boldBtn').addEventListener('click', function(){ exec('bold'); });
+    document.getElementById('italicBtn').addEventListener('click', function(){ exec('italic'); });
+    document.getElementById('underlineBtn').addEventListener('click', function(){ exec('underline'); });
+    document.getElementById('strikeBtn').addEventListener('click', function(){ exec('strikeThrough'); });
+    document.getElementById('subBtn').addEventListener('click', function(){ exec('subscript'); });
+    document.getElementById('supBtn').addEventListener('click', function(){ exec('superscript'); });
+    document.getElementById('colorBtn').addEventListener('click', function(){ exec('foreColor', '#e5484d'); });
+    document.getElementById('hiliteBtn').addEventListener('click', function(){ exec('hiliteColor', '#fff3a0'); });
+    document.getElementById('listBtn').addEventListener('click', function(){ exec('insertUnorderedList'); });
+    document.getElementById('olistBtn').addEventListener('click', function(){ exec('insertOrderedList'); });
+
+    // 更多菜单
+    var moreMenu = document.getElementById('moreMenu');
+    document.getElementById('moreBtn').addEventListener('click', function(e){ e.stopPropagation(); moreMenu.classList.toggle('show'); });
+    document.addEventListener('click', function(e){ if (!moreMenu.contains(e.target)) moreMenu.classList.remove('show'); });
+    moreMenu.querySelectorAll('a').forEach(function(a){
+        a.addEventListener('click', function(){
+            var act = a.getAttribute('data-act');
+            if (act === 'list') exec('insertUnorderedList');
+            else if (act === 'olist') exec('insertOrderedList');
+            else if (act === 'indent') exec('indent');
+            else if (act === 'image') { var u = prompt('请输入图片地址：'); if (u) exec('insertImage', u); }
+            else if (act === 'table') { exec('insertHTML', '<table border="1" cellpadding="6" style="border-collapse:collapse;width:100%;"><tr><td>单元格</td><td>单元格</td></tr><tr><td>单元格</td><td>单元格</td></tr></table>'); }
+            else if (act === 'quote') exec('formatBlock', 'blockquote');
+            else if (act === 'hr') exec('insertHorizontalRule');
+            else if (act === 'print') { window.print(); }
+            else if (act === 'link') { var u = prompt('请输入链接地址：'); if (u) exec('createLink', u); }
+            else if (act === 'code') exec('formatBlock', 'pre');
+            else if (act === 'plain') { showToast('已切换为纯文本'); }
+            moreMenu.classList.remove('show');
+        });
+    });
+
+    // 全屏
+    document.getElementById('fullscreenBtn').addEventListener('click', function(){ document.body.classList.toggle('fullscreen'); });
+
+    // ===== 签名 =====
+    var sigKey = 'mail_signatures_v1';
+    var sigSelKey = 'mail_signature_selected_v1';
+    var sigPosKey = 'mail_signature_pos_v1';
+    function loadSigs(){ try { return JSON.parse(localStorage.getItem(sigKey) || '[]'); } catch(e){ return []; } }
+    function saveSigs(list){ localStorage.setItem(sigKey, JSON.stringify(list)); }
+    function selectedSig(){ return localStorage.getItem(sigSelKey) || ''; }
+    var signMenu = document.getElementById('signMenu');
+    document.getElementById('signLink').addEventListener('click', function(e){ e.stopPropagation(); signMenu.classList.toggle('show'); });
+    document.addEventListener('click', function(e){ if (!signMenu.contains(e.target)) signMenu.classList.remove('show'); });
+    document.querySelectorAll('#signMenu a[data-sel]').forEach(function(a){
+        a.addEventListener('click', function(){
+            localStorage.removeItem(sigSelKey);
+            signMenu.classList.remove('show');
+            showToast('已不使用签名档');
+        });
+    });
+    document.getElementById('editSignBtn').addEventListener('click', function(){
+        signMenu.classList.remove('show');
+        renderSigList();
+        document.getElementById('sigMask').style.display = 'flex';
+    });
+    document.querySelectorAll('.sig-tabs a').forEach(function(a){
+        a.addEventListener('click', function(){
+            document.querySelectorAll('.sig-tabs a').forEach(function(x){ x.classList.remove('active'); });
+            a.classList.add('active');
+            var isSig = a.id === 'sigTabSig';
+            document.getElementById('sigPersonalPane').style.display = isSig ? 'none' : 'block';
+            document.getElementById('sigPane').style.display = isSig ? 'block' : 'none';
+        });
+    });
+    function renderSigList(){
+        var list = loadSigs();
+        var box = document.getElementById('sigList');
+        box.innerHTML = '';
+        list.forEach(function(s){
+            var row = document.createElement('div'); row.className = 'row';
+            var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = s.name;
+            var ops = document.createElement('span'); ops.className = 'ops';
+            var use = document.createElement('a'); use.textContent = '使用';
+            use.addEventListener('click', function(){ localStorage.setItem(sigSelKey, s.name); document.getElementById('sigTip').classList.add('show'); setTimeout(function(){ document.getElementById('sigTip').classList.remove('show'); }, 1800); });
+            var del = document.createElement('a'); del.className = 'del'; del.textContent = '删除';
+            del.addEventListener('click', function(){
+                var nlist = list.filter(function(x){ return x.name !== s.name; });
+                saveSigs(nlist); renderSigList();
+                if (localStorage.getItem(sigSelKey) === s.name) localStorage.removeItem(sigSelKey);
+            });
+            ops.appendChild(use); ops.appendChild(del);
+            row.appendChild(nm); row.appendChild(ops);
+            box.appendChild(row);
+        });
+        document.getElementById('sigNote').textContent = '当前共有' + list.length + '个签名档，您一共可以设置3个签名档。';
+    }
+    document.querySelectorAll('input[name=sigPos]').forEach(function(r){
+        r.addEventListener('change', function(){ localStorage.setItem(sigPosKey, this.value); document.getElementById('sigTip').classList.add('show'); setTimeout(function(){ document.getElementById('sigTip').classList.remove('show'); }, 1800); });
+    });
+    try { var sp = localStorage.getItem(sigPosKey); if (sp) { var rr = document.querySelector('input[name=sigPos][value="' + sp + '"]'); if (rr) rr.checked = true; } } catch(e){}
+    document.getElementById('sigNewBtn').addEventListener('click', function(){ document.getElementById('nsigName').value = ''; document.getElementById('nsigContent').value = ''; document.getElementById('nsigMask').style.display = 'flex'; });
+    document.getElementById('nsigCancel').addEventListener('click', function(){ document.getElementById('nsigMask').style.display = 'none'; });
+    document.getElementById('nsigOk').addEventListener('click', function(){
+        var nm = document.getElementById('nsigName').value.trim();
+        if (!nm) { showToast('请输入签名名称'); return; }
+        var list = loadSigs();
+        if (list.length >= 3) { showToast('最多可设置3个签名档'); return; }
+        if (list.some(function(s){ return s.name === nm; })) { showToast('签名名称已存在'); return; }
+        list.push({ name: nm, content: document.getElementById('nsigContent').value });
+        saveSigs(list);
+        document.getElementById('nsigMask').style.display = 'none';
+        renderSigList();
+        showToast('签名「' + nm + '」已创建');
+    });
+
+    // ===== 附件 =====
+    var attachName = null;
+    document.getElementById('attachLink').addEventListener('click', function(){
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '*';
+        input.onchange = function(){
+            if (input.files && input.files[0]) {
+                var f = input.files[0];
+                if (f.size > 1024 * 1024 * 1024) { showToast('单个附件最大 1G'); return; }
+                attachName = f.name;
+                showToast('已添加附件：' + f.name);
+            }
+        };
+        input.click();
+    });
+
+    // ===== 底部选项 =====
+    document.getElementById('timedSend').addEventListener('click', function(){ showToast('定时发送功能建设中'); });
+    document.getElementById('burnAfter').addEventListener('click', function(){ showToast('阅后即焚功能建设中'); });
+    document.getElementById('pwdEncrypt').addEventListener('click', function(){ showToast('口令加密功能建设中'); });
+
+    // ===== 右侧通讯录 =====
+    var cpAll = [], cpGroup = '__all__';
+    function loadCp(){
+        fetch(API + '/api/mail/contacts', { headers: { 'Authorization': 'Bearer ' + getToken() } })
+            .then(function(r){ return r.json(); })
+            .then(function(j){
+                if (!j.ok) return;
+                var alumni = (j.alumni || []).map(function(a){ return { name: a.name, email: a.email, group: '已认证校友', isAlumni: true }; });
+                var personal = (j.personal || []).map(function(c){ return { name: c.name, email: c.email, group: c.group_name || '未分组联系人', isAlumni: false }; });
+                cpAll = alumni.concat(personal);
+                renderCp();
+            })
+            .catch(function(){});
+    }
+    function renderCp(){
+        var box = document.getElementById('cpList');
+        box.innerHTML = '';
+        var groups = {};
+        cpAll.forEach(function(c){ var g = c.group; groups[g] = (groups[g] || 0) + 1; });
+        function item(label, cnt, key){
+            var d = document.createElement('div');
+            d.className = 'cp-item' + (cpGroup === key ? ' active' : '');
+            d.innerHTML = '<span>' + label + '</span><span class="c">' + cnt + '</span>';
+            d.addEventListener('click', function(){ cpGroup = key; renderCp(); });
+            box.appendChild(d);
+        }
+        item('全部联系人', cpAll.length, '__all__');
+        Object.keys(groups).forEach(function(g){ if (g === '未分组联系人') return; item(g, groups[g], g); });
+        if (groups['未分组联系人']) item('未分组联系人', groups['未分组联系人'], '未分组联系人');
+        item('已认证校友', (cpAll.filter(function(c){ return c.isAlumni; })).length, '__alumni__');
+    }
+    document.getElementById('cpSearch').addEventListener('input', function(){
+        var q = this.value.trim().toLowerCase();
+        var box = document.getElementById('cpList');
+        box.innerHTML = '';
+        var list = cpAll.filter(function(c){
+            if (cpGroup === '__alumni__' && !c.isAlumni) return false;
+            if (cpGroup !== '__all__' && cpGroup !== '__alumni__' && c.group !== cpGroup) return false;
+            return !q || (c.name || '').toLowerCase().indexOf(q) >= 0 || (c.email || '').toLowerCase().indexOf(q) >= 0;
+        });
+        if (!list.length) { box.innerHTML = '<div style="padding:1rem;color:#999;font-size:0.85rem;text-align:center;">无匹配联系人</div>'; return; }
+        list.slice(0, 20).forEach(function(c){
+            var d = document.createElement('div');
+            d.className = 'cp-item';
+            d.innerHTML = '<span>' + c.name + '<br><span style="color:#0a8043;font-size:0.78rem;">' + c.email + '</span></span>';
+            d.addEventListener('click', function(){
+                var cur = document.getElementById('toInput').value.trim();
+                document.getElementById('toInput').value = cur ? cur + ', ' + c.email : c.email;
+                showToast('已添加收件人：' + c.name);
+            });
+            box.appendChild(d);
+        });
+    });
+    document.getElementById('cpFoot').addEventListener('click', function(){ location.href = 'mail-contact.html'; });
+    document.getElementById('cpMore').addEventListener('click', function(){ showToast('信纸功能建设中'); });
+    document.getElementById('cpTpl').addEventListener('click', function(){ showToast('模板信功能建设中'); });
+
+    // ===== 预览弹窗 =====
+    function openPreview(){
+        var from = document.getElementById('fromInput').value || '—';
+        var toRaw = document.getElementById('toInput').value.trim() || '（未填写）';
+        var ccRaw = document.getElementById('ccInput').value.trim();
+        var subj = document.getElementById('subjectInput').value.trim() || '（无主题）';
+        var text = body.innerText || body.textContent || '';
+        document.getElementById('pvFrom').textContent = from;
+        var meta = '收件人：' + toRaw + (ccRaw ? '；抄送：' + ccRaw : '');
+        var now = new Date();
+        function p2(n){ return (n < 10 ? '0' : '') + n; }
+        var timeStr = now.getFullYear() + '-' + p2(now.getMonth() + 1) + '-' + p2(now.getDate()) + ' ' + p2(now.getHours()) + ':' + p2(now.getMinutes()) + ':' + p2(now.getSeconds());
+        document.getElementById('pvTime').textContent = timeStr;
+        document.getElementById('pvContent').textContent = (subj ? '主题：' + subj + '\n\n' : '') + (meta ? meta + '\n\n' : '') + (text || '（空）');
+        document.getElementById('pvCnt').textContent = '共1封邮件，当前：1/1';
+        document.getElementById('previewMask').style.display = 'flex';
+    }
+    document.getElementById('previewBtn').addEventListener('click', openPreview);
+    document.getElementById('pvOk').addEventListener('click', function(){ document.getElementById('previewMask').style.display = 'none'; });
+    document.getElementById('pvClose').addEventListener('click', function(){ document.getElementById('previewMask').style.display = 'none'; });
+    document.getElementById('pvPrev').addEventListener('click', function(){ showToast('已是第一封'); });
+    document.getElementById('pvNext').addEventListener('click', function(){ showToast('已是最后一封'); });
+    document.getElementById('previewMask').addEventListener('click', function(e){ if (e.target === this) this.style.display = 'none'; });
+
+    // ===== 发送 / 草稿 / 取消（保持后端逻辑） =====
     function collectForm(){
         var toRaw = document.getElementById('toInput').value.trim();
         var to = toRaw ? toRaw.split(/[,，;；]/).map(function(s){ return s.trim(); }).filter(Boolean) : [];
@@ -215,7 +737,7 @@
         return {
             to: to, cc: cc,
             subject: document.getElementById('subjectInput').value.trim(),
-            body: document.getElementById('bodyInput').value,
+            body: body.innerText || body.textContent || '',
             priority: document.getElementById('urgentCb').checked ? 'urgent' : 'normal',
             read_receipt: document.getElementById('receiptCb').checked
         };
@@ -240,7 +762,6 @@
         })
         .catch(function(){ if (btn) btn.disabled = false; showToast('网络异常，保存失败'); });
     }
-    // 编辑草稿：加载内容
     if (editingDraftId) {
         fetch(API + '/api/mail/drafts/' + editingDraftId, { headers: { 'Authorization': 'Bearer ' + getToken() } })
             .then(function(r){ return r.json(); })
@@ -250,7 +771,7 @@
                 document.getElementById('toInput').value = (d.to || []).join(', ');
                 document.getElementById('ccInput').value = (d.cc || []).join(', ');
                 document.getElementById('subjectInput').value = d.subject || '';
-                document.getElementById('bodyInput').value = d.body || '';
+                body.innerHTML = (d.body || '').replace(/\n/g, '<br>');
                 document.getElementById('urgentCb').checked = d.priority === 'urgent';
                 document.getElementById('receiptCb').checked = d.read_receipt !== false;
             })
@@ -258,7 +779,6 @@
     }
     document.getElementById('draftBtn').addEventListener('click', function(){ saveDraft(); });
 
-    // 读取发件人地址
     fetch(API + '/api/mail/account', { headers: { 'Authorization': 'Bearer ' + getToken() } })
         .then(function(r){ return r.json(); })
         .then(function(j){ if (j.ok && j.account) document.getElementById('fromInput').value = j.account.mail_address; })
@@ -274,7 +794,7 @@
             to: to,
             cc: cc,
             subject: document.getElementById('subjectInput').value.trim(),
-            body: document.getElementById('bodyInput').value,
+            body: body.innerText || body.textContent || '',
             priority: document.getElementById('urgentCb').checked ? 'urgent' : 'normal',
             read_receipt: document.getElementById('receiptCb').checked
         };
@@ -296,15 +816,11 @@
         .catch(function(){ btn.disabled = false; showToast('网络异常，发送失败'); });
     });
 
-    document.getElementById('previewBtn').addEventListener('click', function(){
-        var subj = document.getElementById('subjectInput').value.trim() || '（无主题）';
-        var body = document.getElementById('bodyInput').value || '（空）';
-        alert('主题：' + subj + '\n\n' + body.slice(0, 500));
-    });
-
     document.getElementById('cancelBtn').addEventListener('click', function(){
         location.href = 'mail-inbox.html';
     });
+
+    loadCp();
 })();
 </script>
 </body>
