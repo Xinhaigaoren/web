@@ -343,3 +343,13 @@ create table if not exists public.alumni_mail_drafts (
   updated_at timestamptz default now()
 );
 create index if not exists idx_mail_drafts_owner on public.alumni_mail_drafts(owner_user_id, updated_at desc);
+-- 通讯录联系组（空组也存储）
+create table if not exists public.alumni_contact_groups (
+  id bigserial primary key,
+  owner_user_id bigint not null references public.app_users(id) on delete cascade,
+  group_name text not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique (owner_user_id, group_name)
+);
+create index if not exists idx_contact_groups_owner on public.alumni_contact_groups(owner_user_id);

@@ -4988,9 +4988,114 @@ app.delete('/api/mail/contacts/:id', requireAuth, requireAlumni, async (req, res
   try {
     const id = Number(req.params.id);
     await dbQuery(`delete from public.alumni_contacts where id=$1 and owner_user_id=$2`, [id, req.user.user_id]);
+    contactsCache.delete(String(req.user.user_id));
     return ok(res, { message: '联系人已删除' });
   } catch (e) {
     return fail(res, 500, '删除联系人失败', { error: e.message });
+  }
+});
+
+// ===== 通讯录分组管理 =====
+
+// 联系组列表（空组来自分组表 + 有联系人的组聚合），带数量
+app.get('/api/mail/contact-groups', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const me = req.user.user_id;
+    const g = await dbQuery(
+      `select group_name from public.alumni_contact_groups where owner_user_id=$1 order by id`,
+      [me]
+    );
+    const c = await dbQuery(
+      `select group_name, count(*)::int as cnt from public.alumni_contacts
+       where owner_user_id=$1 group by group_name`,
+      [me]
+    );
+    const cntMap = {};
+    (c.rows || []).forEach(r => { cntMap[r.group_name] = r.cnt; });
+    const names = new Set([...(g.rows || []).map(r => r.group_name), ...Object.keys(cntMap)]);
+    const list = [];
+    names.forEach(n => list.push({ name: n, count: cntMap[n] || 0 }));
+    // 排序：未分组联系人放最后
+    list.sort((a, b) => (a.name === '未分组联系人' ? 1 : 0) - (b.name === '未分组联系人' ? 1 : 0));
+    return ok(res, { groups: list, total: Object.values(cntMap).reduce((s, n) => s + n, 0) });
+  } catch (e) {
+    return fail(res, 500, '获取联系组失败', { error: e.message });
+  }
+});
+
+// 新建联系组（空组）
+app.post('/api/mail/contact-groups', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const name = String((req.body || {}).name || '').trim();
+    if (!name) return fail(res, 400, '联系组名称不能为空');
+    if (name === '未分组联系人') return fail(res, 400, '不能使用该组名');
+    const ins = await dbQuery(
+      `insert into public.alumni_contact_groups (owner_user_id, group_name)
+       values ($1,$2) on conflict (owner_user_id, group_name) do nothing returning id`,
+      [req.user.user_id, name]
+    );
+    if (!ins.rows[0]) return fail(res, 400, '该联系组已存在');
+    contactsCache.delete(String(req.user.user_id));
+    return ok(res, { message: '联系组已创建' });
+  } catch (e) {
+    return fail(res, 500, '创建联系组失败', { error: e.message });
+  }
+});
+
+// 重命名联系组
+app.put('/api/mail/contact-groups/:name', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const oldName = decodeURIComponent(req.params.name);
+    const newName = String((req.body || {}).name || '').trim();
+    if (!newName) return fail(res, 400, '新组名不能为空');
+    if (newName === '未分组联系人') return fail(res, 400, '不能使用该组名');
+    const me = req.user.user_id;
+    await dbQuery(
+      `update public.alumni_contact_groups set group_name=$3 where owner_user_id=$1 and group_name=$2`,
+      [me, oldName, newName]
+    ).catch(() => {});
+    await dbQuery(
+      `update public.alumni_contacts set group_name=$3 where owner_user_id=$1 and group_name=$2`,
+      [me, oldName, newName]
+    ).catch(() => {});
+    contactsCache.delete(String(me));
+    return ok(res, { message: '联系组已重命名' });
+  } catch (e) {
+    return fail(res, 500, '重命名失败', { error: e.message });
+  }
+});
+
+// 删除联系组（组内联系人归为未分组）
+app.delete('/api/mail/contact-groups/:name', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const name = decodeURIComponent(req.params.name);
+    const me = req.user.user_id;
+    if (name === '未分组联系人') return fail(res, 400, '未分组联系人不能删除');
+    await dbQuery(`delete from public.alumni_contact_groups where owner_user_id=$1 and group_name=$2`, [me, name]).catch(() => {});
+    await dbQuery(
+      `update public.alumni_contacts set group_name='未分组联系人' where owner_user_id=$1 and group_name=$2`,
+      [me, name]
+    ).catch(() => {});
+    contactsCache.delete(String(me));
+    return ok(res, { message: '联系组已删除' });
+  } catch (e) {
+    return fail(res, 500, '删除联系组失败', { error: e.message });
+  }
+});
+
+// 清空联系组（删除组内所有联系人）
+app.delete('/api/mail/contact-groups/:name/clear', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const name = decodeURIComponent(req.params.name);
+    const me = req.user.user_id;
+    const del = await dbQuery(
+      `delete from public.alumni_contacts where owner_user_id=$1 and group_name=$2`,
+      [me, name]
+    );
+    contactsCache.delete(String(me));
+    return ok(res, { message: `已清空 ${del.rowCount || 0} 位联系人` });
+  } catch (e) {
+    return fail(res, 500, '清空失败', { error: e.message });
   }
 });
 
