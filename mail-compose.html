@@ -38,7 +38,7 @@
     .sidebar-btn svg { width: 1rem; height: 1rem; fill: currentColor; }
     .content-area { flex: 1; padding: 1.5rem 2rem; overflow-y: auto; background: #fff; }
 
-    .compose-form { max-width: 900px; margin: 0 auto; }
+    .compose-form { width: 100%; }
     .compose-actions { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
     .btn-send { background: #94070A; color: #fff; border: none; padding: 0.55rem 1.6rem; font-size: 1rem; border-radius: 0.25rem; cursor: pointer; font-family: inherit; }
     .btn-send:hover { background: #7a0609; }
@@ -58,7 +58,6 @@
     .toast { position: fixed; top: 6rem; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 0.6rem 1.4rem; border-radius: 0.3rem; font-size: 0.9rem; z-index: 99; display: none; }
 
     /* ========== 浏览器适配 ========== */
-    .compose-form { max-width: min(900px, 100%); }
     @media (max-width: 1280px) {
         .topbar { height: 5rem; padding: 0 1.4rem; }
         .topbar-menu { font-size: 1.2rem; gap: 1.4rem; }
