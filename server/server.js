@@ -5217,6 +5217,45 @@ app.delete('/api/mail/contact-groups/:name/clear', requireAuth, requireAlumni, a
   }
 });
 
+// ===== 模板信 CRUD（必须在 /api/mail/:id 之前注册，避免被 :id 捕获） =====
+app.get('/api/mail/templates', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    if (!pool) return ok(res, { templates: [] });
+    const r = await dbQuery(
+      `select id, name, content, updated_at from public.alumni_mail_templates where owner_user_id=$1 order by updated_at desc`,
+      [req.user.user_id]
+    );
+    return ok(res, { templates: r.rows || [] });
+  } catch (e) {
+    return fail(res, 500, '获取模板失败', { error: e.message });
+  }
+});
+app.post('/api/mail/templates', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const nm = String(b.name || '').trim();
+    if (!nm) return fail(res, 400, '请输入模板名称');
+    const r = await dbQuery(
+      `insert into public.alumni_mail_templates (owner_user_id, name, content) values ($1,$2,$3) returning id`,
+      [req.user.user_id, nm, String(b.content || '')]
+    );
+    return ok(res, { template_id: r.rows[0].id });
+  } catch (e) {
+    return fail(res, 500, '保存模板失败', { error: e.message });
+  }
+});
+app.delete('/api/mail/templates/:id', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    await dbQuery(
+      `delete from public.alumni_mail_templates where id=$1 and owner_user_id=$2`,
+      [Number(req.params.id), req.user.user_id]
+    );
+    return ok(res, { message: '模板已删除' });
+  } catch (e) {
+    return fail(res, 500, '删除模板失败', { error: e.message });
+  }
+});
+
 // 邮件详情（收件人打开自动标记已读；发件人可见已读回执）
 app.get('/api/mail/:id', requireAuth, requireAlumni, async (req, res) => {
   try {
@@ -5364,45 +5403,6 @@ async function processScheduledMails() {
 }
 setInterval(processScheduledMails, 30000).unref();
 processScheduledMails();
-
-// ===== 模板信 CRUD =====
-app.get('/api/mail/templates', requireAuth, requireAlumni, async (req, res) => {
-  try {
-    if (!pool) return ok(res, { templates: [] });
-    const r = await dbQuery(
-      `select id, name, content, updated_at from public.alumni_mail_templates where owner_user_id=$1 order by updated_at desc`,
-      [req.user.user_id]
-    );
-    return ok(res, { templates: r.rows || [] });
-  } catch (e) {
-    return fail(res, 500, '获取模板失败', { error: e.message });
-  }
-});
-app.post('/api/mail/templates', requireAuth, requireAlumni, async (req, res) => {
-  try {
-    const b = req.body || {};
-    const nm = String(b.name || '').trim();
-    if (!nm) return fail(res, 400, '请输入模板名称');
-    const r = await dbQuery(
-      `insert into public.alumni_mail_templates (owner_user_id, name, content) values ($1,$2,$3) returning id`,
-      [req.user.user_id, nm, String(b.content || '')]
-    );
-    return ok(res, { template_id: r.rows[0].id });
-  } catch (e) {
-    return fail(res, 500, '保存模板失败', { error: e.message });
-  }
-});
-app.delete('/api/mail/templates/:id', requireAuth, requireAlumni, async (req, res) => {
-  try {
-    await dbQuery(
-      `delete from public.alumni_mail_templates where id=$1 and owner_user_id=$2`,
-      [Number(req.params.id), req.user.user_id]
-    );
-    return ok(res, { message: '模板已删除' });
-  } catch (e) {
-    return fail(res, 500, '删除模板失败', { error: e.message });
-  }
-});
 
 bootstrapSchema()
   .then(() => ensureZhangSuperAdmin())
