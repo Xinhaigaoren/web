@@ -1410,6 +1410,26 @@ async function ensureMailTables() {
     read_at timestamptz,
     unique (mail_id, address, kind)
   )`);
+  // 定时发送 / 阅后即焚 / 口令加密 扩展列（幂等）
+  await dbQuery(`alter table public.alumni_mails add column if not exists status text default 'sent'`).catch(() => {});
+  await dbQuery(`alter table public.alumni_mails add column if not exists scheduled_at timestamptz`).catch(() => {});
+  await dbQuery(`alter table public.alumni_mails add column if not exists burn_read_limit int`).catch(() => {});
+  await dbQuery(`alter table public.alumni_mails add column if not exists burn_expire_at timestamptz`).catch(() => {});
+  await dbQuery(`alter table public.alumni_mails add column if not exists view_password text`).catch(() => {});
+  await dbQuery(`alter table public.alumni_mails add column if not exists view_password_plain text`).catch(() => {});
+  await dbQuery(`alter table public.alumni_mails add column if not exists save_password boolean default false`).catch(() => {});
+  await dbQuery(`alter table public.alumni_mail_recipients add column if not exists read_count int default 0`).catch(() => {});
+  await dbQuery(`alter table public.alumni_mail_recipients add column if not exists burn_destroyed boolean default false`).catch(() => {});
+  await dbQuery(`create table if not exists public.alumni_mail_templates (
+    id bigserial primary key,
+    owner_user_id bigint not null references public.app_users(id) on delete cascade,
+    name text not null,
+    content text default '',
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+  )`).catch(() => {});
+  await dbQuery(`create index if not exists idx_mail_templates_owner on public.alumni_mail_templates(owner_user_id)`).catch(() => {});
+  await dbQuery(`create index if not exists idx_mails_status on public.alumni_mails(status)`).catch(() => {});
   await dbQuery(`create table if not exists public.alumni_contacts (
     id bigserial primary key,
     owner_user_id bigint not null references public.app_users(id) on delete cascade,
@@ -4832,6 +4852,21 @@ app.post('/api/mail/send', requireAuth, requireAlumni, async (req, res) => {
     const toInput = Array.isArray(b.to) ? b.to : [];
     const ccInput = Array.isArray(b.cc) ? b.cc : [];
     if (!toInput.length) return fail(res, 400, '请填写收件人');
+    // ===== 定时发送 / 阅后即焚 / 口令加密 参数 =====
+    const scheduledAt = b.scheduled_at ? new Date(b.scheduled_at) : null;
+    const burnLimit = b.burn_read_limit != null && b.burn_read_limit !== '' ? Math.min(99, Math.max(1, Number(b.burn_read_limit))) : null;
+    const burnExpire = b.burn_expire_at ? new Date(b.burn_expire_at) : null;
+    const viewPwd = b.view_password ? String(b.view_password) : null;
+    const savePwd = b.save_password === true;
+    const isScheduled = !!(scheduledAt && scheduledAt.getTime() > Date.now() + 1000);
+    if (scheduledAt && isScheduled === false && scheduledAt.getTime() < Date.now() - 60000) {
+      return fail(res, 400, '定时发送时间已过期，请重新选择');
+    }
+    let pwdHash = null, pwdPlain = null;
+    if (viewPwd) {
+      pwdHash = bcrypt.hashSync(viewPwd, 8);
+      pwdPlain = savePwd ? viewPwd : null;
+    }
     const myAccount = await getOrCreateMailAccount(req.user.user_id);
     const toList = [];
     for (const item of toInput) {
@@ -4847,9 +4882,13 @@ app.post('/api/mail/send', requireAuth, requireAlumni, async (req, res) => {
     }
     if (!toList.length) return fail(res, 400, '没有可用的有效收件人邮箱');
     const ins = await dbQuery(
-      `insert into public.alumni_mails (sender_user_id, sender_address, sender_name, subject, body, priority, read_receipt)
-       values ($1,$2,$3,$4,$5,'normal',$6) returning id`,
-      [req.user.user_id, myAccount.mail_address, myAccount.display_name, subject, body, readReceipt]
+      `insert into public.alumni_mails
+        (sender_user_id, sender_address, sender_name, subject, body, priority, read_receipt,
+         status, scheduled_at, burn_read_limit, burn_expire_at, view_password, view_password_plain, save_password)
+       values ($1,$2,$3,$4,$5,'normal',$6,$7,$8,$9,$10,$11,$12,$13) returning id`,
+      [req.user.user_id, myAccount.mail_address, myAccount.display_name, subject, body, readReceipt,
+       isScheduled ? 'scheduled' : 'sent', isScheduled ? scheduledAt : null,
+       burnLimit, burnExpire, pwdHash, pwdPlain, savePwd]
     );
     const mailId = ins.rows[0].id;
     for (const item of [...toList.map(x => ({ ...x, kind: 'to' })), ...ccList.map(x => ({ ...x, kind: 'cc' }))]) {
@@ -4859,6 +4898,9 @@ app.post('/api/mail/send', requireAuth, requireAlumni, async (req, res) => {
          on conflict (mail_id, address, kind) do nothing`,
         [mailId, item.user_id, item.address, item.name || null, item.kind]
       ).catch(() => {});
+    }
+    if (isScheduled) {
+      return ok(res, { mail_id: mailId, scheduled: true, message: '邮件已定时，将在 ' + scheduledAt.toISOString() + ' 自动投递' });
     }
     // ===== 外部邮箱：真实外发（优先 Resend API，其次 SMTP；免费通道） =====
     const externalList = [...toList.map(x => ({ ...x, kind: 'to' })), ...ccList.map(x => ({ ...x, kind: 'cc' }))]
@@ -5190,17 +5232,35 @@ app.get('/api/mail/:id', requireAuth, requireAlumni, async (req, res) => {
     );
     const recipients = r.rows || [];
     if (!isSender) {
-      // 收件人视角：标记本人已读（to 或 cc 均可）
+      // 收件人视角：先做阅后即焚 / 口令加密 校验
       const myRec = recipients.find(x => x.user_id === me);
-      if (myRec && !myRec.is_read) {
-        await dbQuery(
-          `update public.alumni_mail_recipients set is_read=true, read_at=now() where id=$1`,
-          [myRec.id]
-        );
-        myRec.is_read = true;
-        myRec.read_at = new Date();
-      }
       if (!myRec) return fail(res, 403, '无权查看该邮件');
+      // 邮件销毁时间已到 -> 全部销毁
+      if (mail.burn_expire_at && new Date(mail.burn_expire_at).getTime() < Date.now()) {
+        await dbQuery(`update public.alumni_mail_recipients set burn_destroyed=true where mail_id=$1`, [mailId]).catch(() => {});
+        return fail(res, 410, '邮件已在设定时间自动销毁');
+      }
+      // 口令加密：需提供正确口令
+      if (mail.view_password) {
+        const pwd = (req.query && req.query.password) || (req.body && req.body.password) || '';
+        const okPwd = mail.view_password_plain
+          ? (pwd === mail.view_password_plain)
+          : bcrypt.compareSync(String(pwd), mail.view_password);
+        if (!okPwd) return fail(res, 403, '该邮件已加密，请输入查看口令');
+      }
+      if (myRec.burn_destroyed) return fail(res, 410, '邮件已销毁，无法查看');
+      // 阅读次数 +1；达到上限后标记销毁（第 limit 次仍可读，之后失效）
+      const newCount = (myRec.read_count || 0) + 1;
+      await dbQuery(
+        `update public.alumni_mail_recipients set is_read=true, read_at=now(), read_count=$1, burn_destroyed=$2 where id=$3`,
+        [newCount, !!(mail.burn_read_limit && newCount >= mail.burn_read_limit), myRec.id]
+      );
+      myRec.is_read = true;
+      myRec.read_at = new Date();
+      myRec.read_count = newCount;
+      if (mail.burn_read_limit && newCount >= mail.burn_read_limit) {
+        myRec.burn_destroyed = true;
+      }
     }
     const toList = recipients.filter(x => x.kind === 'to');
     const ccList = recipients.filter(x => x.kind === 'cc');
@@ -5208,10 +5268,15 @@ app.get('/api/mail/:id', requireAuth, requireAlumni, async (req, res) => {
       mail: {
         id: mail.id, sender_address: mail.sender_address, sender_name: mail.sender_name,
         subject: mail.subject, body: mail.body, priority: mail.priority,
-        read_receipt: mail.read_receipt, sent_at: mail.sent_at
+        read_receipt: mail.read_receipt, sent_at: mail.sent_at,
+        status: mail.status, scheduled_at: mail.scheduled_at,
+        burn_read_limit: mail.burn_read_limit, burn_expire_at: mail.burn_expire_at,
+        password_required: !!mail.view_password,
+        save_password: mail.save_password === true,
+        view_password_plain: isSender ? (mail.view_password_plain || null) : null
       },
       is_sender: isSender,
-      recipients: recipients.map(x => ({ name: x.name, address: x.address, kind: x.kind, is_read: x.is_read, read_at: x.read_at })),
+      recipients: recipients.map(x => ({ name: x.name, address: x.address, kind: x.kind, is_read: x.is_read, read_at: x.read_at, read_count: x.read_count || 0, burn_destroyed: x.burn_destroyed === true })),
       to: toList, cc: ccList,
       to_count: toList.length,
       read_count: recipients.filter(x => x.is_read).length
@@ -5248,6 +5313,95 @@ app.delete('/api/mail/:id/delete', requireAuth, requireAlumni, async (req, res) 
 
 app.use((req, res) => {
   fail(res, 404, '接口不存在');
+});
+
+// ===== 定时投递轮询：每 30 秒处理到期的定时邮件 =====
+async function processScheduledMails() {
+  if (!pool) return;
+  try {
+    const due = await dbQuery(
+      `select * from public.alumni_mails where status='scheduled' and scheduled_at <= now() limit 20`
+    );
+    for (const mail of due.rows || []) {
+      const claimed = await dbQuery(
+        `update public.alumni_mails set status='sending' where id=$1 and status='scheduled' returning id`,
+        [mail.id]
+      );
+      if (!claimed.rows[0]) continue;
+      // 对已存储的外部收件人真实外发（Resend 优先，SMTP 备用）
+      const recs = await dbQuery(`select * from public.alumni_mail_recipients where mail_id=$1`, [mail.id]);
+      const ext = (recs.rows || []).filter(x => !x.user_id && !/@xinhaigaoren\.org\.cn$/i.test(x.address));
+      if (ext.length) {
+        const resendKey = process.env.RESEND_API_KEY;
+        const resendFrom = process.env.RESEND_FROM || '';
+        if (resendKey && resendFrom) {
+          try {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), 30000);
+            const resp = await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + resendKey, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                from: `"${mail.sender_name || '新海高人校友'}" <${resendFrom}>`,
+                to: ext.map(x => x.address),
+                subject: mail.subject || '（无主题）',
+                text: mail.body
+              }),
+              signal: ctrl.signal
+            });
+            clearTimeout(t);
+            if (!resp.ok) console.error('[mail] scheduled external send failed:', resp.status, await resp.text().catch(() => ''));
+          } catch (e) {
+            console.error('[mail] scheduled external send error:', (e && e.message) || e);
+          }
+        }
+      }
+      await dbQuery(`update public.alumni_mails set status='sent', sent_at=now() where id=$1`, [mail.id]);
+    }
+  } catch (e) {
+    console.error('[mail] scheduled process error:', (e && e.message) || e);
+  }
+}
+setInterval(processScheduledMails, 30000).unref();
+processScheduledMails();
+
+// ===== 模板信 CRUD =====
+app.get('/api/mail/templates', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    if (!pool) return ok(res, { templates: [] });
+    const r = await dbQuery(
+      `select id, name, content, updated_at from public.alumni_mail_templates where owner_user_id=$1 order by updated_at desc`,
+      [req.user.user_id]
+    );
+    return ok(res, { templates: r.rows || [] });
+  } catch (e) {
+    return fail(res, 500, '获取模板失败', { error: e.message });
+  }
+});
+app.post('/api/mail/templates', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const nm = String(b.name || '').trim();
+    if (!nm) return fail(res, 400, '请输入模板名称');
+    const r = await dbQuery(
+      `insert into public.alumni_mail_templates (owner_user_id, name, content) values ($1,$2,$3) returning id`,
+      [req.user.user_id, nm, String(b.content || '')]
+    );
+    return ok(res, { template_id: r.rows[0].id });
+  } catch (e) {
+    return fail(res, 500, '保存模板失败', { error: e.message });
+  }
+});
+app.delete('/api/mail/templates/:id', requireAuth, requireAlumni, async (req, res) => {
+  try {
+    await dbQuery(
+      `delete from public.alumni_mail_templates where id=$1 and owner_user_id=$2`,
+      [Number(req.params.id), req.user.user_id]
+    );
+    return ok(res, { message: '模板已删除' });
+  } catch (e) {
+    return fail(res, 500, '删除模板失败', { error: e.message });
+  }
 });
 
 bootstrapSchema()
