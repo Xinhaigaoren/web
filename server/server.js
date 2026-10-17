@@ -6,6 +6,8 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+let nodemailer = null;
+try { nodemailer = require('nodemailer'); } catch (_) { nodemailer = null; }
 let pinyin = null;
 try { pinyin = require('pinyin-pro'); } catch (_) { pinyin = null; }
 
@@ -4858,7 +4860,34 @@ app.post('/api/mail/send', requireAuth, requireAlumni, async (req, res) => {
         [mailId, item.user_id, item.address, item.name || null, item.kind]
       ).catch(() => {});
     }
-    return ok(res, { mail_id: mailId, message: '邮件已发送' });
+    // ===== 外部邮箱：走 SMTP 真实外发（QQ/163/edu.cn 等；需环境变量 SMTP_USER/SMTP_PASS） =====
+    const externalList = [...toList.map(x => ({ ...x, kind: 'to' })), ...ccList.map(x => ({ ...x, kind: 'cc' }))]
+      .filter(x => !x.user_id && !/@xinhaigaoren\.org\.cn$/i.test(x.address));
+    let smtpMsg = null;
+    if (externalList.length) {
+      if (!nodemailer || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        smtpMsg = '外部收件人未真实外发（未配置 SMTP）';
+      } else {
+        try {
+          const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST || 'smtp.qq.com',
+            port: Number(process.env.SMTP_PORT || 465),
+            secure: true,
+            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+          });
+          await transporter.sendMail({
+            from: `"${myAccount.display_name || '新海高人校友'}" <${process.env.SMTP_USER}>`,
+            to: externalList.map(x => x.address).join(', '),
+            subject: subject || '（无主题）',
+            text: body
+          });
+          smtpMsg = '外部收件人已通过 SMTP 发送';
+        } catch (e) {
+          smtpMsg = '外部收件人 SMTP 发送失败：' + (e && e.message ? e.message : '未知错误');
+        }
+      }
+    }
+    return ok(res, { mail_id: mailId, message: smtpMsg ? '邮件已发送（' + smtpMsg + '）' : '邮件已发送', external: smtpMsg });
   } catch (e) {
     return fail(res, 500, '发送失败', { error: e.message });
   }
