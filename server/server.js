@@ -4869,14 +4869,16 @@ app.post('/api/mail/send', requireAuth, requireAlumni, async (req, res) => {
         smtpMsg = '外部收件人未真实外发（未配置 SMTP）';
       } else {
         try {
+          const smtpPort = Number(process.env.SMTP_PORT || 465);
           const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST || 'smtp.qq.com',
-            port: Number(process.env.SMTP_PORT || 465),
-            secure: true,
+            port: smtpPort,
+            secure: smtpPort === 465,
+            requireTLS: smtpPort !== 465,
             auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-            connectionTimeout: 20000,
-            greetingTimeout: 20000,
-            socketTimeout: 30000
+            connectionTimeout: 25000,
+            greetingTimeout: 25000,
+            socketTimeout: 35000
           });
           await transporter.sendMail({
             from: `"${myAccount.display_name || '新海高人校友'}" <${process.env.SMTP_USER}>`,
