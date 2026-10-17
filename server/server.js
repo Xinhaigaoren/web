@@ -4873,7 +4873,10 @@ app.post('/api/mail/send', requireAuth, requireAlumni, async (req, res) => {
             host: process.env.SMTP_HOST || 'smtp.qq.com',
             port: Number(process.env.SMTP_PORT || 465),
             secure: true,
-            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+            connectionTimeout: 20000,
+            greetingTimeout: 20000,
+            socketTimeout: 30000
           });
           await transporter.sendMail({
             from: `"${myAccount.display_name || '新海高人校友'}" <${process.env.SMTP_USER}>`,
@@ -4883,6 +4886,7 @@ app.post('/api/mail/send', requireAuth, requireAlumni, async (req, res) => {
           });
           smtpMsg = '外部收件人已通过 SMTP 发送';
         } catch (e) {
+          console.error('[smtp] external send failed:', (e && e.message) || e, e && e.response && (' | response: ' + e.response));
           smtpMsg = '外部收件人 SMTP 发送失败：' + (e && e.message ? e.message : '未知错误');
         }
       }
