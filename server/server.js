@@ -1423,6 +1423,15 @@ async function ensureMailTables() {
   await dbQuery(`create index if not exists idx_mail_recipients_mail on public.alumni_mail_recipients(mail_id)`).catch(() => {});
   await dbQuery(`create index if not exists idx_mail_recipients_user on public.alumni_mail_recipients(user_id, is_read)`).catch(() => {});
   await dbQuery(`create index if not exists idx_contacts_owner on public.alumni_contacts(owner_user_id)`).catch(() => {});
+  await dbQuery(`create table if not exists public.alumni_contact_groups (
+    id bigserial primary key,
+    owner_user_id bigint not null references public.app_users(id) on delete cascade,
+    group_name text not null,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now(),
+    unique (owner_user_id, group_name)
+  )`).catch(() => {});
+  await dbQuery(`create index if not exists idx_contact_groups_owner on public.alumni_contact_groups(owner_user_id)`).catch(() => {});
 }
 
 // 姓名 → 拼音首字母（全小写），例：张文轩 → zwx
