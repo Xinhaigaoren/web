@@ -557,7 +557,7 @@
                             body: JSON.stringify({ name: nn.trim() })
                         })
                         .then(function(r){ return r.json(); })
-                        .then(function(rj){ showToast(rj.message || '已重命名'); loadGroups(); loadContacts(); showManage(); })
+                        .then(function(rj){ showToast(rj.message || '已重命名'); curGroup = '__all__'; curPage = 1; loadGroups(); loadContacts(); showManage(); })
                         .catch(function(){ showToast('网络异常'); });
                     });
                     var cl = document.createElement('a'); cl.textContent = '清空';
@@ -565,7 +565,7 @@
                         if (!confirm('确定清空联系组「' + g.name + '」内所有联系人？')) return;
                         fetch(API + '/api/mail/contact-groups/' + encodeURIComponent(g.name) + '/clear', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getToken() } })
                             .then(function(r){ return r.json(); })
-                            .then(function(rj){ showToast(rj.message || '已清空'); loadGroups(); loadContacts(); showManage(); })
+                            .then(function(rj){ showToast(rj.message || '已清空'); curGroup = '__all__'; curPage = 1; loadGroups(); loadContacts(); showManage(); })
                             .catch(function(){ showToast('网络异常'); });
                     });
                     var dl = document.createElement('a'); dl.className = 'danger'; dl.textContent = '删除';
@@ -573,7 +573,7 @@
                         if (!confirm('确定删除联系组「' + g.name + '」？（组内联系人将移至未分组）')) return;
                         fetch(API + '/api/mail/contact-groups/' + encodeURIComponent(g.name), { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getToken() } })
                             .then(function(r){ return r.json(); })
-                            .then(function(rj){ showToast(rj.message || '已删除'); loadGroups(); loadContacts(); showManage(); })
+                            .then(function(rj){ showToast(rj.message || '已删除'); curGroup = '__all__'; curPage = 1; loadGroups(); loadContacts(); showManage(); })
                             .catch(function(){ showToast('网络异常'); });
                     });
                     tdO.appendChild(rn); tdO.appendChild(cl); tdO.appendChild(dl);
