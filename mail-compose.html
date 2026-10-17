@@ -95,6 +95,62 @@
     .more-menu a:hover { background: #f2f3f5; }
     .more-menu a.plain { color: #9E0B0F; }
 
+    /* 工具栏下拉（符号/缩进/行距） */
+    .tb-drop { position: relative; }
+    .tb-drop-menu { position: absolute; top: 2rem; left: 0; background: #fff; border: 1px solid #ddd; border-radius: 0.25rem; box-shadow: 0 4px 14px rgba(0,0,0,0.12); z-index: 70; display: none; min-width: 10.5rem; padding: 0.3rem 0; }
+    .tb-drop-menu.show { display: block; }
+    .tb-drop-menu a { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 1rem; font-size: 0.88rem; color: #333; text-decoration: none; cursor: pointer; }
+    .tb-drop-menu a:hover { background: #f2f3f5; }
+    .tb-drop-menu a .sym { width: 2.8rem; text-align: center; font-size: 1rem; flex-shrink: 0; }
+    .tb-drop-menu .lh { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    .tb-drop-menu .lh .t { color: #666; font-size: 0.8rem; }
+
+    /* 插入表格 8x10 网格选择器 */
+    .table-picker { display: none; position: absolute; top: 2rem; left: 0; background: #fff; border: 1px solid #ddd; border-radius: 0.25rem; box-shadow: 0 4px 14px rgba(0,0,0,0.12); z-index: 70; padding: 0.7rem; }
+    .table-picker.show { display: block; }
+    .table-picker .grid { display: grid; grid-template-columns: repeat(10, 1.05rem); gap: 2px; }
+    .table-picker .cell { width: 1.05rem; height: 1.05rem; border: 1px solid #cfd3d8; border-radius: 2px; background: #fff; cursor: pointer; }
+    .table-picker .cell.hl { background: #9E0B0F; border-color: #9E0B0F; }
+    .table-picker .tip { font-size: 0.82rem; color: #555; margin-top: 0.5rem; }
+    .table-picker .tip a { color: #3b7cff; text-decoration: none; cursor: pointer; }
+
+    /* 底部高级选项配置区（定时/焚毁/口令） */
+    .adv-panel { display: none; background: #fafafa; border: 1px solid #eee; border-radius: 0.25rem; padding: 0.8rem 1rem; margin-top: 0.6rem; }
+    .adv-panel.show { display: block; }
+    .adv-panel .row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; flex-wrap: wrap; font-size: 0.9rem; color: #333; }
+    .adv-panel .row:last-child { margin-bottom: 0; }
+    .adv-panel label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+    .adv-panel select { height: 1.8rem; font-size: 0.85rem; border: 1px solid #d5d9de; border-radius: 0.2rem; padding: 0 0.3rem; color: #333; background: #fff; }
+    .adv-panel input[type=text], .adv-panel input[type=number] { height: 1.8rem; border: 1px solid #d5d9de; border-radius: 0.2rem; padding: 0 0.5rem; font-size: 0.85rem; color: #333; font-family: inherit; outline: none; }
+    .adv-panel .tip { color: #888; font-size: 0.82rem; }
+
+    /* 模板信设置弹窗 */
+    .tpl-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 96; display: none; align-items: center; justify-content: center; }
+    .tpl-box { background: #fff; border-radius: 0.3rem; width: 56rem; max-width: 94vw; max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 10px 36px rgba(0,0,0,0.22); overflow: hidden; }
+    .tpl-tabs { display: flex; gap: 1.2rem; padding: 0.8rem 1.4rem; border-bottom: 1px solid #eee; flex-wrap: wrap; }
+    .tpl-tabs a { font-size: 0.95rem; color: #666; cursor: pointer; padding-bottom: 0.3rem; border-bottom: 2px solid transparent; white-space: nowrap; }
+    .tpl-tabs a.active { color: #9E0B0F; border-bottom-color: #9E0B0F; }
+    .tpl-body { flex: 1; overflow-y: auto; padding: 1.2rem 1.4rem; }
+    .tpl-intro { font-size: 0.9rem; color: #555; margin-bottom: 1rem; }
+    .tpl-actions { display: flex; gap: 0.7rem; margin-bottom: 1rem; }
+    .tpl-actions button { padding: 0.45rem 1.3rem; font-size: 0.9rem; border-radius: 0.25rem; cursor: pointer; font-family: inherit; }
+    .tpl-actions .ok { background: #9E0B0F; color: #fff; border: none; }
+    .tpl-actions .ok:hover { background: #7d090c; }
+    .tpl-actions .cancel { background: #fff; border: 1px solid #d0d0d0; color: #333; }
+    .tpl-field { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.8rem; }
+    .tpl-field label { width: 5.2rem; color: #666; font-size: 0.9rem; flex-shrink: 0; }
+    .tpl-field input { flex: 1; border: 1px solid #d5d9de; border-radius: 0.25rem; padding: 0.45rem 0.6rem; font-size: 0.9rem; font-family: inherit; outline: none; }
+    .tpl-toolbar { display: flex; align-items: center; gap: 0.3rem; padding: 0.4rem 0; border: 1px solid #e0e0e0; border-bottom: none; border-radius: 0.25rem 0.25rem 0 0; flex-wrap: wrap; background: #fafafa; }
+    .tpl-toolbar .tb-btn { background: #fff; border: 1px solid #e0e0e0; border-radius: 0.2rem; min-width: 1.9rem; height: 1.7rem; padding: 0 0.4rem; font-size: 0.8rem; color: #444; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; }
+    .tpl-toolbar .tb-btn:hover { border-color: #9E0B0F; color: #9E0B0F; }
+    .tpl-toolbar select { height: 1.7rem; font-size: 0.78rem; border: 1px solid #e0e0e0; border-radius: 0.2rem; color: #444; background: #fff; padding: 0 0.2rem; max-width: 7rem; }
+    .tpl-content { width: 100%; min-height: 12rem; border: 1px solid #e0e0e0; border-radius: 0 0 0.25rem 0.25rem; outline: none; padding: 0.6rem; font-size: 0.95rem; line-height: 1.6; font-family: inherit; overflow-y: auto; }
+    .tpl-list { margin-top: 1rem; border-top: 1px solid #eee; padding-top: 0.8rem; }
+    .tpl-list .row { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.8rem; border: 1px solid #eee; border-radius: 0.25rem; margin-bottom: 0.4rem; font-size: 0.88rem; }
+    .tpl-list .row .nm { color: #333; font-weight: bold; }
+    .tpl-list .row .ops a { color: #3b7cff; font-size: 0.82rem; cursor: pointer; margin-left: 0.8rem; text-decoration: none; }
+    .tpl-list .row .ops a.del { color: #e5484d; }
+
     /* 右侧个人通讯录面板 */
     .contact-panel { width: 14rem; flex-shrink: 0; border-left: 1px solid #eee; background: #fafbfc; display: flex; flex-direction: column; }
     .cp-head { padding: 0.7rem 0.9rem; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
@@ -319,6 +375,10 @@
                 </div>
 
                 <div class="compose-toolbar">
+                    <button class="tb-btn" id="undoBtn" title="撤销">↶</button>
+                    <button class="tb-btn" id="redoBtn" title="重做">↷</button>
+                    <button class="tb-btn" id="copyBtn" title="复制">⧉</button>
+                    <span class="sep"></span>
                     <select id="styleSel" title="样式">
                         <option value="p">正文</option>
                         <option value="h1">标题1</option>
@@ -338,8 +398,44 @@
                     <button class="tb-btn" id="colorBtn" title="字体颜色">A</button>
                     <button class="tb-btn" id="hiliteBtn" title="高亮">A</button>
                     <span class="sep"></span>
-                    <button class="tb-btn" id="listBtn" title="无序列表">☰</button>
+                    <div class="tb-drop">
+                        <button class="tb-btn" id="symbolBtn" title="项目符号">☰ ▾</button>
+                        <div class="tb-drop-menu" id="symbolMenu">
+                            <a data-sym="●"><span class="sym">●,●,●…</span>实心圆点</a>
+                            <a data-sym="○"><span class="sym">○,○,○…</span>空心圆点</a>
+                            <a data-sym="■"><span class="sym">■,■,■…</span>实心方形</a>
+                            <a data-sym="◆"><span class="sym">◆,◆,◆…</span>菱形</a>
+                            <a data-sym="√"><span class="sym">√,√,√…</span>对勾</a>
+                            <a data-sym="✧"><span class="sym">✧,✧,✧…</span>四角星</a>
+                            <a data-sym="›"><span class="sym">›,›,›…</span>箭头</a>
+                        </div>
+                    </div>
                     <button class="tb-btn" id="olistBtn" title="有序列表">≡</button>
+                    <div class="tb-drop">
+                        <button class="tb-btn" id="indentBtn" title="缩进">↹ ▾</button>
+                        <div class="tb-drop-menu" id="indentMenu">
+                            <a data-act="indentIn"><span class="sym">⤡</span>增加缩进</a>
+                            <a data-act="indentOut"><span class="sym">⤢</span>减少缩进</a>
+                        </div>
+                    </div>
+                    <div class="tb-drop">
+                        <button class="tb-btn" id="lineHeightBtn" title="行距">≡≡ ▾</button>
+                        <div class="tb-drop-menu" id="lineHeightMenu">
+                            <a data-lh="1"><span class="sym">≡</span><span class="lh">1.0<t class="t">单倍行距</t></span></a>
+                            <a data-lh="1.5"><span class="sym">≡≡</span><span class="lh">1.5<t class="t">1.5倍行距</t></span></a>
+                            <a data-lh="2"><span class="sym">≡≡≡</span><span class="lh">2.0<t class="t">2倍行距</t></span></a>
+                            <a data-lh="2.5"><span class="sym">≡≡≡≡</span><span class="lh">2.5<t class="t">2.5倍行距</t></span></a>
+                            <a data-lh="3"><span class="sym">≡≡≡≡≡</span><span class="lh">3.0<t class="t">3倍行距</t></span></a>
+                        </div>
+                    </div>
+                    <span class="sep"></span>
+                    <div class="tb-drop">
+                        <button class="tb-btn" id="tableBtn" title="插入表格">⊞</button>
+                        <div class="table-picker" id="tablePicker">
+                            <div class="grid" id="tableGrid"></div>
+                            <div class="tip" id="tableTip">1×1 表格</div>
+                        </div>
+                    </div>
                     <span class="grow"></span>
                     <div style="position:relative;">
                         <button class="tb-btn" id="moreBtn">更多 ▾</button>
@@ -367,9 +463,49 @@
                 <div class="compose-footer">
                     <label><input type="checkbox" id="urgentCb"> 设为“紧急”</label>
                     <label><input type="checkbox" id="receiptCb" checked> 已读回执</label>
-                    <span class="ft" id="timedSend">⏱ 定时发送</span>
-                    <span class="ft" id="burnAfter">🔥 阅后即焚</span>
-                    <span class="ft" id="pwdEncrypt">🔒 口令加密</span>
+                    <label><input type="checkbox" id="timedCb"> 定时发送</label>
+                    <label><input type="checkbox" id="burnCb"> 阅后即焚</label>
+                    <label><input type="checkbox" id="pwdCb"> 口令加密</label>
+                </div>
+
+                <div class="adv-panel" id="timedPanel">
+                    <div class="row">
+                        <span>发送时间：</span>
+                        <select id="tsYear"></select><span>年</span>
+                        <select id="tsMonth"></select><span>月</span>
+                        <select id="tsDay"></select><span>日</span>
+                        <select id="tsHour"></select><span>时</span>
+                        <select id="tsMin"></select><span>分</span>
+                    </div>
+                    <div class="row"><span class="tip" id="tsTip">本邮件将在所选时间自动投递到对方邮箱</span></div>
+                </div>
+
+                <div class="adv-panel" id="burnPanel">
+                    <div class="row">
+                        <span>限定阅读次数：</span>
+                        <input type="number" id="burnCount" min="1" max="99" value="1" style="width:3.5rem;">
+                        <span class="tip">(可统一向每个收件人设置1~99次，超出阅读次数后读信链接将自动失效)</span>
+                    </div>
+                    <div class="row">
+                        <span>邮件销毁时间：</span>
+                        <select id="beYear"></select><span>年</span>
+                        <select id="beMonth"></select><span>月</span>
+                        <select id="beDay"></select><span>日</span>
+                        <select id="beHour"></select><span>时</span>
+                        <select id="beMin"></select><span>分</span>
+                        <span class="tip">(邮件在所设时间后自动销毁)</span>
+                    </div>
+                </div>
+
+                <div class="adv-panel" id="pwdPanel">
+                    <div class="row">
+                        <span>设置查看密码：</span>
+                        <input type="text" id="pwdInput" maxlength="6" style="width:9rem;">
+                        <span class="tip">(请输入6个字符，字母区分大小写，首尾不能有空格)</span>
+                    </div>
+                    <div class="row">
+                        <label><input type="checkbox" id="pwdSaveCb"> 在已发送邮件中保存密码</label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -453,6 +589,60 @@
     </div>
 </div>
 
+<!-- 模板信设置弹窗 -->
+<div class="tpl-mask" id="tplMask">
+    <div class="tpl-box">
+        <div class="tpl-tabs">
+            <a data-tab="compose" id="tplTabCompose">写信设置</a>
+            <a data-tab="reply" id="tplTabReply">回复设置</a>
+            <a data-tab="read" id="tplTabRead">读信设置</a>
+            <a data-tab="forward" id="tplTabForward">自动转发</a>
+            <a data-tab="vacation" id="tplTabVacation">假期自动回复</a>
+            <a data-tab="template" id="tplTabTemplate" class="active">模板信设置</a>
+        </div>
+        <div class="tpl-body">
+            <div id="tplPaneTemplate">
+                <div class="tpl-intro">自定义写信模板，写信时直接使用，提高发信效率。</div>
+                <div class="tpl-actions">
+                    <button class="ok" id="tplSave">保存更改</button>
+                    <button class="cancel" id="tplCancel">取消</button>
+                </div>
+                <div class="tpl-field">
+                    <label>模板名称：</label>
+                    <input type="text" id="tplName" placeholder="请输入模板名称">
+                </div>
+                <div class="tpl-field">
+                    <label>模板内容：</label>
+                    <span></span>
+                </div>
+                <div class="tpl-toolbar">
+                    <select id="tplStyleSel" title="样式">
+                        <option value="p">正文</option>
+                        <option value="h1">标题1</option>
+                        <option value="h2">标题2</option>
+                        <option value="h3">标题3</option>
+                    </select>
+                    <select id="tplFontSel" title="字体"><option value="">默认字体</option></select>
+                    <select id="tplSizeSel" title="字号"><option value="">五号</option></select>
+                    <button class="tb-btn" id="tplBoldBtn" title="加粗"><b>B</b></button>
+                    <button class="tb-btn" id="tplItalicBtn" title="斜体"><i>I</i></button>
+                    <button class="tb-btn" id="tplUnderlineBtn" title="下划线"><u>U</u></button>
+                    <button class="tb-btn" id="tplStrikeBtn" title="删除线"><s>S</s></button>
+                    <button class="tb-btn" id="tplSubBtn" title="下标">X₂</button>
+                    <button class="tb-btn" id="tplSupBtn" title="上标">X²</button>
+                    <span style="flex:1"></span>
+                    <button class="tb-btn" id="tplFullBtn" title="更多格式">…</button>
+                </div>
+                <div class="tpl-content" id="tplContent" contenteditable="true" data-placeholder="输入模板内容"></div>
+                <div class="tpl-list" id="tplList"></div>
+            </div>
+            <div id="tplPaneOther" style="display:none;color:#888;font-size:0.9rem;padding:1rem 0;">
+                该设置项已上线的基础功能：写信设置（默认发件人）、回复设置、读信设置、自动转发、假期自动回复将陆续开放，当前可优先使用模板信功能。
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -482,6 +672,7 @@
 
     // ===== 密送 / 群发单显 / 取消抄送 =====
     var ccVisible = true, bccVisible = false, singleVisible = false;
+    document.getElementById('checkNameLink').addEventListener('click', function(){ showToast('正在检查收件人姓名…'); });
     function syncRows(){
         document.getElementById('ccRow').style.display = ccVisible ? '' : 'none';
         document.getElementById('bccRow').style.display = bccVisible ? '' : 'none';
@@ -525,8 +716,141 @@
     document.getElementById('supBtn').addEventListener('click', function(){ exec('superscript'); });
     document.getElementById('colorBtn').addEventListener('click', function(){ exec('foreColor', '#e5484d'); });
     document.getElementById('hiliteBtn').addEventListener('click', function(){ exec('hiliteColor', '#fff3a0'); });
-    document.getElementById('listBtn').addEventListener('click', function(){ exec('insertUnorderedList'); });
     document.getElementById('olistBtn').addEventListener('click', function(){ exec('insertOrderedList'); });
+
+    // 撤销 / 重做 / 复制
+    document.getElementById('undoBtn').addEventListener('click', function(){ exec('undo'); });
+    document.getElementById('redoBtn').addEventListener('click', function(){ exec('redo'); });
+    document.getElementById('copyBtn').addEventListener('click', function(){
+        try { document.execCommand('copy'); showToast('已复制选中内容'); } catch(e) { showToast('复制失败'); }
+    });
+
+    // 项目符号样式（● ○ ■ ◆ √ ✧ ›）
+    function hideAllDrops(){
+        document.querySelectorAll('.tb-drop-menu, .table-picker').forEach(function(x){ x.classList.remove('show'); });
+    }
+    var symbolBtn = document.getElementById('symbolBtn');
+    if (symbolBtn) {
+        symbolBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAllDrops(); document.getElementById('symbolMenu').classList.toggle('show'); });
+        document.getElementById('symbolMenu').querySelectorAll('a').forEach(function(a){
+            a.addEventListener('click', function(){
+                var sym = a.getAttribute('data-sym');
+                exec('insertUnorderedList');
+                setTimeout(function(){
+                    var sel = window.getSelection();
+                    var list = null;
+                    if (sel.rangeCount) {
+                        var node = sel.getRangeAt(0).commonAncestorContainer;
+                        var el = node.nodeType === 1 ? node : node.parentElement;
+                        list = el ? el.closest('ul') : null;
+                    }
+                    if (!list) {
+                        var uls = body.querySelectorAll('ul');
+                        if (uls.length) list = uls[uls.length - 1];
+                    }
+                    if (list) {
+                        if (sym === '●') list.style.listStyleType = 'disc';
+                        else if (sym === '○') list.style.listStyleType = 'circle';
+                        else if (sym === '■') list.style.listStyleType = 'square';
+                        else list.style.listStyleType = 'none';
+                        var marker = (list.style.listStyleType === 'none') ? '\\"' + sym + '\\" ' : null;
+                        if (marker) {
+                            list.style.setProperty('list-style-type', 'none');
+                            var styleEl = list.querySelector('style.li-marker');
+                            if (!styleEl) {
+                                styleEl = document.createElement('style');
+                                styleEl.className = 'li-marker';
+                                list.appendChild(styleEl);
+                            }
+                            styleEl.textContent = 'li::marker { content: ' + marker + '; }';
+                        }
+                    }
+                    body.focus();
+                }, 0);
+                hideAllDrops();
+            });
+        });
+    }
+
+    // 缩进：增加 / 减少
+    var indentBtn = document.getElementById('indentBtn');
+    if (indentBtn) {
+        indentBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAllDrops(); document.getElementById('indentMenu').classList.toggle('show'); });
+        document.getElementById('indentMenu').querySelectorAll('a').forEach(function(a){
+            a.addEventListener('click', function(){
+                exec(a.getAttribute('data-act') === 'indentIn' ? 'indent' : 'outdent');
+                hideAllDrops();
+            });
+        });
+    }
+
+    // 行距
+    var lineHeightBtn = document.getElementById('lineHeightBtn');
+    if (lineHeightBtn) {
+        lineHeightBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAllDrops(); document.getElementById('lineHeightMenu').classList.toggle('show'); });
+        document.getElementById('lineHeightMenu').querySelectorAll('a').forEach(function(a){
+            a.addEventListener('click', function(){
+                var lh = a.getAttribute('data-lh');
+                exec('styleWithCSS', 'true');
+                try { exec('lineHeight', lh); } catch(e) {
+                    // 兼容：对选区父元素直接设置行高
+                    var sel = window.getSelection();
+                    if (sel.rangeCount) {
+                        var node = sel.getRangeAt(0).commonAncestorContainer;
+                        var el = node.nodeType === 1 ? node : node.parentElement;
+                        if (el) el.style.lineHeight = lh;
+                    }
+                }
+                hideAllDrops();
+            });
+        });
+    }
+
+    // 插入表格 8x10 网格选择器
+    var tablePicker = document.getElementById('tablePicker');
+    var tableGrid = document.getElementById('tableGrid');
+    var tableTip = document.getElementById('tableTip');
+    var selR = 0, selC = 0;
+    (function buildGrid(){
+        for (var r = 1; r <= 8; r++) {
+            for (var c = 1; c <= 10; c++) {
+                var cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.r = r; cell.dataset.c = c;
+                cell.addEventListener('mouseenter', function(){
+                    selR = Number(this.dataset.r); selC = Number(this.dataset.c);
+                    tableGrid.querySelectorAll('.cell').forEach(function(x){
+                        var rr = Number(x.dataset.r), cc = Number(x.dataset.c);
+                        x.classList.toggle('hl', rr <= selR && cc <= selC);
+                    });
+                    tableTip.textContent = selR + '×' + selC + ' 表格';
+                });
+                cell.addEventListener('click', function(){
+                    var rows = Number(this.dataset.r), cols = Number(this.dataset.c);
+                    insertTable(rows, cols);
+                    tablePicker.classList.remove('show');
+                });
+                tableGrid.appendChild(cell);
+            }
+        }
+    })();
+    function insertTable(rows, cols){
+        var html = '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;">';
+        for (var r = 0; r < rows; r++) {
+            html += '<tr>';
+            for (var c = 0; c < cols; c++) html += '<td style="border:1px solid #ccc;min-width:40px;">&nbsp;</td>';
+            html += '</tr>';
+        }
+        html += '</table>';
+        exec('insertHTML', html);
+    }
+    var tableBtn = document.getElementById('tableBtn');
+    if (tableBtn) {
+        tableBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAllDrops(); tablePicker.classList.toggle('show'); });
+    }
+    document.addEventListener('click', function(e){
+        if (!e.target.closest || (!e.target.closest('.tb-drop') && !e.target.closest('.table-picker') && !e.target.closest('#moreMenu'))) hideAllDrops();
+    });
 
     // 更多菜单
     var moreMenu = document.getElementById('moreMenu');
@@ -539,7 +863,7 @@
             else if (act === 'olist') exec('insertOrderedList');
             else if (act === 'indent') exec('indent');
             else if (act === 'image') { var u = prompt('请输入图片地址：'); if (u) exec('insertImage', u); }
-            else if (act === 'table') { exec('insertHTML', '<table border="1" cellpadding="6" style="border-collapse:collapse;width:100%;"><tr><td>单元格</td><td>单元格</td></tr><tr><td>单元格</td><td>单元格</td></tr></table>'); }
+            else if (act === 'table') { insertTable(2, 4); }
             else if (act === 'quote') exec('formatBlock', 'blockquote');
             else if (act === 'hr') exec('insertHorizontalRule');
             else if (act === 'print') { window.print(); }
@@ -642,10 +966,110 @@
         input.click();
     });
 
-    // ===== 底部选项 =====
-    document.getElementById('timedSend').addEventListener('click', function(){ showToast('定时发送功能建设中'); });
-    document.getElementById('burnAfter').addEventListener('click', function(){ showToast('阅后即焚功能建设中'); });
-    document.getElementById('pwdEncrypt').addEventListener('click', function(){ showToast('口令加密功能建设中'); });
+    // ===== 底部高级选项（定时发送 / 阅后即焚 / 口令加密） =====
+    function fillDateSel(selId, start, count, val){
+        var sel = document.getElementById(selId);
+        if (!sel) return;
+        sel.innerHTML = '';
+        for (var i = 0; i < count; i++) {
+            var o = document.createElement('option');
+            o.value = start + i;
+            o.textContent = start + i;
+            sel.appendChild(o);
+        }
+        if (val !== undefined && val !== null) sel.value = val;
+    }
+    var now0 = new Date();
+    function p2(n){ return (n < 10 ? '0' : '') + n; }
+    // 定时发送默认：明天当前时刻
+    fillDateSel('tsYear', now0.getFullYear(), 5, now0.getFullYear());
+    fillDateSel('tsMonth', 1, 12, now0.getMonth() + 1);
+    var daysInMonth = new Date(now0.getFullYear(), now0.getMonth() + 1, 0).getDate();
+    fillDateSel('tsDay', 1, daysInMonth, Math.min(daysInMonth, now0.getDate() + 1));
+    fillDateSel('tsHour', 0, 24, now0.getHours());
+    fillDateSel('tsMin', 0, 60, now0.getMinutes());
+    // 阅后即焚销毁时间默认：明天当前时刻
+    fillDateSel('beYear', now0.getFullYear(), 5, now0.getFullYear());
+    fillDateSel('beMonth', 1, 12, now0.getMonth() + 1);
+    fillDateSel('beDay', 1, daysInMonth, Math.min(daysInMonth, now0.getDate() + 1));
+    fillDateSel('beHour', 0, 24, now0.getHours());
+    fillDateSel('beMin', 0, 60, now0.getMinutes());
+    // 月份/年份切换联动天数
+    function syncDays(ySel, mSel, dSel){
+        var y = Number(document.getElementById(ySel).value);
+        var m = Number(document.getElementById(mSel).value);
+        var dim = new Date(y, m, 0).getDate();
+        var d = document.getElementById(dSel);
+        var cur = Number(d.value);
+        d.innerHTML = '';
+        for (var i = 1; i <= dim; i++) {
+            var o = document.createElement('option'); o.value = i; o.textContent = i;
+            d.appendChild(o);
+        }
+        if (cur >= 1 && cur <= dim) d.value = cur; else d.value = Math.min(dim, cur || 1);
+    }
+    document.getElementById('tsYear').addEventListener('change', function(){ syncDays('tsYear', 'tsMonth', 'tsDay'); });
+    document.getElementById('tsMonth').addEventListener('change', function(){ syncDays('tsYear', 'tsMonth', 'tsDay'); });
+    document.getElementById('beYear').addEventListener('change', function(){ syncDays('beYear', 'beMonth', 'beDay'); });
+    document.getElementById('beMonth').addEventListener('change', function(){ syncDays('beYear', 'beMonth', 'beDay'); });
+    function readDT(y, m, d, h, mi){
+        return new Date(Number(y), Number(m) - 1, Number(d), Number(h), Number(mi), 0, 0);
+    }
+    function fmtDT(dt){
+        return dt.getFullYear() + '-' + p2(dt.getMonth() + 1) + '-' + p2(dt.getDate()) + ' ' + p2(dt.getHours()) + ':' + p2(dt.getMinutes()) + ':00';
+    }
+    var timedCb = document.getElementById('timedCb'), burnCb = document.getElementById('burnCb'), pwdCb = document.getElementById('pwdCb');
+    timedCb.addEventListener('change', function(){
+        document.getElementById('timedPanel').classList.toggle('show', this.checked);
+        if (this.checked) {
+            var dt = readDT(document.getElementById('tsYear').value, document.getElementById('tsMonth').value, document.getElementById('tsDay').value, document.getElementById('tsHour').value, document.getElementById('tsMin').value);
+            document.getElementById('tsTip').textContent = '本邮件将在' + fmtDT(dt) + '投递到对方邮箱';
+        }
+    });
+    ['tsYear','tsMonth','tsDay','tsHour','tsMin'].forEach(function(id){
+        document.getElementById(id).addEventListener('change', function(){
+            if (timedCb.checked) {
+                var dt = readDT(document.getElementById('tsYear').value, document.getElementById('tsMonth').value, document.getElementById('tsDay').value, document.getElementById('tsHour').value, document.getElementById('tsMin').value);
+                document.getElementById('tsTip').textContent = '本邮件将在' + fmtDT(dt) + '投递到对方邮箱';
+            }
+        });
+    });
+    burnCb.addEventListener('change', function(){ document.getElementById('burnPanel').classList.toggle('show', this.checked); });
+    pwdCb.addEventListener('change', function(){ document.getElementById('pwdPanel').classList.toggle('show', this.checked); });
+    function collectAdvance(){
+        var adv = {};
+        if (timedCb.checked) {
+            var dt = readDT(document.getElementById('tsYear').value, document.getElementById('tsMonth').value, document.getElementById('tsDay').value, document.getElementById('tsHour').value, document.getElementById('tsMin').value);
+            if (dt.getTime() > Date.now() + 1000) adv.scheduled_at = dt.toISOString();
+        }
+        if (burnCb.checked) {
+            adv.burn_read_limit = Math.min(99, Math.max(1, Number(document.getElementById('burnCount').value) || 1));
+            var be = readDT(document.getElementById('beYear').value, document.getElementById('beMonth').value, document.getElementById('beDay').value, document.getElementById('beHour').value, document.getElementById('beMin').value);
+            if (be.getTime() > Date.now()) adv.burn_expire_at = be.toISOString();
+        }
+        if (pwdCb.checked) {
+            var pw = document.getElementById('pwdInput').value || '';
+            if (pw) adv.view_password = pw;
+            adv.save_password = document.getElementById('pwdSaveCb').checked;
+        }
+        return adv;
+    }
+    function validAdvance(){
+        if (pwdCb.checked) {
+            var pw = document.getElementById('pwdInput').value || '';
+            if (pw.length !== 6) { showToast('口令加密需输入6个字符'); return false; }
+            if (/^\s|\s$/.test(pw)) { showToast('口令首尾不能有空格'); return false; }
+        }
+        if (timedCb.checked) {
+            var dt = readDT(document.getElementById('tsYear').value, document.getElementById('tsMonth').value, document.getElementById('tsDay').value, document.getElementById('tsHour').value, document.getElementById('tsMin').value);
+            if (dt.getTime() <= Date.now()) { showToast('定时发送时间已过期，请重新选择'); return false; }
+        }
+        if (burnCb.checked) {
+            var be = readDT(document.getElementById('beYear').value, document.getElementById('beMonth').value, document.getElementById('beDay').value, document.getElementById('beHour').value, document.getElementById('beMin').value);
+            if (be.getTime() <= Date.now()) { showToast('邮件销毁时间需晚于当前时间'); return false; }
+        }
+        return true;
+    }
 
     // ===== 右侧通讯录 =====
     var cpAll = [], cpGroup = '__all__';
@@ -702,7 +1126,107 @@
     });
     document.getElementById('cpFoot').addEventListener('click', function(){ location.href = 'mail-contact.html'; });
     document.getElementById('cpMore').addEventListener('click', function(){ showToast('信纸功能建设中'); });
-    document.getElementById('cpTpl').addEventListener('click', function(){ showToast('模板信功能建设中'); });
+
+    // ===== 模板信设置 =====
+    var tplMask = document.getElementById('tplMask');
+    var tplContent = document.getElementById('tplContent');
+    function tplExec(cmd, val){ document.execCommand(cmd, false, val || null); tplContent.focus(); }
+    document.getElementById('cpTpl').addEventListener('click', function(){ openTpl(); });
+    function openTpl(){
+        document.getElementById('tplName').value = '';
+        tplContent.innerHTML = '';
+        renderTplList();
+        document.querySelectorAll('.tpl-tabs a').forEach(function(x){ x.classList.remove('active'); });
+        document.getElementById('tplTabTemplate').classList.add('active');
+        document.getElementById('tplPaneTemplate').style.display = 'block';
+        document.getElementById('tplPaneOther').style.display = 'none';
+        tplMask.style.display = 'flex';
+    }
+    document.querySelectorAll('.tpl-tabs a').forEach(function(a){
+        a.addEventListener('click', function(){
+            document.querySelectorAll('.tpl-tabs a').forEach(function(x){ x.classList.remove('active'); });
+            a.classList.add('active');
+            var isTpl = a.getAttribute('data-tab') === 'template';
+            document.getElementById('tplPaneTemplate').style.display = isTpl ? 'block' : 'none';
+            document.getElementById('tplPaneOther').style.display = isTpl ? 'none' : 'block';
+        });
+    });
+    document.getElementById('tplCancel').addEventListener('click', function(){ tplMask.style.display = 'none'; });
+    tplMask.addEventListener('click', function(e){ if (e.target === this) this.style.display = 'none'; });
+    // 模板编辑器工具栏
+    document.getElementById('tplStyleSel').addEventListener('change', function(){
+        var v = this.value;
+        if (v === 'p') tplExec('formatBlock', 'p');
+        else tplExec('formatBlock', 'h' + v[1]);
+        this.value = '';
+    });
+    var tplFontSel = document.getElementById('tplFontSel');
+    FONTS.forEach(function(f){ var o = document.createElement('option'); o.value = f; o.textContent = f; tplFontSel.appendChild(o); });
+    var tplSizeSel = document.getElementById('tplSizeSel');
+    SIZES.forEach(function(s){ var o = document.createElement('option'); o.value = s; o.textContent = s; tplSizeSel.appendChild(o); });
+    tplSizeSel.value = '五号';
+    document.getElementById('tplFontSel').addEventListener('change', function(){ tplExec('fontName', this.value); this.value = ''; });
+    document.getElementById('tplSizeSel').addEventListener('change', function(){
+        var v = this.value;
+        tplExec('fontSize', v.indexOf('px') >= 0 ? v.replace('px','') : (SIZE_PX[v] || '3'));
+        this.value = '五号';
+    });
+    document.getElementById('tplBoldBtn').addEventListener('click', function(){ tplExec('bold'); });
+    document.getElementById('tplItalicBtn').addEventListener('click', function(){ tplExec('italic'); });
+    document.getElementById('tplUnderlineBtn').addEventListener('click', function(){ tplExec('underline'); });
+    document.getElementById('tplStrikeBtn').addEventListener('click', function(){ tplExec('strikeThrough'); });
+    document.getElementById('tplSubBtn').addEventListener('click', function(){ tplExec('subscript'); });
+    document.getElementById('tplSupBtn').addEventListener('click', function(){ tplExec('superscript'); });
+    document.getElementById('tplFullBtn').addEventListener('click', function(){ showToast('更多格式选项'); });
+    function renderTplList(){
+        var box = document.getElementById('tplList');
+        box.innerHTML = '';
+        fetch(API + '/api/mail/templates', { headers: { 'Authorization': 'Bearer ' + getToken() } })
+            .then(function(r){ return r.json(); })
+            .then(function(j){
+                if (!j.ok || !j.templates) return;
+                if (!j.templates.length) { box.innerHTML = '<div style="color:#999;font-size:0.85rem;padding:0.5rem 0;">暂无模板，填写上方模板名称与内容后点击「保存更改」。</div>'; return; }
+                j.templates.forEach(function(t){
+                    var row = document.createElement('div'); row.className = 'row';
+                    var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = t.name;
+                    var ops = document.createElement('span'); ops.className = 'ops';
+                    var use = document.createElement('a'); use.textContent = '使用';
+                    use.addEventListener('click', function(){
+                        var html = (t.content || '').replace(/\n/g, '<br>');
+                        body.innerHTML = body.innerHTML + (body.innerHTML ? '<br>' : '') + html;
+                        showToast('已插入模板「' + t.name + '」');
+                    });
+                    var del = document.createElement('a'); del.className = 'del'; del.textContent = '删除';
+                    del.addEventListener('click', function(){
+                        fetch(API + '/api/mail/templates/' + t.id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getToken() } })
+                            .then(function(r){ return r.json(); })
+                            .then(function(j){ if (j.ok) { renderTplList(); showToast('模板已删除'); } });
+                    });
+                    ops.appendChild(use); ops.appendChild(del);
+                    row.appendChild(nm); row.appendChild(ops);
+                    box.appendChild(row);
+                });
+            })
+            .catch(function(){});
+    }
+    document.getElementById('tplSave').addEventListener('click', function(){
+        var nm = document.getElementById('tplName').value.trim();
+        if (!nm) { showToast('请输入模板名称'); return; }
+        fetch(API + '/api/mail/templates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+            body: JSON.stringify({ name: nm, content: tplContent.innerHTML || tplContent.innerText || '' })
+        })
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+            if (!j.ok) { showToast(j.message || '保存失败'); return; }
+            showToast('模板已保存');
+            document.getElementById('tplName').value = '';
+            tplContent.innerHTML = '';
+            renderTplList();
+        })
+        .catch(function(){ showToast('网络异常，保存失败'); });
+    });
 
     // ===== 预览弹窗 =====
     function openPreview(){
@@ -734,13 +1258,16 @@
         var to = toRaw ? toRaw.split(/[,，;；]/).map(function(s){ return s.trim(); }).filter(Boolean) : [];
         var ccRaw = document.getElementById('ccInput').value.trim();
         var cc = ccRaw ? ccRaw.split(/[,，;；]/).map(function(s){ return s.trim(); }).filter(Boolean) : [];
-        return {
+        var payload = {
             to: to, cc: cc,
             subject: document.getElementById('subjectInput').value.trim(),
-            body: body.innerText || body.textContent || '',
+            body: body.innerHTML || body.innerText || '',
             priority: document.getElementById('urgentCb').checked ? 'urgent' : 'normal',
             read_receipt: document.getElementById('receiptCb').checked
         };
+        var adv = collectAdvance();
+        Object.keys(adv).forEach(function(k){ payload[k] = adv[k]; });
+        return payload;
     }
     function saveDraft(andThen){
         var payload = collectForm();
@@ -771,7 +1298,7 @@
                 document.getElementById('toInput').value = (d.to || []).join(', ');
                 document.getElementById('ccInput').value = (d.cc || []).join(', ');
                 document.getElementById('subjectInput').value = d.subject || '';
-                body.innerHTML = (d.body || '').replace(/\n/g, '<br>');
+                body.innerHTML = d.body || '';
                 document.getElementById('urgentCb').checked = d.priority === 'urgent';
                 document.getElementById('receiptCb').checked = d.read_receipt !== false;
             })
@@ -785,6 +1312,7 @@
         .catch(function(){});
 
     document.getElementById('sendBtn').addEventListener('click', function(){
+        if (!validAdvance()) return;
         var toRaw = document.getElementById('toInput').value.trim();
         if (!toRaw) { showToast('请填写收件人'); return; }
         var to = toRaw.split(/[,，;；]/).map(function(s){ return s.trim(); }).filter(Boolean);
@@ -794,10 +1322,12 @@
             to: to,
             cc: cc,
             subject: document.getElementById('subjectInput').value.trim(),
-            body: body.innerText || body.textContent || '',
+            body: body.innerHTML || body.innerText || '',
             priority: document.getElementById('urgentCb').checked ? 'urgent' : 'normal',
             read_receipt: document.getElementById('receiptCb').checked
         };
+        var adv = collectAdvance();
+        Object.keys(adv).forEach(function(k){ payload[k] = adv[k]; });
         var btn = document.getElementById('sendBtn');
         btn.disabled = true;
         fetch(API + '/api/mail/send', {
@@ -810,7 +1340,8 @@
             btn.disabled = false;
             if (!j.ok) { showToast(j.message || '发送失败'); return; }
             if (editingDraftId) { try { fetch(API + '/api/mail/drafts/' + editingDraftId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getToken() } }); } catch(e){} }
-            showToast('邮件已发送');
+            if (j.scheduled) { showToast(j.message || '邮件已定时'); setTimeout(function(){ location.href = 'mail-sent.html'; }, 1200); return; }
+            showToast(j.message || '邮件已发送');
             setTimeout(function(){ location.href = 'mail-sent.html'; }, 900);
         })
         .catch(function(){ btn.disabled = false; showToast('网络异常，发送失败'); });
