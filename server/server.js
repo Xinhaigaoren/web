@@ -4860,14 +4860,44 @@ app.post('/api/mail/send', requireAuth, requireAlumni, async (req, res) => {
         [mailId, item.user_id, item.address, item.name || null, item.kind]
       ).catch(() => {});
     }
-    // ===== 外部邮箱：走 SMTP 真实外发（QQ/163/edu.cn 等；需环境变量 SMTP_USER/SMTP_PASS） =====
+    // ===== 外部邮箱：真实外发（优先 Resend API，其次 SMTP；免费通道） =====
     const externalList = [...toList.map(x => ({ ...x, kind: 'to' })), ...ccList.map(x => ({ ...x, kind: 'cc' }))]
       .filter(x => !x.user_id && !/@xinhaigaoren\.org\.cn$/i.test(x.address));
     let smtpMsg = null;
     if (externalList.length) {
-      if (!nodemailer || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        smtpMsg = '外部收件人未真实外发（未配置 SMTP）';
-      } else {
+      const resendKey = process.env.RESEND_API_KEY;
+      const resendFrom = process.env.RESEND_FROM || '';
+      if (resendKey && resendFrom) {
+        try {
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), 30000);
+          const resp = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + resendKey,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              from: `"${myAccount.display_name || '新海高人校友'}" <${resendFrom}>`,
+              to: externalList.map(x => x.address),
+              subject: subject || '（无主题）',
+              text: body
+            }),
+            signal: ctrl.signal
+          });
+          clearTimeout(t);
+          const j = await resp.json().catch(() => ({}));
+          if (resp.ok) {
+            smtpMsg = '外部收件人已通过 Resend 发送';
+          } else {
+            console.error('[resend] send failed:', resp.status, JSON.stringify(j));
+            smtpMsg = '外部收件人 Resend 发送失败：' + (j.message || ('HTTP ' + resp.status));
+          }
+        } catch (e) {
+          console.error('[resend] send error:', (e && e.message) || e);
+          smtpMsg = '外部收件人 Resend 发送失败：' + ((e && e.message) || '未知错误');
+        }
+      } else if (nodemailer && process.env.SMTP_USER && process.env.SMTP_PASS) {
         try {
           const smtpPort = Number(process.env.SMTP_PORT || 465);
           const transporter = nodemailer.createTransport({
@@ -4891,6 +4921,8 @@ app.post('/api/mail/send', requireAuth, requireAlumni, async (req, res) => {
           console.error('[smtp] external send failed:', (e && e.message) || e, e && e.response && (' | response: ' + e.response));
           smtpMsg = '外部收件人 SMTP 发送失败：' + (e && e.message ? e.message : '未知错误');
         }
+      } else {
+        smtpMsg = '外部收件人未真实外发（未配置 Resend/SMTP）';
       }
     }
     return ok(res, { mail_id: mailId, message: smtpMsg ? '邮件已发送（' + smtpMsg + '）' : '邮件已发送', external: smtpMsg });
