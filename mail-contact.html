@@ -404,27 +404,19 @@
         return list;
     }
     function renderTable(){
-        try {
-        window.__m = ['R0'];
         var list = getFiltered();
-        window.__m.push('R1:' + list.length);
         var totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
         if (curPage > totalPages) curPage = totalPages;
         var pageItems = list.slice((curPage - 1) * PAGE_SIZE, curPage * PAGE_SIZE);
-        window.__m.push('R2:' + pageItems.length);
         var title = document.querySelector('.contact-title');
         var titleText = '所有联系人';
         if (curGroup === '__alumni__') titleText = '已认证校友';
         else if (curGroup === '__ungrouped__') titleText = '未分组联系人';
         else if (curGroup !== '__all__') titleText = curGroup;
         title.innerHTML = esc(titleText) + '<span class="count">（共' + list.length + '个联系人）</span>';
-        window.__m.push('R3:title');
 
-        document.getElementById('countTip').textContent = '';
-        window.__m.push('R4:countTip');
         var body = document.getElementById('contactBody');
         body.innerHTML = '';
-        window.__m.push('R5:cleared');
         var empty = document.getElementById('emptyTip');
         if (!pageItems.length) {
             empty.style.display = 'block';
@@ -432,7 +424,6 @@
         } else {
             empty.style.display = 'none';
         }
-        window.__m.push('R6:empty');
         pageItems.forEach(function(c){
             var tr = document.createElement('tr');
             var tdN = document.createElement('td'); tdN.className = 'name'; tdN.textContent = c.name || '（未命名）';
@@ -453,12 +444,9 @@
             tr.appendChild(tdN); tr.appendChild(tdE); tr.appendChild(tdP); tr.appendChild(tdX);
             body.appendChild(tr);
         });
-        window.__m.push('R7:rows:' + body.children.length);
         document.getElementById('pageTip').textContent = curPage + '/' + totalPages;
         document.getElementById('prevBtn').disabled = curPage <= 1;
         document.getElementById('nextBtn').disabled = curPage >= totalPages;
-        window.__m.push('R8:done');
-        } catch (e) { window.__m.push('RERR:' + (e && e.message) + '|' + String(e && e.stack).slice(0,200)); }
     }
 
     // ===== 搜索 / 分页 =====
