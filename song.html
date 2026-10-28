@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>海林高中校歌 - 海林市高级中学校友（新海高人）</title>
+  <meta name="description" content="海林高中校歌：成就更好的自己，服务挚爱的家国。海林市高级中学校友（新海高人）" />
+  <link rel="icon" href="assets/favicon.png" />
+<style>
+/* =========================================
+   新导航栏样式（北大红水墨渐变版 · 全站一致）
+   ========================================= */
+html { font-size: 1.25vw; }
+body { margin: 0; padding: 0; background-color: #111; }
+
+.top-navbar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 8rem;
+    background: linear-gradient(
+        to bottom,
+        rgba(148, 7, 10, 0.95) 0%,
+        rgba(148, 7, 10, 0.7) 40%,
+        rgba(148, 7, 10, 0.2) 80%,
+        rgba(148, 7, 10, 0) 100%
+    );
+    display: flex;
+    justify-content: center;
+    z-index: 1000;
+}
+.nav-container {
+    width: 100%;
+    max-width: 95rem;
+    height: 100%;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    z-index: 10;
+}
+.nav-logo {
+    display: flex;
+    align-items: center;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-right: 3rem;
+}
+.nav-logo img {
+    height: 4rem;
+    width: auto;
+    margin-right: 0.8rem;
+    border-radius: 50%;
+    object-fit: contain;
+    transition: transform 0.3s;
+}
+.nav-logo:hover img { transform: scale(1.05); }
+.logo-text { display: flex; flex-direction: column; justify-content: center; }
+.logo-text .zh {
+    font-size: 1.1rem;
+    font-weight: 500;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    line-height: 1.4;
+    letter-spacing: 0.03rem;
+    white-space: nowrap;
+}
+.logo-text .en {
+    font-size: 0.7rem;
+    opacity: 0.85;
+    margin-top: 0.1rem;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    line-height: 1.4;
+    letter-spacing: 0.01rem;
+    white-space: nowrap;
+}
+.nav-right-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-left: auto;
+}
+.nav-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.8rem;
+}
+.top-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    white-space: nowrap;
+}
+.top-tools a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.top-tools a:hover { color: #fff; text-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.5); }
+.tool-divider { width: 0.0625rem; height: 0.8rem; background-color: rgba(255, 255, 255, 0.3); }
+.top-tools a.webvpn { position: relative; }
+.search-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+    fill: currentColor;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.search-icon:hover { fill: #fff; transform: scale(1.1); }
+.main-menu {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+    white-space: nowrap;
+}
+.main-menu a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.03rem;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding-bottom: 0.2rem;
+}
+.main-menu a::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0;
+    height: 0.125rem;
+    background-color: #fff;
+    transition: width 0.3s ease;
+    border-radius: 0.125rem;
+}
+.main-menu a:hover::after { width: 100%; }
+.main-menu a:hover { text-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.3); }
+.arrow-down {
+    width: 0.7rem;
+    height: 0.7rem;
+    fill: rgba(255, 255, 255, 0.7);
+    transition: transform 0.3s;
+}
+.main-menu a:hover .arrow-down { transform: rotate(180deg); fill: #fff; }
+.hamburger-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 1.6rem;
+    height: 1rem;
+    cursor: pointer;
+    margin-left: 0.5rem;
+    transition: opacity 0.3s;
+    flex-shrink: 0;
+}
+.hamburger-menu:hover { opacity: 0.8; }
+.hamburger-line { width: 100%; height: 0.16rem; background-color: #fff; border-radius: 0.08rem; }
+
+/* =========================================
+   校歌页主体（北大红 + 校园合影背景 + 飘雪）
+   ========================================= */
+.song-body {
+    min-height: 100vh;
+    background-color: #94070A;
+    color: #ffffff;
+    overflow-x: hidden;
+    position: relative;
+    padding-top: 8rem;
+    font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+.bg-layer {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(rgba(60, 5, 8, 0.75), rgba(60, 5, 8, 0.9)),
+                url('assets/song-cover.jpg') center/cover no-repeat;
+    z-index: 0;
+    filter: blur(3px);
+}
+.snow {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    background-image:
+        radial-gradient(1px 1px at 10% 10%, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 30% 40%, #fff, transparent),
+        radial-gradient(1px 1px at 50% 60%, #fff, transparent),
+        radial-gradient(2px 2px at 70% 20%, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 90% 80%, #fff, transparent),
+        radial-gradient(1px 1px at 80% 50%, #fff, transparent);
+    background-size: 100% 100%;
+    opacity: 0.35;
+    animation: snowFall 12s linear infinite;
+    z-index: 1;
+}
+@keyframes snowFall {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+}
+.container {
+    max-width: 70rem;
+    margin: 0 auto;
+    padding: 4rem 2rem 6rem;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.header { text-align: center; margin-bottom: 3rem; animation: fadeInDown 1s ease-out; }
+.header h1 {
+    font-size: 3.2rem;
+    font-weight: bold;
+    letter-spacing: 0.5rem;
+    color: #ffffff;
+    text-shadow: 0 0.3rem 0.6rem rgba(0,0,0,0.6);
+    margin-bottom: 1.2rem;
+}
+.header .subtitle {
+    font-size: 1.4rem;
+    letter-spacing: 0.2rem;
+    color: #ffd700;
+    opacity: 0.95;
+    font-weight: bold;
+}
+.player {
+    width: 100%;
+    max-width: 46rem;
+    margin: 0 auto 3.5rem;
+    animation: fadeInDown 1.2s ease-out;
+}
+.player audio { width: 100%; display: block; }
+.lyrics {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    font-size: 1.15rem;
+    line-height: 2.4;
+    letter-spacing: 0.15rem;
+    text-align: justify;
+    text-shadow: 0 0.1rem 0.3rem rgba(0,0,0,0.5);
+}
+.stanza { display: flex; flex-direction: column; gap: 0.5rem; }
+.line {
+    opacity: 0;
+    transform: translateY(1rem);
+    animation: floatUp 0.8s ease-out forwards;
+}
+.line:nth-child(1) { animation-delay: 0.2s; }
+.line:nth-child(2) { animation-delay: 0.3s; }
+.line:nth-child(3) { animation-delay: 0.4s; }
+.line:nth-child(4) { animation-delay: 0.5s; }
+.line:nth-child(5) { animation-delay: 0.6s; }
+.line:nth-child(6) { animation-delay: 0.7s; }
+.line:nth-child(7) { animation-delay: 0.8s; }
+.line:nth-child(8) { animation-delay: 0.9s; }
+.highlight { color: #ffd700; font-weight: bold; }
+.core-spirit {
+    margin-top: 3rem;
+    text-align: center;
+    font-size: 1.6rem;
+    color: #ffd700;
+    letter-spacing: 0.4rem;
+    font-weight: bold;
+    text-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.5);
+    animation: fadeIn 2s ease-out forwards;
+    opacity: 0;
+}
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-2rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes floatUp { to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { to { opacity: 1; } }
+@media (max-width: 900px) {
+    .lyrics { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
+    .header h1 { font-size: 2.2rem; }
+    .header .subtitle { font-size: 1.1rem; }
+    .core-spirit { font-size: 1.2rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="top-navbar">
+    <div class="nav-container">
+        <a href="index.html" class="nav-logo">
+            <img src="assets/haigao-logo.jpg" alt="海林市高级中学校友会 Logo">
+            <div class="logo-text">
+                <span class="zh">海林市高级中学校友（新海高人）</span>
+                <span class="en">Hailin Senior High School Alumni Association</span>
+            </div>
+        </a>
+        <div class="nav-right-wrapper">
+            <div class="nav-right">
+                <div class="top-tools">
+                    <a href="index.html">访客</a>
+                    <a href="jobs.html">招聘</a>
+                    <a href="user-electronic.html" class="webvpn">内网</a>
+                    <a href="login.html?redirect=mail-inbox.html">邮箱</a>
+                    <div class="tool-divider"></div>
+                    <a href="#">🌐 English</a>
+                    <svg class="search-icon" viewBox="0 0 24 24">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                </div>
+                <nav class="main-menu">
+                    <a href="news.html">新海高人新闻网</a>
+                    <a href="login.html?redirect=journal.html">新海高青年期刊</a>
+                    <a href="about.html">
+                        新海高人概况
+                        <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </a>
+                    <a href="alumni.html">校友联络</a>
+                    <a href="#">
+                        媒体平台
+                        <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </a>
+                    <a href="#">
+                        校友服务
+                        <svg class="arrow-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </a>
+                </nav>
+            </div>
+            <div class="hamburger-menu">
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="song-body">
+    <div class="bg-layer"></div>
+    <div class="snow"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>海林高中校歌</h1>
+            <div class="subtitle">成就更好的自己 服务挚爱的家国</div>
+        </div>
+
+        <!-- 校歌音频播放器（assets/song.mp3） -->
+        <div class="player">
+            <audio controls preload="none" src="assets/song.mp3">您的浏览器不支持音频播放。</audio>
+        </div>
+
+        <!-- 歌词区 -->
+        <div class="lyrics">
+            <div class="stanza">
+                <div class="line">林海雪原是我家乡</div>
+                <div class="line">天地宽广 山高水长</div>
+                <div class="line">莘莘学子茁壮成长</div>
+                <div class="line">海林高中桃李芬芳</div>
+                <div class="line">学海泛舟书声朗朗</div>
+                <div class="line">人才辈出 国之栋梁</div>
+                <div class="line">国之栋梁</div>
+                <div class="line">崇尚文明 志存高远</div>
+                <div class="line">热血沸腾 青春闪光</div>
+                <div class="line">自强不息 开拓创新</div>
+                <div class="line">春华秋实 放飞理想</div>
+                <div class="line">啊——<span class="highlight">团结文明 勤奋进取</span></div>
+                <div class="line">华夏振兴 矢志不忘</div>
+                <div class="line">杨子荣精神激励我奋进</div>
+                <div class="line">肩负使命 铸就辉煌</div>
+            </div>
+            <div class="stanza">
+                <div class="line">啊——<span class="highlight">团结文明 勤奋进取</span></div>
+                <div class="line">华夏振兴 矢志不忘</div>
+                <div class="line">杨子荣精神激励我奋进</div>
+                <div class="line">肩负使命 铸就辉煌</div>
+                <div class="line">肩负使命 铸就辉煌！</div>
+            </div>
+        </div>
+
+        <div class="core-spirit">
+            中国心 · 世界眼 · 未来力
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

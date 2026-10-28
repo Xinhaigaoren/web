@@ -302,6 +302,57 @@ body { margin: 0; padding: 0; background-color: #111; }
     background-color: #ffffff;
     border-color: #ffffff;
 }
+
+/* =========================================
+   校歌专区（新海高人新闻网）
+   ========================================= */
+.song-section {
+    min-height: calc(100vh - 8rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #fdf6f6 0%, #f4f4f4 100%);
+    padding: 5rem 2rem;
+    font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+}
+.song-card {
+    display: flex;
+    gap: 3rem;
+    align-items: center;
+    max-width: 62rem;
+    width: 100%;
+    background: #ffffff;
+    border-radius: 1.5rem;
+    padding: 3rem;
+    box-shadow: 0 1.5rem 4rem rgba(148, 7, 10, 0.15);
+}
+.song-cover {
+    width: 16rem;
+    height: 16rem;
+    object-fit: cover;
+    border-radius: 1rem;
+    flex-shrink: 0;
+    box-shadow: 0 0.8rem 2rem rgba(148, 7, 10, 0.2);
+}
+.song-info { flex: 1; }
+.song-info h2 { font-size: 1.8rem; color: #94070A; margin: 0 0 0.8rem; letter-spacing: 0.05rem; }
+.song-info .sub { color: #b8860b; font-size: 1rem; margin: 0 0 1.5rem; letter-spacing: 0.1rem; }
+.song-info audio { width: 100%; margin-bottom: 1.4rem; }
+.song-info .song-link {
+    display: inline-block;
+    color: #fff;
+    background: #94070A;
+    padding: 0.65rem 1.6rem;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+.song-info .song-link:hover { background: #b00a10; transform: translateY(-2px); }
+@media (max-width: 900px) {
+    .song-card { flex-direction: column; text-align: center; padding: 2rem; }
+    .song-cover { width: 12rem; height: 12rem; }
+}
 </style>
 </head>
 
@@ -370,6 +421,22 @@ body { margin: 0; padding: 0; background-color: #111; }
 <!-- ==========================================
      主体：新海高人新闻网（建设中，仅导航栏与底栏）
      ========================================== -->
+
+<!-- ==========================================
+     校歌专区（海林高中校歌 · 音频 + 封面 + 歌词页入口）
+     ========================================== -->
+
+<section class="song-section">
+    <div class="song-card">
+        <img src="assets/song-cover.jpg" alt="海林高中校园合影" class="song-cover">
+        <div class="song-info">
+            <h2>海林高中校歌</h2>
+            <p class="sub">成就更好的自己 · 服务挚爱的家国</p>
+            <audio controls preload="none" src="assets/song.mp3">您的浏览器不支持音频播放。</audio>
+            <a href="song.html" class="song-link">查看完整歌词与飘雪页面 →</a>
+        </div>
+    </div>
+</section>
 
 <footer class="site-footer" id="contact">
     <!-- 底部页脚（2026-10-14 新版）：白底链接区 + 北大红底品牌区；访问人数由后端实时统计 -->
